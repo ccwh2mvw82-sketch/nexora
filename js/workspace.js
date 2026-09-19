@@ -1,13 +1,14 @@
 /* ============================================================
-   GestAffaires – Espace de travail
-   Suite d'outils automatisés pour l'administrateur :
-   1. Gestion administrative      6. Google Ads
-   2. Google Business Profile     7. Suivi des campagnes
-   3. Réseaux sociaux             8. Reporting
-   4. Création de contenus        9. Accompagnement stratégique
-   5. SEO local
-   Génération 100 % locale (règles + modèles), démo sans backend.
-   Données conservées dans le navigateur (localStorage "ga_tools").
+   GestAffaires – Espace de travail · Missions client
+   Votre métier : gestion administrative & digitale pour vos
+   clients (TPE/PME). Chaque mission prépare le livrable final
+   pour UN client (choisi dans vos fiches ou saisi à la main) :
+   dossiers, facturation & relances, déclarations, classement,
+   trésorerie, reporting, Google Business, réseaux sociaux,
+   contenus & visuels, newsletters.
+   Tout reste local (localStorage). Pour ce qui exige les API
+   Meta/Google : le pack complet est généré, vous n'avez qu'à
+   déposer les contenus sur le compte du client.
    ============================================================ */
 
 window.GestWorkspace = (function () {
@@ -17,14 +18,15 @@ window.GestWorkspace = (function () {
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
 
   var LS_TOOLS = "ga_tools";
+  var LS_MEDIA = "ga_media";
   var LS_CLIENTS = "ga_clients";
   var LS_FACTURES = "ga_factures";
   var LS_DEVIS = "ga_devis";
   var LS_CONTRATS = "ga_contrats";
 
   var adminMain = function () { return $("#admin-main"); };
-  var activeTool = null;
-  var currentInputs = {};
+
+  var state = { tool: null, step: 0, inputs: {}, resultHtml: null, resultMeta: null };
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -42,61 +44,1004 @@ window.GestWorkspace = (function () {
   }
   function getTools() { return load(LS_TOOLS, {}); }
   function setTools(t) { save(LS_TOOLS, t); }
+  function getClients() { return load(LS_CLIENTS, []); }
   function today() {
     var d = new Date(), m = String(d.getMonth() + 1).padStart(2, "0");
     return d.getFullYear() + "-" + m + "-" + String(d.getDate()).padStart(2, "0");
   }
-  function fmtDate(iso) {
-    if (!iso) return "";
-    try { return new Date(iso + "T00:00:00").toLocaleDateString("fr-FR"); } catch (e) { return iso; }
+
+  /* ==================================================================
+     BIBLIOTHÈQUE MÉDIA (photos / logos, upload local, compressé)
+     ================================================================== */
+  function getMedia() { return load(LS_MEDIA, []); }
+  function setMedia(m) { save(LS_MEDIA, m); }
+  function mediaName(file) {
+    return (file && file.name) ? file.name.replace(/\.(png|jpe?g|webp|gif)$/i, "") : "Photo";
+  }
+  function readFileAsDataURL(file, cb) {
+    var r = new FileReader();
+    r.onload = function () { cb(r.result); };
+    r.onerror = function () { cb(null); };
+    r.readAsDataURL(file);
+  }
+  function compressImage(dataUrl, maxDim, quality, cb) {
+    var img = new Image();
+    img.onload = function () {
+      var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      var w = Math.max(1, Math.round(img.width * scale));
+      var h = Math.max(1, Math.round(img.height * scale));
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      var ctx = c.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
+      try { ctx.drawImage(img, 0, 0, w, h); } catch (e) {}
+      var out;
+      try { out = c.toDataURL("image/jpeg", quality); } catch (e) { out = dataUrl; }
+      cb(out, w, h);
+    };
+    img.onerror = function () { cb(dataUrl, 0, 0); };
+    img.src = dataUrl;
+  }
+  function addMedia(file, cb) {
+    readFileAsDataURL(file, function (dataUrl) {
+      if (!dataUrl) { cb(null); return; }
+      compressImage(dataUrl, 1080, 0.82, function (compressed) {
+        var list = getMedia();
+        if (list.length >= 12) { cb(null); return; }
+        var item = { id: "m" + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: mediaName(file), dataUrl: compressed };
+        list.push(item);
+        setMedia(list);
+        cb(item);
+      });
+    });
+  }
+  function removeMedia(id) {
+    setMedia(getMedia().filter(function (m) { return m.id !== id; }));
+  }
+  function mediaById(id) {
+    var found = getMedia().filter(function (m) { return m.id === id; })[0];
+    return found || null;
+  }
+  function stripAcc(s) {
+    try { return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+    catch (e) { return String(s || ""); }
   }
 
-  /* ------------------------------------------------------------------
-     Cadre de page ("entête + pied") réutilisé par tous les onglets
-     ------------------------------------------------------------------ */
-  function pageHead(title, sub) {
-    return '<div class="admin-head"><div><h2>' + esc(title) + "</h2><p>" + esc(sub) + '</p></div>' +
-      '<a class="admin-btn admin-btn-ghost" href="#" data-ws-home>← Espace de travail</a></div>';
-  }
-  function card(inner) {
-    return '<div class="admin-card ws-card">' + inner + "</div>";
+  /* ==================================================================
+     VIDÉO : consignes honnêtes (pas de montage vidéo local fiable)
+     ================================================================== */
+  function videoNote() {
+    return '<div class="ws-box" style="border-color:#8b6bff;background:#f7f5ff;">' +
+      '<h4>🎬 À propos des vidéos</h4>' +
+      "<p>Le montage vidéo automatisé demande un outil professionnel (hors navigateur). GestAffaires prépare le <b>découpage</b>, le <b>script</b> et les <b>consignes</b> — il reste à filmer chaque plan avec un téléphone, puis à coller les plans selon le découpage fourni (montage simple en 10 min dans la galerie photo).</p></div>";
   }
 
-  /* ------------------------------------------------------------------
-     USINE À FORMULAIRES
-     fields = [ { n, label, type, options, ph, hint } ]
-     ------------------------------------------------------------------ */
-  function fieldHTML(f) {
-    var n = f.n, lab = f.label || "";
-    var req = f.req ? " required" : "";
-    var v = esc(currentInputs[n] != null ? currentInputs[n] : (f.def || ""));
-    if (f.type === "select") {
-      var opts = (f.options || []).map(function (o) {
-        return '<option value="' + esc(o) + '"' + (String(currentInputs[n] === o || (v === o)) ? " selected" : "") + ">" + esc(o) + "</option>";
+  /* ==================================================================
+     MISSIONS CLIENT : définition (étapes + générateur)
+     ================================================================== */
+  var TOOLS = [];
+
+  /* ---------- 1. Dossier client ---------- */
+  TOOLS.push({
+    id: "dossier",
+    name: "Dossier client",
+    desc: "Ouvrir ou reprendre le dossier d'un client : pièces à collecter, plan de classement, échéances et courrier de demande.",
+    icon: "🗂️",
+    payment: false,
+    steps: [
+      {
+        title: "Le client & la société",
+        hint: "Choisissez un client (ses infos remplissent les champs) ou saisissez son entreprise.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Nom du client / société *", type: "text", req: true, ph: "ex : Boulangerie Dupont (SARL)" },
+          { n: "forme", label: "Forme juridique", type: "select", options: ["Auto-entrepreneur", "EI", "EURL", "SARL", "SASU", "SAS", "Association"], def: "Auto-entrepreneur" },
+          { n: "siret", label: "SIRET / RCS", type: "text", ph: "000 000 000 00000" },
+          { n: "activite", label: "Activité (une ligne)", type: "text", ph: "ex : boulangerie artisanale" },
+          { n: "comptable", label: "Expert-comptable du client", type: "text" }
+        ]
+      },
+      {
+        title: "Pièces & besoins",
+        hint: "Listez ce que vous possédez : l'assistant en déduit ce qui manque.",
+        fields: [
+          { n: "statut", label: "État du dossier", type: "select", options: ["Nouveau dossier à ouvrir", "Dossier existant à reprendre"], def: "Nouveau dossier à ouvrir" },
+          { n: "pieces", label: "Pièces déjà en votre possession (une par ligne)", type: "textarea", rows: 4, ph: "KBIS / extrait RCS\nRIB professionnel\nContrat de gestion signé\nIdentité du dirigeant\nAttestation URSSAF" },
+          { n: "besoins", label: "Besoins du client (une par ligne)", type: "textarea", rows: 4, req: true, ph: "Facturation mensuelle\nRelances des impayés\nDéclarations URSSAF / TVA\nPointage bancaire\nClassement du courrier" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var up = (v.pieces || "").toUpperCase();
+      function have(kw) { return up.indexOf(kw) !== -1; }
+      var standard = [
+        { doc: "KBIS / extrait RCS", kw: "KBIS" },
+        { doc: "RIB professionnel", kw: "RIB" },
+        { doc: "Identité du dirigeant (CNI / passeport)", kw: "IDENTITE" },
+        { doc: "Contrat de gestion signé", kw: "CONTRAT" },
+        { doc: "Mandat SEPA (prélèvement des honoraires)", kw: "SEPA" },
+        { doc: "Accès outils du client (compta, banque, mail)", kw: "ACCES" },
+        { doc: "Attestation URSSAF en cours", kw: "URSSAF" },
+        { doc: "Assurance RC professionnelle", kw: "ASSURANCE" }
+      ];
+      var manque = standard.filter(function (a) { return !have(a.kw); });
+      var pieces = (v.pieces || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var besoins = (v.besoins || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var y = new Date().getFullYear();
+      var plan =
+        "📁 Dossier – " + v.entreprise + "\n" +
+        "   ├─ 00-CONTACT (fiche client, coordonnées, contrat de gestion)\n" +
+        "   ├─ 01-IDENTITE (KBIS / RCS, statuts, RIB)\n" +
+        "   ├─ 02-PRE-COMPTA (TVA, liasses, pointages bancaires)\n" +
+        "   ├─ 03-SOCIAL (URSSAF, paie, attestations)\n" +
+        "   ├─ 04-COMMERCIAL (devis, factures, relances)\n" +
+        "   └─ 05-ECHANCES (déclarations, contrats, renouvellements " + y + ")";
+      var courrier = "Objet : Ouverture de votre dossier de gestion\n\nBonjour,\n\nPour démarrer la gestion de votre dossier, merci de nous transmettre : " +
+        (manque.length ? manque.map(function (a) { return a.doc; }).join(" ; ") : "les pièces listées dans votre dossier") +
+        "\n\nVous pouvez nous les transmettre par e-mail, en ligne ou en les déposant.\n\nMerci de votre confiance.\n\nL'équipe GestAffaires – 06 12 34 56 78 · contact@gestaffaires.fr";
+      return '<div class="ws-box"><h4>Dossier client – ' + esc(v.entreprise) + "</h4>" +
+        "<h4>🔖 Fiche synthèse</h4><ul class='ws-list'>" +
+        "<li><b>Forme</b> : " + esc(v.forme) + "</li>" +
+        (v.siret ? "<li><b>SIRET</b> : " + esc(v.siret) + "</li>" : "") +
+        (v.activite ? "<li><b>Activité</b> : " + esc(v.activite) + "</li>" : "") +
+        (v.comptable ? "<li><b>Comptable</b> : " + esc(v.comptable) + "</li>" : "") +
+        "<li><b>État</b> : " + esc(v.statut) + "</li></ul>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>✅ Pièces à réunir (' + manque.length + ")</h4><ul class='ws-list ws-check'>" +
+        (manque.length ? manque.map(function (a) { return "<li>" + esc(a.doc) + "</li>"; }).join("") : "<li>Toutes les pièces de base sont réunies.</li>") +
+        "</ul>" +
+        "<h4>📦 Pièces déjà en main</h4><ul class='ws-list'>" +
+        (pieces.length ? pieces.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") : "<li>Aucune.</li>") +
+        "</ul></div>" +
+        '<div class="ws-box"><h4>🗄️ Plan de classement (à créer)</h4><pre class="ws-pre">' + esc(plan) + "</pre>" +
+        (besoins.length ? "<h4>🎯 Besoins pris en charge</h4><ul class='ws-list'>" + besoins.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>" : "") +
+        "</div></div>" +
+        '<div class="ws-box" style="margin-top:12px;"><h4>✉️ Courrier prêt à envoyer au client</h4><pre class="ws-pre">' + esc(courrier) + "</pre></div></div>";
+    }
+  });
+
+  /* ---------- 2. Facturation & relances ---------- */
+  TOOLS.push({
+    id: "factu",
+    name: "Facturation & relances",
+    desc: "Une facture impayée ? L'assistant génère la relance adaptée (courtoise, ferme ou mise en demeure) prête à envoyer.",
+    icon: "🧾",
+    payment: false,
+    steps: [
+      {
+        title: "La facture impayée",
+        hint: "Choisissez le client, le numéro et le montant de la facture à relancer.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Nom du client *", type: "text", req: true },
+          { n: "num", label: "N° de facture *", type: "text", req: true, ph: "ex : FA-2026-0042" },
+          { n: "montant", label: "Montant TTC (€) *", type: "number", min: "0", step: "0.01", req: true },
+          { n: "emise", label: "Date d'émission", type: "date" },
+          { n: "echeance", label: "Date d'échéance", type: "date" }
+        ]
+      },
+      {
+        title: "Historique & canal",
+        hint: "L'assistant choisit le ton en fonction des relances déjà envoyées.",
+        fields: [
+          { n: "historique", label: "Relances déjà envoyées", type: "select", options: ["Aucune", "1 relance courtoise", "2 relances", "3 + (bloquée)"], def: "Aucune" },
+          { n: "canal", label: "Canal d'envoi", type: "select", options: ["E-mail", "Courrier recommandé"], def: "E-mail" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var mt = fmtMoney(Number(v.montant) || 0);
+      var retard = "";
+      if (v.echeance) {
+        var d = new Date(v.echeance + "T00:00:00");
+        var jours = Math.max(0, Math.round((new Date() - d) / 86400000));
+        retard = jours > 0 ? "<b>" + jours + " j de retard</b>" : "échéance à venir";
+      }
+      var hist = v.historique || "Aucune";
+      var objet, intro, corps, ton, sortie;
+      if (hist === "Aucune") {
+        objet = "Rappel – Facture " + v.num + " (" + mt + ")";
+        intro = "Bonjour,\n\nNous nous permettons de vous rappeler la facture " + v.num + " d'un montant de " + mt + ".";
+        corps = "Il semble que le règlement ne soit pas encore parvenu. Merci de nous confirmer son traitement ou son échéance prévue.";
+        ton = "Politesse, aucune pénalité évoquée.";
+      } else if (hist === "1 relance courtoise") {
+        objet = "Relance – Facture " + v.num + " (" + mt + ")";
+        intro = "Bonjour,\n\nMalgré notre précédent rappel, la facture " + v.num + " de " + mt + " reste impayée.";
+        corps = "Merci de procéder au règlement sous 8 jours. À défaut, des pénalités de retard pourront s'appliquer (10 points au-dessus du taux directeur de la BCE).";
+        ton = "Ton ferme, pénalités annoncées.";
+      } else if (hist === "2 relances") {
+        objet = "Mise en demeure – Facture " + v.num + " (" + mt + ")";
+        intro = "Bonjour,\n\nLa facture " + v.num + " de " + mt + " reste impayée malgré nos deux relances précédentes.";
+        corps = "Par la présente, il vous est demandé de régler sous 8 jours. À défaut : pénalités de retard, indemnité forfaitaire de recouvrement de 40 € et poursuites (injonction de payer).";
+        ton = "Mise en demeure avec délai impératif.";
+      } else {
+        objet = "Dernière notification avant recouvrement – " + v.num;
+        intro = "Bonjour,\n\nSans règlement sous 5 jours, la facture " + v.num + " de " + mt + " sera transmise à un service de recouvrement.";
+        corps = "Une issue amiable reste préférable : contactez-nous pour convenir d'un échéancier.";
+        ton = "Dernier avis avant précontentieux.";
+      }
+      sortie = hist === "Aucune" ? "Envoyez ce rappel." :
+        (hist === "1 relance courtoise" ? "Envoyez la relance ferme." :
+        (hist === "2 relances" ? "Envoyez la mise en demeure (idéalement en recommandé)." : "Envoyez le dernier avis, puis actionnez le recouvrement."));
+      var corpsFinal = intro + "\n\n" + corps + (v.canalecheance ? "" : "") + "\n\nCordialement,\nL'équipe GestAffaires\n06 12 34 56 78 · contact@gestaffaires.fr";
+      return '<div class="ws-box"><h4>Relance – ' + esc(v.entreprise) + "</h4>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>🧾 Récapitulatif</h4><ul class="ws-list">' +
+        "<li><b>Facture</b> : " + esc(v.num) + "</li>" +
+        "<li><b>Montant</b> : " + mt + "</li>" +
+        (v.emise ? "<li><b>Émise le</b> : " + esc(v.emise) + "</li>" : "") +
+        (v.echeance ? "<li><b>Échéance</b> : " + esc(v.echeance) + " · " + retard + "</li>" : "") +
+        "<li><b>Canal</b> : " + esc(v.canal) + "</li>" +
+        "<li><b>Étape</b> : " + esc(sortie) + "</li></ul></div>" +
+        '<div class="ws-box"><h4>🔤 ' + esc(ton) + "</h4>" +
+        '<p class="ws-label">Objet</p><p class="ws-quote">' + esc(objet) + "</p>" +
+        '<p class="ws-label">Message prêt à copier</p><pre class="ws-pre">' + esc(corpsFinal) + "</pre></div></div>" +
+        '<div class="ws-box" style="margin-top:12px;border-color:#8b6bff;background:#f7f5ff;"><h4>ℹ️ Précisions légales</h4><p class="ws-hint">Pénalités de retard et indemnité forfaitaire de 40 € ne sont applicables que si elles figurent dans vos CGV et que la mention est rappelée sur la facture. Règles à vérifier avec votre comptable ou sur le site des impôts.</p></div></div>';
+    }
+  });
+
+  /* ---------- 3. Déclarations & échéances ---------- */
+  TOOLS.push({
+    id: "decla",
+    name: "Déclarations & échéances",
+    desc: "Le calendrier annuel des déclarations du client (URSSAF, TVA, CFE, résultat) et sa checklist mensuelle de préparation.",
+    icon: "📆",
+    payment: false,
+    steps: [
+      {
+        title: "Le client & le régime",
+        hint: "Le calendrier dépend du régime de l'entreprise.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Entreprise *", type: "text", req: true },
+          { n: "forme", label: "Forme juridique", type: "select", options: ["Auto-entrepreneur", "EI", "EURL", "SARL", "SASU", "SAS", "Association"], def: "Auto-entrepreneur" },
+          { n: "tva", label: "Régime TVA", type: "select", options: ["Franchise (micro / pas de TVA)", "Réel simplifié (TVA trimestrielle)", "Réel normal (TVA mensuelle)"], def: "Franchise (micro / pas de TVA)" },
+          { n: "mode", label: "Paiement URSSAF", type: "select", options: ["Mensuel", "Trimestriel", "Non concerné"], def: "Mensuel" }
+        ]
+      },
+      {
+        title: "Échéances propres au client",
+        hint: "Ajoutez les échéances connues (assurances, crédits, renouvellements).",
+        fields: [
+          { n: "comptable", label: "Expert-comptable du client", type: "text" },
+          { n: "propres", label: "Autres échéances connues (une par ligne)", type: "textarea", rows: 4, ph: "Renouvellement assurance RC – janvier\nÉchéance crédit – chaque 15 du mois\nCertificat SSL – novembre" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var mois = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+      var y = new Date().getFullYear();
+      var mensuel = v.mode.indexOf("Mensuel") !== -1;
+      var trimestriel = v.mode.indexOf("Trimestriel") !== -1;
+      var tvTri = v.tva.indexOf("trimestrielle") !== -1;
+      var tvMen = v.tva.indexOf("mensuelle") !== -1;
+      var ligne = mois.map(function (m, i) {
+        var evts = [];
+        if (mensuel) evts.push("URSSAF – cotisation (début de mois)");
+        if (trimestriel && [0, 2, 5, 8].indexOf(i) !== -1) evts.push("URSSAF – cotisation trimestrielle");
+        if (tvTri && [2, 5, 8, 11].indexOf(i) !== -1) evts.push("TVA trimestrielle – avant le 15 du mois suivant");
+        if (tvMen) evts.push("TVA mensuelle – avant le 15");
+        if (i === 11) evts.push("CFE – taxation foncière (échéance décembre)");
+        if (i === 0) evts.push("Renouvellements : assurances, abonnements, licences");
+        return "<tr><td>" + m + "</td><td>" + (evts.length ? evts.join("<br>") : "<span class='ws-hint'>—</span>") + "</td></tr>";
       }).join("");
-      return '<div class="form-field"><label>' + esc(lab) + "</label><select name=\"" + n + "\"" + req + ">" + opts + "</select>" + (f.hint ? '<p class="ws-hint">' + esc(f.hint) + "</p>" : "") + "</div>";
+      var propres = (v.propres || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      return '<div class="ws-box"><h4>Échéancier ' + y + " – " + esc(v.entreprise) + "</h4>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>📅 Calendrier des déclarations</h4><table class="admin-table"><thead><tr><th>Mois</th><th>Échéances</th></tr></thead><tbody>' + ligne + "</tbody></table>" +
+        (propres.length ? "<h4>➕ Échéances propres au client</h4><ul class='ws-list'>" + propres.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>" : "") +
+        "</div>" +
+        '<div class="ws-box"><h4>✅ Checklist mensuelle de préparation</h4><ul class="ws-list ws-check">' +
+        "<li>Pointage bancaire des encaissements et décaissements</li>" +
+        "<li>Classement (numérisation) des factures reçues et émises</li>" +
+        "<li>Vérifier RIB et coordonnées auprès des organismes</li>" +
+        "<li>Consulter le relevé URSSAF / TVA attendu</li>" +
+        (v.comptable ? "<li>Transmettre les pièces à " + esc(v.comptable) + " avant le 5 du mois</li>" : "<li>Prévoir la transmission des pièces à l'expert-comptable</li>") +
+        "</ul>" +
+        '<h4>📄 Déclaration annuelle de résultat</h4><p class="ws-hint">Dépôt entre avril et mai ' + y + " selon la forme (" + esc(v.forme) + ") — échéance exacte à confirmer avec l'expert-comptable (calendrier des impôts).</p>" +
+        "</div></div>" +
+        "<p class='ws-hint' style='margin-top:10px;'>⚠️ Dates indicatives (métropole) : toujours confirmer avec l'expert-comptable ou sur impots.gouv.fr / urssaf.fr avant toute déclaration. Tout retard ouvre droit à pénalités.</p></div>";
+    }
+  });
+
+  /* ---------- 4. Classement & archivage ---------- */
+  TOOLS.push({
+    id: "classement",
+    name: "Classement & archivage",
+    desc: "Plan de classement type du client, règle de nommage et durées légales de conservation, prêts à appliquer.",
+    icon: "🗄️",
+    payment: false,
+    steps: [
+      {
+        title: "Le dossier",
+        hint: "Le support de classement du client.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Entreprise *", type: "text", req: true },
+          { n: "support", label: "Support", type: "select", options: ["Numérique", "Papier", "Mixte (papier + numérique)"], def: "Numérique" }
+        ]
+      },
+      {
+        title: "Types de documents",
+        hint: "Les familles de documents à ranger.",
+        fields: [
+          { n: "types", label: "Familles de documents (une par ligne)", type: "textarea", rows: 4, req: true, ph: "Juridique & identité\nPré-compta & TVA\nSocial & URSSAF\nCommercial & facturation\nÉchéances & contrats" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var familles = (v.types || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!familles.length) familles = ["Juridique & identité", "Pré-compta & TVA", "Social & URSSAF", "Commercial"];
+      var plan = "📁 Dossier – " + v.entreprise + " (" + new Date().getFullYear() + ")\n";
+      familles.forEach(function (f, i) {
+        plan += "   ├─ " + String(i + 1).padStart(2, "0") + "-" + stripAcc(f).toUpperCase().trim().replace(/\s+/g, "-").replace(/[^A-Z0-9-]/gi, "") + "/\n";
+      });
+      plan += "   └─ 99-ARCHIVES/";
+      var durees = [
+        ["Factures et pièces comptables", "10 ans"],
+        ["Livres et journaux comptables", "10 ans"],
+        ["Registre du personnel", "5 ans après le départ"],
+        ["Bulletins de paie", "5 ans"],
+        ["Contrats commerciaux", "5 ans après la fin du contrat"],
+        ["Déclarations fiscales (TVA, IS)", "6 ans (jusqu'à 10 ans)"],
+        ["Documents d'assurance (après sinistre)", "10 ans"],
+        ["KBIS / RCS", "Durée de vie de la société"]
+      ];
+      return '<div class="ws-box"><h4>Classement – ' + esc(v.entreprise) + " (" + esc(v.support) + ")</h4>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>🗂️ Plan de classement (à copier)</h4><pre class="ws-pre">' + esc(plan) + "</pre>" +
+        "<h4>🏷️ Règle de nommage recommandée</h4><pre class='ws-pre'>AAAA-MM-JJ_Type_Client_Description.ext\nEx : 2026-10-05_FAC_DUPONT-BOULANGERIE_octobre.pdf</pre></div>" +
+        '<div class="ws-box"><h4>🗓️ Durées légales de conservation</h4><table class="admin-table"><thead><tr><th>Document</th><th>Durée</th></tr></thead><tbody>' +
+        durees.map(function (r) { return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td></tr>"; }).join("") +
+        "</tbody></table></div></div>" +
+        '<div class="ws-box" style="margin-top:12px;"><h4>✅ Checklist de numérisation</h4><ul class="ws-list ws-check">' +
+        "<li>Scanner en PDF (300 dpi, texte lisible)</li>" +
+        "<li>Appliquer la règle de nommage</li>" +
+        "<li>Ranger dans le plan de classement du client</li>" +
+        "<li>Sauvegarde 3-2-1 (original + 2 copies, dont 1 hors site)</li>" +
+        "<li>Année bouclée → déplacer dans « Archives »</li></ul></div></div>";
+    }
+  });
+
+  /* ---------- 5. Trésorerie & pointage ---------- */
+  TOOLS.push({
+    id: "treso",
+    name: "Trésorerie & pointage",
+    desc: "Solde et opérations à venir : prévisionnel 30/60/90 jours du client et checklist de pointage bancaire.",
+    icon: "💶",
+    payment: false,
+    steps: [
+      {
+        title: "Le dossier",
+        hint: "Le compte bancaire du client à suivre.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Entreprise *", type: "text", req: true },
+          { n: "banque", label: "Banque", type: "text", ph: "ex : Crédit Agricole / BNP / La Banque Postale" },
+          { n: "solde", label: "Solde actuel du compte (€)", type: "number", min: "0", step: "0.01", def: "0" }
+        ]
+      },
+      {
+        title: "Opérations à venir",
+        hint: "Une opération par ligne : date | libellé | entrée € | sortie €",
+        fields: [
+          { n: "ops", label: "Opérations à venir *", type: "textarea", rows: 6, req: true, ph: "2026-09-25 | Loyer local | 0 | 850\n2026-09-27 | Facture client A | 1200 | 0\n2026-10-05 | URSSAF | 0 | 310\n2026-11-08 | Crédit bail | 0 | 220" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var entries = (v.ops || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean).map(function (s) {
+        var p = s.split("|").map(function (x) { return x.trim(); });
+        return { d: p[0] || "", lib: p[1] || "", entre: Number(p[2]) || 0, sort: Number(p[3]) || 0 };
+      });
+      var soldei = Number(v.solde) || 0;
+      var solde = soldei;
+      var rows = entries.map(function (e) {
+        solde += e.entre - e.sort;
+        return "<tr><td>" + esc(e.d) + "</td><td>" + esc(e.lib) + "</td><td class='right'>" + fmtMoney(e.entre) + "</td><td class='right'>" + fmtMoney(e.sort) + "</td><td class='right'><b>" + fmtMoney(solde) + "</b></td></tr>";
+      }).join("");
+      var totalE = entries.reduce(function (s, e) { return s + e.entre; }, 0);
+      var totalS = entries.reduce(function (s, e) { return s + e.sort; }, 0);
+      var now = new Date();
+      function soldeDans(jours) {
+        var lim = new Date(now.getTime() + jours * 86400000);
+        var s = soldei;
+        entries.forEach(function (e) {
+          if (e.d) {
+            var dd = new Date(e.d + "T00:00:00");
+            if (!isNaN(dd.getTime()) && dd <= lim) s += e.entre - e.sort;
+          }
+        });
+        return s;
+      }
+      function kpi(titre, val) {
+        return "<div class='ws-kpi'><b style='color:" + (val < 0 ? "#ff7a7a" : "#7ce8c8") + "'>" + fmtMoney(val) + "</b><span>" + titre + "</span></div>";
+      }
+      var j30 = soldeDans(30), j60 = soldeDans(60), j90 = soldeDans(90);
+      return '<div class="ws-box"><h4>Trésorerie – ' + esc(v.entreprise) + (v.banque ? " (" + esc(v.banque) + ")" : "") + "</h4>" +
+        '<div class="ws-kpis">' + kpi("Prévisionnel J+30", j30) + kpi("J+60", j60) + kpi("J+90", j90) + "</div>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>📋 Prévisionnel détaillé</h4><table class="admin-table"><thead><tr><th>Date</th><th>Libellé</th><th>Entrées</th><th>Sorties</th><th>Solde</th></tr></thead><tbody>' +
+        rows +
+        '<tr><td colspan="2"><b>Totaux</b></td><td class="right">' + fmtMoney(totalE) + "</td><td class='right'>" + fmtMoney(totalS) + "</td><td class='right'><b>" + fmtMoney(solde) + "</b></td></tr></tbody></table>" +
+        (j90 < 0 ? '<div class="ws-box" style="margin-top:10px;border-color:#f0c36d;background:#fffbf0;"><p><b>⚠️ Solde négatif prévu à 90 jours :</b> anticiper (relance impayés, échelonnement fournisseur, autorisation de découvert).</p></div>' : "") +
+        "</div>" +
+        '<div class="ws-box"><h4>✅ Pointage bancaire hebdomadaire</h4><ul class="ws-list ws-check">' +
+        "<li>Comparer le relevé avec les opérations attendues</li>" +
+        "<li>Repérer les débits non reconnus → vérifier auprès de la banque</li>" +
+        "<li>Suivre les impayés et rejets (URSSAF, fournisseurs)</li>" +
+        "<li>Mettre à jour le solde réel dans cet outil</li></ul></div></div>" +
+        '<p class="ws-hint" style="margin-top:8px;">Estimation à partir des opérations saisies : elle ne remplace pas le relevé officiel de la banque.</p></div>';
+    }
+  });
+
+  /* ---------- 6. Reporting client ---------- */
+  TOOLS.push({
+    id: "report",
+    name: "Reporting client",
+    desc: "L'assistant lit les documents établis pour le client (factures, devis, contrats) et rédige le rapport prêt à envoyer.",
+    icon: "📊",
+    payment: false,
+    steps: [
+      {
+        title: "Le rapport",
+        hint: "Choisissez le client : ses documents établis seront repris automatiquement.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "periode", label: "Période du rapport", type: "text", ph: "ex : Septembre 2026" }
+        ]
+      },
+      {
+        title: "Actions & suites",
+        hint: "Ce qui a été fait et ce qui reste à faire pour ce client.",
+        fields: [
+          { n: "actions", label: "Actions réalisées pour le client (une par ligne) *", type: "textarea", rows: 4, req: true, ph: "Émission de la facture mensuelle\nRelance du devis en attente\nPointage bancaire du mois\nClassement des pièces URSSAF" },
+          { n: "dossiers", label: "Dossiers en cours (description | statut) – une par ligne", type: "textarea", rows: 3, ph: "Recouvrement facture FA-2026-0042 | en cours\nOuverture dossier TVA | à terminer" },
+          { n: "prochaines", label: "Prochaines étapes (une par ligne)", type: "textarea", rows: 3, ph: "Relancer la facture FA-0043 sous 7 jours\nPréparer le dossier TVA du trimestre" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var cl = v.clientId ? getClients().filter(function (c) { return c.id === v.clientId; })[0] : null;
+      var factures = load(LS_FACTURES, []).filter(function (f) { return !v.clientId || f.clientId === v.clientId; });
+      var devis = load(LS_DEVIS, []).filter(function (d) { return !v.clientId || d.clientId === v.clientId; });
+      var contrats = load(LS_CONTRATS, []).filter(function (c) { return !v.clientId || c.clientId === v.clientId; });
+      var caTotal = 0, payees = 0, attente = 0;
+      factures.forEach(function (f) {
+        var tot = (f.lignes || []).reduce(function (s, l) {
+          var q = Number(l.qte) || 0, p = Number(l.pu) || 0, tv = Number(l.tva) || 0;
+          return s + q * p * (1 + tv / 100);
+        }, 0);
+        if (f.statut !== "annulee") caTotal += tot;
+        if (f.statut === "payee") payees++; else if (f.statut === "en_attente") attente++;
+      });
+      var devisAtt = devis.filter(function (d) { return d.statut === "en_attente"; }).length;
+      var actions = (v.actions || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var dossiers = (v.dossiers || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean).map(function (s) {
+        var p = s.split("|");
+        return { d: (p[0] || "").trim(), st: ((p[1] || "en cours")).trim() };
+      });
+      var prochaines = (v.prochaines || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var nom = cl ? (cl.name || cl.company || v.entreprise) : (v.entreprise || "Client");
+      var bloc =
+        "Objet : Point d'activité " + (v.periode || "") + " – " + nom +
+        "\n\nBonjour,\n\nVoici le point d'activité pour " + (v.periode || "la période") + " :\n" +
+        (actions.length ? "• " + actions.join("\n• ") : "• Aucune action saisie") +
+        (prochaines.length ? "\n\nProchaines étapes :\n• " + prochaines.join("\n• ") : "") +
+        "\n\nPour toute question, je reste à votre disposition.\n\nL'équipe GestAffaires\n06 12 34 56 78 · contact@gestaffaires.fr";
+      return '<div class="ws-box"><h4>Rapport ' + (v.periode ? esc(v.periode) : "") + " – " + esc(nom) + "</h4>" +
+        '<div class="ws-kpis">' +
+        "<div class='ws-kpi'><b>" + factures.length + "</b><span>Factures établies</span></div>" +
+        "<div class='ws-kpi'><b>" + devis.length + "</b><span>Devis rédigés</span></div>" +
+        "<div class='ws-kpi'><b>" + contrats.length + "</b><span>Contrats suivis</span></div></div>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>✅ Actions réalisées</h4><ul class="ws-list">' +
+        (actions.length ? actions.map(function (a) { return "<li>" + esc(a) + "</li>"; }).join("") : "<li>Aucune action saisie.</li>") +
+        "</ul>" +
+        (dossiers.length ? "<h4>📁 Dossiers en cours</h4><table class='admin-table'><thead><tr><th>Dossier</th><th>Statut</th></tr></thead><tbody>" +
+          dossiers.map(function (d) { return "<tr><td>" + esc(d.d) + "</td><td>" + esc(d.st) + "</td></tr>"; }).join("") + "</tbody></table>" : "") +
+        "</div>" +
+        '<div class="ws-box"><h4>📄 Documents produits pour le client</h4><ul class="ws-list">' +
+        "<li>" + factures.length + " facture(s), " + payees + " payée(s), " + attente + " en attente (" + fmtMoney(caTotal) + " TTC).</li>" +
+        "<li>" + devis.length + " devis rédigés dont " + devisAtt + " en attente — relance conseillée sous 7 jours.</li>" +
+        "<li>" + contrats.length + " contrat(s) en suivi.</li></ul>" +
+        "<h4>🚀 Prochaines étapes</h4><ul class='ws-list ws-check'>" +
+        (prochaines.length ? prochaines.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") : "<li>Précisez-les pour compléter le rapport.</li>") +
+        "</ul></div></div>" +
+        '<div class="ws-box" style="margin-top:12px;"><h4>✉️ Bloc prêt à envoyer au client</h4><pre class="ws-pre">' + esc(bloc) + "</pre></div></div>";
+    }
+  });
+
+  /* ---------- 7. Google Business Profile (fiche du client) ---------- */
+  TOOLS.push({
+    id: "gbp",
+    name: "Google Business – fiche client",
+    desc: "La fiche Google de l'entreprise du client : description, services, photos et checklist de mise en ligne.",
+    icon: "📍",
+    payment: false,
+    steps: [
+      {
+        title: "L'entreprise du client",
+        hint: "Les informations affichées sur Google.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Nom de l'entreprise *", type: "text", req: true },
+          { n: "categorie", label: "Catégorie principale *", type: "text", req: true, ph: "ex : Boulangerie artisanale" },
+          { n: "ville", label: "Ville *", type: "text", req: true },
+          { n: "adresse", label: "Adresse (ou zone d'intervention)", type: "text" },
+          { n: "telephone", label: "Téléphone *", type: "tel", req: true }
+        ]
+      },
+      {
+        title: "Contact et contenu",
+        hint: "Ce que les clients verront sur la fiche.",
+        fields: [
+          { n: "site", label: "Site web", type: "text", ph: "https://…" },
+          { n: "horaires", label: "Horaires", type: "text", def: "Lun–Ven 9h–18h" },
+          { n: "services", label: "Services du client (un par ligne)", type: "textarea", rows: 3, req: true, ph: "Pain au levain\nViennoiseries\nTraiteur d'événements" },
+          { n: "photo", label: "Photo principale de la fiche", type: "media" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var services = (v.services || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var med = mediaById(v.photo);
+      var desc = v.entreprise + " – " + v.categorie + " " + (v.ville ? "à " + v.ville : "").trim() + ". " +
+        (services.length ? "Services : " + services.join(", ") + ". " : "") +
+        (v.telephone ? "Contact : " + v.telephone + ". " : "") +
+        (v.site ? "Site : " + v.site + ". " : "") +
+        (v.adresse ? "Adresse : " + v.adresse + ". " : "") +
+        "Accueil chaleureux et devis / réponse rapide. Pensez à nous : avis clients bienvenus !";
+      var svcList = services.length ? services.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") : "<li>Aucun service.</li>";
+      var posts = [
+        { t: "Présentation", c: "👋 Découvrez " + v.entreprise + " : " + (services[0] || v.categorie) + (v.ville ? " à " + v.ville : "") + ". Réponse rapide et accueil professionnel. 👉 " + (v.site || "Réservez par téléphone") + " #" + stripAcc(v.ville).replace(/[^a-zA-Z0-9]/g, "") },
+        { t: "Réalisation", c: "✅ " + (services[1] || services[0] || "Nouveauté") + " disponible chez " + v.entreprise + " ! Passez nous voir ou appelez le " + v.telephone + " 👇" },
+        { t: "Avis clients", c: "⭐ Vous avez apprécié " + v.entreprise + " ? Partagez votre avis sur Google — 30 secondes suffisent et cela aide énormément ! Merci 🙏" }
+      ];
+      return '<div class="ws-box"><h4>Fiche Google prête – ' + esc(v.entreprise) + "</h4>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>✍️ Description (à coller sur la fiche)</h4><p class="ws-quote">' + esc(desc) + "</p>" +
+        "<h4>Services à lister</h4><ul class='ws-list'>" + svcList + "</ul></div>" +
+        '<div class="ws-box"><h4>📸 Photos à déposer</h4>' +
+        (med ? '<img src="' + med.dataUrl + '" alt="" style="max-width:100%;border-radius:10px;border:1px solid #e2e8f0;">' : "<p>Ajoutez une photo principale pour une fiche plus attractive.</p>") +
+        "<h4>✅ Checklist de mise en ligne</h4><ul class='ws-list ws-check'>" +
+        "<li>business.google.com → créer ou revendiquer la fiche</li><li>Catégorie : " + esc(v.categorie) + "</li>" +
+        (v.ville ? "<li>Zone : " + esc(v.ville) + "</li>" : "") +
+        (v.telephone ? "<li>Téléphone : " + esc(v.telephone) + "</li>" : "") +
+        (v.site ? "<li>Site : " + esc(v.site) + "</li>" : "") +
+        "<li>Horaires : " + esc(v.horaires) + "</li><li>Demander la vérification (carte postale / vidéo)</li></ul></div></div>" +
+        '<div class="ws-box" style="margin-top:12px;"><h4>📅 3 publications prêtes à déposer</h4><ul class="ws-list">' +
+        posts.map(function (p) { return "<li><b>" + p.t + "</b> : " + esc(p.c) + "</li>"; }).join("") + "</ul></div></div>";
+    }
+  });
+
+  /* ---------- 8. Réseaux sociaux (compte client) ---------- */
+  TOOLS.push({
+    id: "social",
+    name: "Réseaux sociaux – client",
+    desc: "Pack de 7 jours de publications pour le compte de l'entreprise du client : textes, hashtags, visuels et heures.",
+    icon: "📱",
+    payment: false,
+    steps: [
+      {
+        title: "Le compte",
+        hint: "Ce que les visiteurs verront.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Nom de l'entreprise / page *", type: "text", req: true },
+          { n: "handle", label: "Nom d'utilisateur (@…)", type: "text", ph: "ex : @boulangerie.dupont" },
+          { n: "plateformes", label: "Plateforme principale", type: "select", options: ["Instagram", "Facebook", "LinkedIn", "TikTok", "Toutes"], def: "Instagram" },
+          { n: "ville", label: "Ville", type: "text", ph: "ex : Lyon" },
+          { n: "public", label: "Public cible", type: "text", ph: "ex : riverains et clients de quartier" }
+        ]
+      },
+      {
+        title: "Identité visuelle",
+        hint: "Photos et logo : tout ce qui servira dans les visuels.",
+        fields: [
+          { n: "theme", label: "Thème / style visuel", type: "text", ph: "ex : chaleureux, authentique" },
+          { n: "tons", label: "Ton de communication", type: "select", options: ["Professionnel", "Décontracté", "Pédagogue", "Engagé", "Ludique"], def: "Professionnel" },
+          { n: "photo", label: "Photo à utiliser dans les visuels", type: "media" }
+        ]
+      },
+      {
+        title: "Contenu (3 sujets)",
+        hint: "Les thèmes que la page du client doit mettre en avant.",
+        fields: [
+          { n: "sujets", label: "3 sujets (un par ligne) *", type: "textarea", rows: 3, req: true, ph: "Nos produits / réalisations\nL'équipe et les coulisses\nOffres et nouveautés" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var sujets = (v.sujets || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!sujets.length) sujets = ["Votre activité"];
+      var med = mediaById(v.photo);
+      var tag = stripAcc(v.handle || v.entreprise).replace(/\s+/g, "").replace(/^@/, "").replace(/[^a-zA-Z0-9]/g, "");
+      var villeTag = v.ville ? " #" + stripAcc(v.ville).replace(/[^a-zA-Z0-9]/g, "") : "";
+      var flows = {
+        Professionnel: ["Conseil", "Réalisation", "Témoignage", "Conseil", "Réalisation", "Astuce", "Engagement"],
+        Décontracté: ["Conseil", "Coulisses", "Astuce", "Conseil", "Coulisses", "Promotion", "Engagement"],
+        Pédagogue: ["Tutoriel", "Conseil", "Conseil", "Tutoriel", "Réalisation", "Astuce", "Engagement"],
+        Engagé: ["Réalisation", "Conseil", "Engagement", "Coulisses", "Conseil", "Témoignage", "Promotion"],
+        Ludique: ["Astuce", "Coulisses", "Conseil", "Astuce", "Quiz", "Promotion", "Engagement"]
+      };
+      var types = flows[v.tons] || flows.Professionnel;
+      var jours = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+      var hour = Math.floor(11 + Math.random() * 7);
+      var captions = {
+        Conseil: "💡 Conseil : ",
+        Réalisation: "✅ Réalisation : ",
+        Témoignage: "🗣️ Témoignage : ",
+        Astuce: "⚙️ Astuce : ",
+        Engagé: "🚀 ",
+        Promotion: "🎉 Offre : ",
+        Coulisses: "🎬 Dans les coulisses : ",
+        Tutoriel: "📚 Tutoriel : ",
+        Quiz: "🔍 À vous de jouer : "
+      };
+      function basic(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+      var week1 = jours.map(function (j, i) {
+        var type = types[i % types.length];
+        var sujet = sujets[i % sujets.length];
+        var cap = captions[type] || "";
+        var txt = cap + basic(sujet) + ". " + (v.entreprise ? v.entreprise : "") + " vous reçoit avec plaisir. 📞 Contact : " + (v.telephone ? v.telephone : "nous écrire") + " !" +
+          (v.handle ? "\n\n👉 Suivez-nous : @" + tag : "") + "\n\n#" + tag + villeTag + " #Gestion #Digital";
+        return { jour: j, type: type, sujet: sujet, text: txt, h: hour + (i % 3) };
+      });
+      var html = '<div class="ws-box"><h4>Pack 7 jours – ' + esc(v.entreprise) + "</h4>" +
+        "<h4>Bio prête</h4><p class='ws-quote'>" +
+        esc(v.entreprise + (v.theme ? " · " + v.theme : "") + (v.public ? " · Pour " + v.public : "") + " · " + v.tons + (v.handle ? "\n@" + tag : "")) + "</p>" +
+        (med ? '<img src="' + med.dataUrl + '" alt="" style="max-width:280px;border-radius:10px;border:1px solid #e2e8f0;margin:6px 0;">' : "<p>Ajoutez une photo pour illustrer vos visuels.</p>") +
+        '<h4 style="margin-top:12px;">📅 Publications prêtes à déposer (semaine 1)</h4>';
+      week1.forEach(function (p, i) {
+        html += '<div class="ws-post">' +
+          "<div><b>" + p.jour + "</b> · " + esc(p.type) + " · “" + esc(basic(p.sujet)) + "” · à " + p.h + "h</div>" +
+          "<pre class='ws-pre'>" + esc(p.text) + "</pre></div>";
+      });
+      return html + '</div><div class="ws-box" style="margin-top:12px;border-color:#e0a800;background:#fffaf0;"><h4>📲 Comment déposer ?</h4>' +
+        "<p>Chaque publication est prête : connectez-vous au compte " + esc(v.plateformes) + " <b>de votre client</b> (avec son accord) et copiez-collez textes et photos aux heures indiquées. L'automatisation directe via l'API Meta est prévue dans une version serveur.</p></div>";
+    }
+  });
+
+  /* ---------- 9. Contenus & visuels (client) ---------- */
+  TOOLS.push({
+    id: "content",
+    name: "Contenus & visuels – client",
+    desc: "Un visuel monté automatiquement avec les vraies photos du client : publication, story, bannière ou plaquette, téléchargeable.",
+    icon: "🎨",
+    payment: false,
+    steps: [
+      {
+        title: "Le visuel",
+        hint: "Ce que vous voulez produire.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Nom de l'entreprise / produit *", type: "text", req: true },
+          { n: "type", label: "Type de visuel", type: "select", options: ["Publication Instagram", "Story", "Bannière web", "Plaquette A5", "Annonce"], def: "Publication Instagram" },
+          { n: "titre", label: "Titre / accroche *", type: "text", req: true, ph: "ex : Votre boulangerie de quartier" },
+          { n: "message", label: "Sous-titre / message", type: "text", ph: "ex : Pain au levain, viennoiseries et traiteur" }
+        ]
+      },
+      {
+        title: "La photo & l'appel à l'action",
+        hint: "L'assistant monte la photo du client avec le design et le texte.",
+        fields: [
+          { n: "cta", label: "Bouton d'appel à l'action", type: "text", def: "Nous contacter" },
+          { n: "couleur", label: "Couleur d'accent", type: "color", def: "#0CB5A6" },
+          { n: "photo", label: "Photo à monter", type: "media", req: true, hint: "Choisissez une photo de la bibliothèque (ou téléversez-en une)." }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var med = mediaById(v.photo);
+      if (!med) return "<div class='ws-box'><p class='empty-note'>Ajoutez d'abord une photo dans la bibliothèque média.</p></div>";
+      var sizes = {
+        "Publication Instagram": [1080, 1080], "Story": [1080, 1920], "Bannière web": [1920, 400],
+        "Plaquette A5": [1080, 720], "Annonce": [1200, 628]
+      }[v.type] || [1080, 1080];
+      var w = sizes[0], h = sizes[1];
+      var color = /^#[0-9a-f]{6}$/i.test(v.couleur) ? v.couleur : "#0CB5A6";
+      var title = esc(v.titre).slice(0, 42);
+      var sub = esc(v.message || v.entreprise).slice(0, 60);
+      var cta = esc(v.cta || "Nous contacter");
+      var svg =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' +
+        '<defs>' +
+        '<linearGradient id="ov" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#06121f" stop-opacity="0.35"/>' +
+        '<stop offset="100%" stop-color="#0B1B33" stop-opacity="0.92"/></linearGradient>' +
+        '<clipPath id="cp"><rect width="' + w + '" height="' + h + '"/></clipPath>' +
+        "</defs>" +
+        '<image href="' + med.dataUrl + '" width="' + w + '" height="' + h + '" preserveAspectRatio="xMidYMid slice" clip-path="url(#cp)"/>' +
+        '<rect width="' + w + '" height="' + h + '" fill="url(#ov)"/>' +
+        '<rect width="' + w + '" height="14" fill="' + color + '"/>' +
+        '<text x="' + (w / 2) + '" y="' + (h * 0.52) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 16) + '" font-weight="800" fill="#ffffff" text-anchor="middle">' + title + "</text>" +
+        '<text x="' + (w / 2) + '" y="' + (h * 0.62) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 34) + '" fill="#d6e4ef" text-anchor="middle">' + sub + "</text>" +
+        '<rect x="' + (w / 2 - w * 0.17) + '" y="' + (h * 0.7) + '" width="' + (w * 0.34) + '" height="' + Math.round(h * 0.08) + '" rx="' + Math.round(h * 0.04) + '" fill="' + color + '"/>' +
+        '<text x="' + (w / 2) + '" y="' + (h * 0.7 + h * 0.05) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 44) + '" font-weight="700" fill="#ffffff" text-anchor="middle">' + cta + "</text>" +
+        '<text x="' + (w / 2) + '" y="' + (h * 0.93) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 52) + '" fill="#7CE8C8" text-anchor="middle">' + esc(v.entreprise) + " · géré par GestAffaires" + "</text>" +
+        "</svg>";
+      var dataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      return '<div class="ws-box"><h4>🎨 Visuel monté automatiquement</h4>' +
+        '<div class="ws-visual"><img src="' + dataUri + '" alt="Montage" style="width:100%;height:auto;border-radius:12px;border:1px solid #e2e8f0;"></div>' +
+        '<div class="ws-actions"><a class="admin-btn" href="' + dataUri + '" download="' + stripAcc(esc(v.entreprise)).replace(/\s+/g, "-").toLowerCase() + '.svg">⬇️ Télécharger le visuel (SVG)</a></div>' +
+        '<p class="ws-hint">La photo est déjà intégrée : le montage est prêt à publier. Dimensions : ' + w + "×" + h + ". Pour un PNG, enregistrez l'image via le clic droit dans le navigateur.</p>" +
+        videoNote() + "</div>";
+    }
+  });
+
+  /* ---------- 10. Newsletter & annonce (client) ---------- */
+  TOOLS.push({
+    id: "news",
+    name: "Newsletter & annonce",
+    desc: "Newsletter, communiqué de presse ou annonce de promotion pour le client : objet, corps et CTA prêts à copier.",
+    icon: "✉️",
+    payment: false,
+    steps: [
+      {
+        title: "Le client & le message",
+        hint: "Le support à préparer.",
+        fields: [
+          { n: "client", type: "client", label: "Client concerné" },
+          { n: "entreprise", label: "Entreprise *", type: "text", req: true },
+          { n: "type", label: "Type de communication", type: "select", options: ["Newsletter", "Communiqué de presse", "Promotion / offre"], def: "Newsletter" },
+          { n: "objet", label: "Objet / titre *", type: "text", req: true, ph: "ex : Rentrée : nos nouveautés" },
+          { n: "cta", label: "Bouton d'appel à l'action", type: "text", def: "En savoir plus" },
+          { n: "message", label: "Message * (une ligne = un paragraphe)", type: "textarea", rows: 5, req: true, ph: "Chers clients,\nNous sommes heureux de vous annoncer...\n- Point fort n°1\n- Point fort n°2\nNous restons à votre disposition." }
+        ]
+      },
+      {
+        title: "Finalisation",
+        hint: "Date de validité et visuel éventuel.",
+        fields: [
+          { n: "dateval", label: "Date de fin / événement", type: "date" },
+          { n: "photo", label: "Visuel d'illustration (facultatif)", type: "media" }
+        ]
+      }
+    ],
+    generate: function (v) {
+      var med = mediaById(v.photo);
+      var paragraphs = (v.message || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      var bullet = paragraphs.filter(function (p) { return p.indexOf("- ") === 0; });
+      var corps = paragraphs.filter(function (p) { return p.indexOf("- ") !== 0; }).map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
+      var bullets = bullet.length ? "<ul class='ws-list'>" + bullet.map(function (b) { return "<li>" + esc(b.slice(2)) + "</li>"; }).join("") + "</ul>" : "";
+      var type = v.type || "Newsletter";
+      var objet = type === "Communiqué de presse" ? "Communiqué – " + v.entreprise + " : " + v.objet : v.objet;
+      var preheader = type === "Communiqué de presse"
+        ? "Pour diffusion immédiate"
+        : (type === "Promotion / offre" ? "Offre exceptionnelle – durée limitée" : "Votre actualité " + v.entreprise);
+      function fmt(d) {
+        if (!d) return "";
+        try { return new Date(d + "T00:00:00").toLocaleDateString("fr-FR"); } catch (e) { return d; }
+      }
+      var html =
+        '<div class="ws-box"><h4>' + esc(type) + " – " + esc(v.entreprise) + "</h4>" +
+        '<div class="ws-grid2">' +
+        '<div class="ws-box"><h4>✍️ Structure prête à copier</h4>' +
+        '<p class="ws-label">Préheader</p><p class="ws-quote">' + esc(preheader) + "</p>" +
+        "<p class='ws-label'>Objet</p><p class='ws-quote'>" + esc(objet) + "</p>" +
+        "<h4>Corps</h4>" + corps + bullets +
+        (v.dateval ? "<p class='ws-hint'>Valable jusqu'au " + esc(fmt(v.dateval)) + ".</p>" : "") +
+        '<div class="ws-box" style="margin-top:10px;background:#0b1b33;color:#fff;text-align:center;padding:10px;border-radius:8px;">' + esc(v.cta || "En savoir plus") + "</div>" +
+        '<p style="font-size:12px;color:#5b6b7b;margin-top:8px;">' + esc(v.entreprise) + "</p></div>" +
+        "<div class='ws-box'><h4>📤 Astuces d'envoi</h4><ul class='ws-list ws-check'>" +
+        "<li>Emailing : utiliser un outil (Mailchimp, Brevo…) ou votre messagerie</li>" +
+        "<li>Inclure votre logo + le numéro du client</li>" +
+        "<li>Lien de désinscription obligatoire pour les newsletters</li>" +
+        "<li>Communiqués : joindre une photo HD + coordonnées presse</li></ul>" +
+        "<h4>🖼️ Visuel</h4>" +
+        (med ? '<img src="' + med.dataUrl + '" alt="" style="max-width:100%;border-radius:10px;">' : "<p class='ws-hint'>Ajoutez une photo pour illustrer le message.</p>") +
+        "</div></div></div>";
+      return html;
+    }
+  });
+
+  /* ==================================================================
+     MOTEUR D'ASSISTANT (étapes)
+     ================================================================== */
+  function visibleFields(tool) {
+    var st = tool.steps[state.step];
+    if (!st) return [];
+    return (st.fields || []).filter(function (f) {
+      if (!f.when) return true;
+      return !!f.when(state.inputs);
+    });
+  }
+  function isLastStep(tool) { return state.step >= tool.steps.length - 1; }
+  function toolTitle(tool) {
+    var u = state.inputs.entreprise || state.inputs.societe || "";
+    return u ? tool.name + " · " + u : tool.name;
+  }
+
+  function fieldHTML(f) {
+    var v = state.inputs[f.n] != null ? state.inputs[f.n] : (f.def !== undefined ? f.def : "");
+    var n = f.n, lab = f.label;
+    var req = f.req ? " required" : "";
+    var hint = f.hint ? '<p class="ws-hint">' + esc(f.hint) + "</p>" : "";
+    if (f.type === "client") {
+      var clients = getClients();
+      var opts = ['<option value="">Choisir un client…</option>'];
+      var cur = state.inputs.manualClient ? "__other__" : (state.inputs.clientId || "");
+      clients.forEach(function (c) {
+        var lib = c.company || c.name || "Client";
+        if (c.name && c.company) lib = c.company + " · " + c.name;
+        opts.push('<option value="' + esc(c.id) + '"' + (String(cur) === c.id ? " selected" : "") + ">" + esc(lib) + "</option>");
+      });
+      opts.push('<option value="__other__"' + (cur === "__other__" ? " selected" : "") + ">Autre entreprise (à saisir ci-dessous)</option>");
+      return '<div class="form-field full"><label>' + esc(lab) + "</label>" +
+        '<select name="' + n + '" data-ws-client>' + opts.join("") + "</select>" +
+        '<p class="ws-hint">Choisir un client remplit les champs ci-dessous ; sinon sélectionnez « Autre entreprise » et saisissez directement.</p></div>';
+    }
+    if (f.type === "media") {
+      var medias = getMedia();
+      var thumbs = medias.map(function (m) {
+        return '<label class="ws-media"><input type="radio" name="' + n + '" value="' + m.id + '"' + (String(v) === m.id ? " checked" : "") + ">" +
+          '<img src="' + m.dataUrl + '" alt=""><span>' + esc(m.name) + "</span></label>";
+      }).join("");
+      return '<div class="form-field"><label>' + esc(lab) + "</label>" +
+        '<div class="ws-media-grid">' + (thumbs || '<p class="ws-hint">Aucune photo. Téléversez-en une ci-dessous.</p>') + "</div>" +
+        '<div class="ws-media-upload"><input type="file" accept="image/*" data-upload="' + n + '"><span class="ws-hint">Téléverser une photo → elle rejoint la bibliothèque et se sélectionne.</span></div>' +
+        hint + "</div>";
+    }
+    if (f.type === "select") {
+      var opts2 = (f.options || []).map(function (o) {
+        return '<option value="' + esc(o) + '"' + (String(v) === o ? " selected" : "") + ">" + esc(o) + "</option>";
+      }).join("");
+      return '<div class="form-field"><label>' + esc(lab) + "</label><select name=\"" + n + "\"" + req + ">" + opts2 + "</select>" + hint + "</div>";
     }
     if (f.type === "textarea") {
-      return '<div class="form-field"><label>' + esc(lab) + "</label><textarea name=\"" + n + "\" rows=\"" + (f.rows || 3) + "\"" + req + ">" + v + "</textarea>" + (f.hint ? '<p class="ws-hint">' + esc(f.hint) + "</p>" : "") + "</div>";
+      return '<div class="form-field"><label>' + esc(lab) + "</label><textarea name=\"" + n + "\" rows=\"" + (f.rows || 3) + "\"" + req + ">" + esc(v) + "</textarea>" + hint + "</div>";
     }
-    return '<div class="form-field"><label>' + esc(lab) + "</label><input name=\"" + n + "\" type=\"" + (f.type || "text") + "\" value=\"" + v + "\"" + (f.ph ? ' placeholder="' + esc(f.ph) + '"' : "") + req + ">" + (f.hint ? '<p class="ws-hint">' + esc(f.hint) + "</p>" : "") + "</div>";
-  }
-  function collectFields(form, fields) {
-    var out = {};
-    fields.forEach(function (f) {
-      var el = form.querySelector('[name="' + f.n + '"]');
-      out[f.n] = el ? el.value.trim() : "";
-    });
-    return out;
+    return '<div class="form-field"><label>' + esc(lab) + "</label><input name=\"" + n + "\" type=\"" + (f.type || "text") + "\" value=\"" + esc(v) + "\"" +
+      (f.ph ? ' placeholder="' + esc(f.ph) + '"' : "") + (f.min ? ' min="' + f.min + '"' : "") + (f.step ? ' step="' + f.step + '"' : "") + req + ">" + hint + "</div>";
   }
 
-  /* ------------------------------------------------------------------
-     SAVEGARDE historiques par outil
-     ------------------------------------------------------------------ */
+  function bindUploads(scope) {
+    $$("[data-upload]", scope).forEach(function (input) {
+      input.addEventListener("change", function () {
+        var file = input.files && input.files[0];
+        if (!file) return;
+        addMedia(file, function (item) {
+          if (item) {
+            state.inputs[input.getAttribute("data-upload")] = item.id;
+            renderAll();
+          } else {
+            alert("Photo non acceptée (taille ou format).");
+          }
+        });
+      });
+    });
+  }
+  function bindClientPicker(scope) {
+    $$("[data-ws-client]", scope).forEach(function (sel) {
+      sel.addEventListener("change", function () {
+        var val = sel.value;
+        if (val === "__other__") {
+          state.inputs.manualClient = true; state.inputs.clientId = null;
+        } else if (val) {
+          var c = getClients().filter(function (x) { return x.id === val; })[0];
+          if (!c) { sel.value = ""; return; }
+          state.inputs.clientId = c.id; state.inputs.manualClient = false;
+          state.inputs.entreprise = c.name || c.company || "";
+        }
+        renderAll();
+      });
+    });
+  }
+  function bindMediaSelect() {
+    $$("input[type=radio][name]", adminMain()).forEach(function (r) {
+      r.addEventListener("change", function () {
+        state.inputs[r.name] = r.value;
+      });
+    });
+  }
+  function collectStep(scope, fields) {
+    fields.forEach(function (f) {
+      if (f.type === "client") return;
+      var el = scope.querySelector('[name="' + f.n + '"]');
+      if (el) state.inputs[f.n] = el.value.trim();
+    });
+  }
+
+  function renderTool(tool) {
+    var fields = visibleFields(tool);
+    var stepsCount = tool.steps.length;
+    var progress = Math.round(((state.step + 1) / stepsCount) * 100);
+    var reqMissing = fields.filter(function (f) { return f.req && !((state.inputs[f.n] || "") + "").trim(); });
+
+    var body =
+      pageHead(tool.name, tool.desc) +
+      '<div class="ws-wiz">' +
+      '<div class="ws-progress"><div class="ws-progress-fill" style="width:' + progress + '%"></div></div>' +
+      '<div class="ws-step-label">Étape ' + (state.step + 1) + " / " + stepsCount + " · " + esc(tool.steps[state.step].title) + "</div>" +
+      (tool.steps[state.step].hint ? '<p class="ws-hint">' + esc(tool.steps[state.step].hint) + "</p>" : "") +
+      '<form id="ws-form" data-ws-tool="' + tool.id + '">' +
+      '<div class="admin-form-grid">' + fields.map(fieldHTML).join("") + "</div>" +
+      '<div class="admin-form-actions">' +
+      (state.step > 0 ? '<button type="button" class="admin-btn admin-btn-ghost" data-ws-prev>← Précédent</button>' : "") +
+      '<button type="submit" class="admin-btn">' + (isLastStep(tool) ? "⚡ Générer automatiquement" : "Continuer →") + "</button>" +
+      "</div></form></div>" +
+      '<div id="ws-result"></div>' +
+      historyCard(tool);
+
+    adminMain().innerHTML = body;
+
+    var form = $("#ws-form", adminMain());
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        collectStep(form, fields);
+        reqMissing = fields.filter(function (f) { return f.req && !((state.inputs[f.n] || "") + "").trim(); });
+        if (reqMissing.length) {
+          var out = $("#ws-result", adminMain());
+          if (out) {
+            out.innerHTML = '<div class="ws-box" style="border-color:#f0c36d;background:#fffbf0;"><p><b>Il manque :</b> ' +
+              reqMissing.map(function (f) { return esc(f.label); }).join(" · ") + "</p></div>";
+          }
+          return;
+        }
+        if (isLastStep(tool)) onGenerate(tool);
+        else { state.step++; renderAll(); }
+      });
+    }
+    var prev = $("[data-ws-prev]", adminMain());
+    if (prev) prev.addEventListener("click", function () { if (state.step > 0) { state.step--; renderAll(); } });
+    bindUploads(adminMain());
+    bindClientPicker(adminMain());
+    bindMediaSelect();
+    bindHomeLink();
+    bindHistory();
+  }
+
+  function onGenerate(tool) {
+    var html = tool.generate(state.inputs);
+    var entry = { date: today(), inputs: JSON.parse(JSON.stringify(state.inputs)), html: html, title: toolTitle(tool) };
+    pushHistory(tool.id, entry);
+    var out = $("#ws-result", adminMain());
+    if (out) { out.innerHTML = html; out.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  }
+
+  function historyCard(tool) {
+    var h = history(tool.id);
+    if (!h.length) return "";
+    var rows = h.map(function (entry, i) {
+      return "<div class='ws-hist-item'><span>" + esc(entry.title || tool.name) + "</span><small>" + fmtDate(entry.date || today()) + "</small>" +
+        '<span class="row-actions"><button class="mini-btn primary" data-ws-view="' + i + '">Voir</button>' +
+        '<button class="mini-btn danger" data-ws-del="' + i + '">Supprimer</button></span></div>';
+    }).join("");
+    return card("<h3>🗃️ Résultats générés</h3>" + rows);
+  }
+  function bindHistory() {
+    var h = history(state.tool);
+    $$("[data-ws-view]", adminMain()).forEach(function (b) {
+      b.addEventListener("click", function () {
+        var e = h[Number(b.getAttribute("data-ws-view"))];
+        if (!e) return;
+        var out = $("#ws-result", adminMain());
+        if (out) { out.innerHTML = e.html; window.scrollTo(0, 0); }
+      });
+    });
+    $$("[data-ws-del]", adminMain()).forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (confirm("Supprimer ce résultat ?")) {
+          removeHistory(state.tool, Number(b.getAttribute("data-ws-del")));
+          renderAll();
+        }
+      });
+    });
+  }
+  function bindHomeLink() {
+    $$("[data-ws-home]", adminMain()).forEach(function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); activeHome(); });
+    });
+  }
+
+  /* ---------- Historique persistant ---------- */
   function history(id) { return (getTools()[id] || []); }
   function pushHistory(id, entry) {
     var t = getTools();
     (t[id] = t[id] || []).unshift(entry);
+    if (t[id].length > 20) t[id] = t[id].slice(0, 20);
     setTools(t);
   }
   function removeHistory(id, index) {
@@ -106,536 +1051,32 @@ window.GestWorkspace = (function () {
   }
 
   /* ==================================================================
-     OUTILS (définition)
+     CADRE & ACCUEIL
      ================================================================== */
-  var TOOLS = [];
-
-  /* ---------- 1. Gestion administrative ---------- */
-  TOOLS.push({
-    id: "admin",
-    name: "Gestion administrative",
-    desc: "Déposez vos informations et documents : l'assistant classe, génère votre calendrier d'échéances et votre carnet administratif.",
-    icon: "🗂️",
-    fields: [
-      { n: "societe", label: "Nom de la société", type: "text", req: true, ph: "Ma société" },
-      { n: "forme", label: "Forme juridique", type: "select", options: ["Auto-entrepreneur", "EURL", "SARL", "SASU", "SAS", "EI"], def: "Auto-entrepreneur" },
-      { n: "siret", label: "SIRET / RCS (optionnel)", type: "text", ph: "000 000 000 00000" },
-      { n: "comptable", label: "Votre cabinet comptable", type: "text", ph: "Nom ou e-mail du comptable" },
-      { n: "tva", label: "Régime TVA", type: "select", options: ["Micro-BIC (pas de TVA)", "Franchise en base", "Réel simplifié", "Réel normal"], def: "Micro-BIC (pas de TVA)" },
-      { n: "documents", label: "Documents que vous possédez (un par ligne)", type: "textarea", rows: 4, ph: "KBIS / extrait RCS\nAssurance RC Pro (échéance), Attestation URSSAF…" }
-    ],
-    generate: function (v) {
-      var docLines = (v.documents || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      var classified = {
-        Juridique: ["KBIS", "STATUTS", "RCS", "GREFFE", "PV", "REGISTRE"],
-        Fiscal: ["TVA", "IMPÔT", "IR", "IS", "BIC", "RESULTAT", "DGFIP"],
-        Social: ["URSSAF", "ATTESTATION", "PAIE", "SALAIRE", "MDPH", "PATRONAL"],
-        Assurance: ["ASSURANCE", "RC PRO", "MULTIRISQUE", "RECOURS"],
-        Bancaire: ["BANQUE", "RIB", "CREDIT", "CONTRAT BANCAIRE"],
-        Commercial: ["FACTURE", "DEVIS", "CONTRAT", "CLIENT", "SOCIETE.COM"]
-      };
-      function findCat(name) {
-        var up = (name || "").toUpperCase();
-        for (var k in classified) {
-          if (classified[k].some(function (kw) { return up.indexOf(kw) !== -1; })) return k;
-        }
-        return "Divers";
-      }
-      var groups = {};
-      docLines.forEach(function (d) {
-        var c = findCat(d);
-        (groups[c] = groups[c] || []).push(d);
-      });
-      var docList = docLines.length
-        ? Object.keys(groups).map(function (g) {
-            return "<tr><td><b>" + esc(g) + "</b></td><td>" + groups[g].map(esc).join(" ; ") + "</td></tr>";
-          }).join("")
-        : '<tr><td colspan="2" class="empty-note">Aucun document saisi.</td></tr>';
-
-      var reminders = [];
-      var y = new Date().getFullYear();
-      if (v.tva.indexOf("Réel") !== -1) {
-        ["CA trimestriel (déclaration de TVA)", "CA trimestriel (déclaration de TVA)", "CA trimestriel (déclaration de TVA)", "CA trimestriel (déclaration de TVA)"].forEach(function (r, i) {
-          reminders.push("<li>" + r + " – à remettre ~" + fmtDate(String(y) + "-0" + (i * 3 + 2) + "-15") + "</li>");
-        });
-      } else {
-        reminders.push("<li>CA annuel (déclaration de revenus) – ~" + fmtDate(String(y) + "-05-05") + "</li>");
-      }
-      reminders.push("<li>URSSAF : prélèvement mensuel (si mensualisé) – chèque de trésorerie chaque mois</li>");
-      if (v.comptable) reminders.push("<li>Remise de pièces comptables à " + esc(v.comptable) + " – avant le 5 du mois suivant</li>");
-
-      return card(
-        "<h3>Dossier administratif de <b>" + esc(v.societe) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        '<div class="ws-box"><h4>📋 Documents classés automatiquement</h4><table class="admin-table"><thead><tr><th>Catégorie</th><th>Documents</th></tr></thead><tbody>' + docList + "</tbody></table></div>" +
-        '<div class="ws-box"><h4>⏰ Échéances à suivre</h4><ul class="ws-list">' + reminders.join("") + "</ul>" +
-        "<h4>🔖 Fiche société</h4><ul class='ws-list'>" +
-        "<li><b>Forme</b> : " + esc(v.forme) + "</li>" +
-        (v.siret ? "<li><b>SIRET</b> : " + esc(v.siret) + "</li>" : "") +
-        (v.comptable ? "<li><b>Comptable</b> : " + esc(v.comptable) + "</li>" : "") +
-        "<li><b>TVA</b> : " + esc(v.tva) + "</li></ul></div></div>"
-      );
-    }
-  });
-
-  /* ---------- 2. Google Business Profile ---------- */
-  TOOLS.push({
-    id: "gbp",
-    name: "Google Business Profile",
-    desc: "Indiquez vos informations : l'assistant génère votre fiche Google optimisée (description, services, horaires) et la checklist de mise en ligne.",
-    icon: "📍",
-    fields: [
-      { n: "entreprise", label: "Nom de l'entreprise", type: "text", req: true },
-      { n: "categorie", label: "Catégorie principale", type: "text", req: true, ph: "ex : Agence de marketing digital" },
-      { n: "ville", label: "Ville", type: "text", req: true },
-      { n: "adresse", label: "Adresse (ou zone d'intervention)", type: "text" },
-      { n: "telephone", label: "Téléphone", type: "tel" },
-      { n: "site", label: "Site web", type: "text", ph: "https://…" },
-      { n: "horaires", label: "Horaires", type: "text", def: "Lun–Ven 9h–18h" },
-      { n: "services", label: "Vos services (un par ligne)", type: "textarea", rows: 3, ph: "Création de sites web\nGoogle Business Profile\nRéseaux sociaux" }
-    ],
-    generate: function (v) {
-      var services = (v.services || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      var desc = v.entreprise + " est une " + v.categorie + " basée " + (v.ville ? "à " + v.ville : "en ligne") + ". " +
-        (services.length ? "Nous accompagnons les entreprises au quotidien : " + services.join(", ") + ". " : "") +
-        "Un accompagnement personnalisé, des résultats mesurables et un service proche de vous. " +
-        (v.telephone ? "Contactez-nous au " + v.telephone + " " : "") +
-        (v.site ? "ou via notre site " + v.site + ". " : "") +
-        (v.adresse ? "Nous intervenons au " + v.adresse + ". " : "") +
-        "Réponse rapide, devis gratuit et conseils adaptés à votre activité.";
-      var svcList = services.length
-        ? services.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("")
-        : "<li>Aucun service saisi.</li>";
-      return card(
-        "<h3>Fiche Google Business Profile de <b>" + esc(v.entreprise) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        '<div class="ws-box"><h4>✍️ Description optimisée (prête à coller)</h4><p class="ws-quote">' + esc(desc) + "</p>" +
-        "<h4>Services affichés</h4><ul class='ws-list'>" + svcList + "</ul></div>" +
-        '<div class="ws-box"><h4>✅ Checklist de mise en ligne</h4><ul class="ws-list ws-check">' +
-        "<li>Créer/revendiquer la fiche sur business.google.com</li>" +
-        "<li>Choisir la catégorie <b>" + esc(v.categorie) + "</b></li>" +
-        (v.ville ? "<li>Zone de service : <b>" + esc(v.ville) + "</b></li>" : "") +
-        (v.telephone ? "<li>Téléphone confirmé : <b>" + esc(v.telephone) + "</b></li>" : "") +
-        (v.site ? "<li>Lien du site : <b>" + esc(v.site) + "</b></li>" : "") +
-        "<li>Horaires renseignés : <b>" + esc(v.horaires) + "</b></li>" +
-        "<li>Téléverser 3 à 5 photos de qualité (atelier, équipe, réalisations)</li>" +
-        "<li>Demander la vérification Google (carte postale / vidéo)</li>" +
-        "<li>Rédiger la réponse type aux avis (voir bouton Recommandations)</li></ul></div></div>"
-      );
-    }
-  });
-
-  /* ---------- 3. Réseaux sociaux ---------- */
-  TOOLS.push({
-    id: "social",
-    name: "Réseaux sociaux",
-    desc: "Vos accès, votre thème, vos photos : l'assistant génère bios, calendrier éditorial et publications prêtes à poster.",
-    icon: "📱",
-    fields: [
-      { n: "entreprise", label: "Nom de l'entreprise", type: "text", req: true },
-      { n: "plateformes", label: "Plateformes visées", type: "select", options: ["Instagram", "Facebook", "LinkedIn", "TikTok", "Toutes"], def: "Instagram" },
-      { n: "theme", label: "Thème / style visuel", type: "text", ph: "ex : moderne, minimaliste, chaleureux" },
-      { n: "tons", label: "Ton de communication", type: "select", options: ["Professionnel", "Décontracté", "Pédagogue", "Engagé", "Ludique"], def: "Professionnel" },
-      { n: "sujets", label: "3 sujets à mettre en avant (un par ligne)", type: "textarea", rows: 3, ph: "Nos réalisations\nConseils en gestion\nOffres du moment" },
-      { n: "public", label: "Public cible", type: "text", ph: "ex : dirigeants de PME" }
-    ],
-    generate: function (v) {
-      var sujets = (v.sujets || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      var hashtags = ["#" + (v.entreprise || "entreprise").replace(/\s+/g, ""), "#GestAffaires", "#Digital", "#Gestion", "#MarketingDigital"].join(" ");
-      var comments = {
-        Professionnel: "🤝 Faites confiance à une approche sérieuse et mesurable.",
-        Décontracté: "😎 Simple, efficace, et sans prise de tête.",
-        Pédagogue: "💡 On vous explique tout en toute transparence.",
-        Engagé: "🌍 Une démarche locale et responsable.",
-        Ludique: "🎯 On rend la gestion aussi fun que possible !"
-      };
-      var bioJours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-      var postTypes = ["Conseil", "Réalisation", "Coulisses", "Témoignage", "Promotion", "Astuce", "Engagement"];
-      var cal = sujets.slice(0, 7).map(function (sujet, i) {
-        return "<li><b>" + bioJours[i] + "</b> – " + postTypes[i] + " : “" + esc(sujet) + "”</li>";
-      }).join("");
-      function choose() { return sujets[Math.floor(Math.random() * sujets.length)] || "votre activité"; }
-      var draft = "📢 <b>" + esc(v.entreprise) + "</b> : " + esc(choose()) + "\n\n" +
-        comments[v.tons] + " " + comments[v.tons] + "\n\n" + (v.public ? "🎯 Pour " + esc(v.public) + "\n\n" : "") + hashtags;
-      return card(
-        "<h3>Stratégie réseaux sociaux – <b>" + esc(v.entreprise) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        '<div class="ws-box"><h4>👤 Bio de profil</h4><p class="ws-quote">' +
-        esc(v.entreprise + (v.theme ? " · " + v.theme : "") + (v.public ? " · Pour " + v.public : "") + "\n" + (comments[v.tons] || "")) + "</p>" +
-        "<h4>📅 Calendrier éditorial (semaine 1)</h4><ul class='ws-list'>" + cal + "</ul></div>" +
-        "<div class=\"ws-box\"><h4>🖊️ Publication prête à poster</h4><pre class=\"ws-pre\">" + esc(draft) + "</pre></div></div>"
-      );
-    }
-  });
-
-  /* ---------- 4. Création de contenus & visuels ---------- */
-  TOOLS.push({
-    id: "content",
-    name: "Création de contenus & visuels",
-    desc: "Décrivez votre besoin : l'assistant crée un visuel prêt à l'emploi (SVG généré automatiquement) + les textes associés.",
-    icon: "🎨",
-    fields: [
-      { n: "entreprise", label: "Nom de l'entreprise / produit", type: "text", req: true },
-      { n: "type", label: "Type de visuel", type: "select", options: ["Publication Instagram", "Story", "Bannière web", "Plaquette A5", "Annonce"], def: "Publication Instagram" },
-      { n: "titre", label: "Titre / accroche", type: "text", req: true, ph: "ex : Votre projet web clé en main" },
-      { n: "message", label: "Sous-titre / message", type: "text", ph: "ex : Création, gestion et optimisation" },
-      { n: "cta", label: "Bouton d'appel à l'action", type: "text", def: "Demander un devis", ph: "ex : Demander un devis" },
-      { n: "couleur", label: "Couleur principale", type: "color", def: "#0CB5A6" }
-    ],
-    generate: function (v) {
-      var sizes = {
-        "Publication Instagram": [1080, 1080], "Story": [1080, 1920], "Bannière web": [1920, 400],
-        "Plaquette A5": [1080, 720], "Annonce": [1200, 628]
-      }[v.type] || [1080, 1080];
-      var w = sizes[0], h = sizes[1];
-      var color = /^#[0-9a-f]{6}$/i.test(v.couleur) ? v.couleur : "#0CB5A6";
-      var title = esc((v.titre || v.entreprise || ""));
-      var sub = esc(v.message || v.entreprise || "");
-      var cta = esc(v.cta || "Demander un devis");
-      var svg =
-        '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' +
-        '<rect width="' + w + '" height="' + h + '" fill="#0B1B33"/>' +
-        '<circle cx="' + (w * 0.85) + '" cy="' + (h * 0.15) + '" r="' + (Math.max(w, h) * 0.28) + '" fill="' + color + '" opacity="0.18"/>' +
-        '<rect width="' + w + '" height="10" fill="' + color + '"/>' +
-        '<text x="' + (w / 2) + '" y="' + (h * 0.32) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 18) + '" font-weight="800" fill="#ffffff" text-anchor="middle">' + title + "</text>" +
-        '<text x="' + (w / 2) + '" y="' + (h * 0.44) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 36) + '" fill="#9fb3c8" text-anchor="middle">' + sub + "</text>" +
-        '<rect x="' + (w / 2 - w * 0.16) + '" y="' + (h * 0.6) + '" width="' + (w * 0.32) + '" height="' + Math.round(h * 0.09) + '" rx="' + Math.round(h * 0.045) + '" fill="' + color + '"/>' +
-        '<text x="' + (w / 2) + '" y="' + (h * 0.6 + h * 0.055) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 42) + '" font-weight="700" fill="#ffffff" text-anchor="middle">' + cta + "</text>" +
-        '<text x="' + (w / 2) + '" y="' + (h * 0.92) + '" font-family="Arial, sans-serif" font-size="' + Math.round(w / 48) + '" fill="#7CE8C8" text-anchor="middle">GestAffaires · gestion &amp; digital</text>' +
-        "</svg>";
-      var dataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
-      return card(
-        "<h3>Visuel généré – <b>" + esc(v.type) + "</b></h3>" +
-        '<div class="ws-visual"><img src="' + dataUri + '" alt="Visuel généré" style="width:100%;height:auto;border-radius:12px;border:1px solid #e2e8f0;"></div>' +
-        '<div class="ws-actions"><a class="admin-btn" href="' + dataUri + '" download="visuel-' + esc(v.entreprise).replace(/\s+/g, "-").toLowerCase() + '.svg">⬇️ Télécharger le visuel (SVG)</a></div>' +
-        '<p class="ws-hint">Cliquez-droit sur l’image pour l’enregistrer aussi en PNG (via votre navigateur). Dimensions : ' + w + "×" + h + ".</p>"
-      );
-    }
-  });
-
-  /* ---------- 5. SEO local ---------- */
-  TOOLS.push({
-    id: "seo",
-    name: "SEO local",
-    desc: "Donnez le lien de votre site : l'assistant produit mots-clés, balises et checklist technique pour apparaître en premier sur Google.",
-    icon: "🔍",
-    fields: [
-      { n: "site", label: "Adresse de votre site", type: "text", req: true, ph: "https://votre-site.fr" },
-      { n: "activite", label: "Activité principale", type: "text", req: true, ph: "ex : agence de communication" },
-      { n: "ville", label: "Ville principale", type: "text" },
-      { n: "motscles", label: "Mots-clés (un par ligne)", type: "textarea", rows: 3, ph: "création de site web\nagence marketing" }
-    ],
-    generate: function (v) {
-      var kws = (v.motscles || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      if (!kws.length) kws = [v.activite];
-      var local = kws.map(function (k) { return k + (v.ville ? " " + v.ville : ""); });
-      var kwList = local.map(function (k) { return "<li>" + esc(k) + "</li>"; }).join("");
-      var title = (v.activite ? v.activite.charAt(0).toUpperCase() + v.activite.slice(1) + " " : "") + (v.ville ? "à " + v.ville + " " : "") + "| GestAffaires";
-      var desc = (v.activite ? v.activite.charAt(0).toUpperCase() + v.activite.slice(1) : "Votre activité") + " " + (v.ville ? "à " + v.ville : "en ligne") + ". Site " + esc(v.site) + " : " + kws.slice(0, 3).join(", ") + ". Devis gratuit.";
-      return card(
-        "<h3>Plan SEO local – <b>" + esc(v.site) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        '<div class="ws-box"><h4>🏷️ Balises prêtes à coller</h4>' +
-        '<p class="ws-label">Title (60 car. max)</p><p class="ws-quote">' + esc(title.slice(0, 60)) + "</p>" +
-        '<p class="ws-label">Meta description (155 car. max)</p><p class="ws-quote">' + esc(desc.slice(0, 155)) + "</p></div>" +
-        '<div class="ws-box"><h4>🔎 Mots-clés locaux</h4><ul class="ws-list">' + kwList + "</ul></div></div>" +
-        '<div class="ws-box"><h4>✅ Checklist technique</h4><ul class="ws-list ws-check">' +
-        "<li>Installer l'extension Google Business Profile et relier le site</li>" +
-        "<li>Vérifier la Search Console (Google Search Console) pour cet URL</li>" +
-        "<li>Ajouter une page “Nos réalisations” et une page “Contact” avec carte</li>" +
-        "<li>Activer les données structurées (Schema.org LocalBusiness)</li>" +
-        "<li>Collecter des avis Google (5 recommandés avant l'achat)</li>" +
-        "<li>Vérifier que le site est rapide et 100 % mobile</li></ul></div>" +
-        '<p class="ws-hint">💰 Pas de frais cachés : ces actions sont gratuites. Si une option payante (outil de visibilité, annonce locale) est activée un jour, vous serez prévenu avant tout paiement.</p>'
-      );
-    }
-  });
-
-  /* ---------- 6. Google Ads ---------- */
-  TOOLS.push({
-    id: "ads",
-    name: "Google Ads",
-    desc: "Budget, objectif, ciblage : l'assistant construit votre campagne publicitaire (annonces, mots-clés, budgets prévisionnels).",
-    icon: "📣",
-    fields: [
-      { n: "entreprise", label: "Nom de l'entreprise", type: "text", req: true },
-      { n: "objectif", label: "Objectif de campagne", type: "select", options: ["Téléphone / Contact", "Trafic vers le site", "Ventes en ligne", "Demandes de devis"], def: "Trafic vers le site" },
-      { n: "budget", label: "Budget mensuel (€)", type: "number", min: "50", step: "10", def: "300" },
-      { n: "ville", label: "Zone de diffusion", type: "text", ph: "ex : toute la France, ou votre ville" },
-      { n: "services", label: "Services à promouvoir (un par ligne)", type: "textarea", rows: 3, ph: "Création de site web\nGoogle Business Profile" }
-    ],
-    generate: function (v) {
-      var svcs = (v.services || "").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      var budget = Number(v.budget) || 300;
-      var daily = Math.round(budget / 30);
-      var cpc = 1.2, convRate = 0.03;
-      var clicks = Math.round(budget / cpc);
-      var convs = Math.round(clicks * convRate);
-      var adGroups = svcs.length ? svcs.slice(0, 4) : ["Site web", "Digital"];
-      var agg = adGroups.map(function (s) {
-        return "<li><b>Groupe d'annonces : " + esc(s) + "</b><br>Annonce 1 : “" + esc(v.entreprise) + " – " + esc(s) + " sur mesure”<br>Annonce 2 : “" + esc(v.entreprise) + ", " + esc(s) + " dès aujourd'hui”</li>";
-      }).join("");
-      return card(
-        "<h3>Campagne Google Ads – <b>" + esc(v.entreprise) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        "<div class=\"ws-box\"><h4>🎯 Structure de campagne</h4><ul class='ws-list'>" +
-        "<li><b>Objectif</b> : " + esc(v.objectif) + "</li>" +
-        (v.ville ? "<li><b>Zone</b> : " + esc(v.ville) + "</li>" : "") +
-        "<li><b>Type</b> : Campagne Search (réseau de recherche)</li>" +
-        "<li><b>Enchère</b> : Maximiser les clics (auto)</li>" +
-        agg + "</ul></div>" +
-        '<div class="ws-box"><h4>📊 Prévisions (estimation)</h4><ul class="ws-list">' +
-        "<li>Budget mensuel : <b>" + fmtMoney(budget) + "</b> (" + fmtMoney(daily) + "/jour)</li>" +
-        "<li>~ " + clicks + " clics · CPC ~ " + fmtMoney(cpc) + "</li>" +
-        "<li>~ " + convs + " contacts générés (au taux " + (convRate * 100).toFixed(0) + " %)</li></ul>" +
-        "<h4>✅ Avant de lancer</h4><ul class='ws-list ws-check'>" +
-        "<li>Avoir une landing page avec appel à l'action</li>" +
-        "<li>Configurer la conversion (téléphone / formulaire)</li>" +
-        "<li>Ajouter les mots-clés négatifs (gratuit, devis, formation…)</li></ul></div></div>" +
-        '<p class="ws-hint">🔒 Les dépenses publicitaires sont payées directement à Google Ads, jamais via GestAffaires. Vous êtes libre de fixer, modifier ou suspendre le budget à tout moment.</p>'
-      );
-    }
-  });
-
-  /* ---------- 7. Suivi des campagnes ---------- */
-  TOOLS.push({
-    id: "track",
-    name: "Suivi des campagnes",
-    desc: "Saisissez vos indicateurs chaque semaine : l'outil calcule clics, coûts, conversions et alerte si les performances chutent.",
-    icon: "📈",
-    fields: [
-      { n: "campagne", label: "Nom de la campagne", type: "text", req: true, ph: "ex : Google Ads – Site web" },
-      { n: "budget", label: "Budget du mois (€)", type: "number", min: "0", step: "10", def: "300" },
-      { n: "clics", label: "Clics", type: "number", min: "0", step: "1", def: "0" },
-      { n: "cout", label: "Coût engagé (€)", type: "number", min: "0", step: "0.5", def: "0" },
-      { n: "conversions", label: "Conversions (contacts)", type: "number", min: "0", step: "1", def: "0" }
-    ],
-    generate: function (v) {
-      var clics = Number(v.clics) || 0, cout = Number(v.cout) || 0, convs = Number(v.conversions) || 0, budget = Number(v.budget) || 0;
-      var cpc = clics ? (cout / clics) : 0;
-      var cpa = convs ? (cout / convs) : 0;
-      var ratio = budget ? (cout / budget) : 0;
-      var status = ratio > 1 ? '<span class="badge badge-pending">Budget dépassé !</span>'
-        : (convs === 0 && clics > 0) ? '<span class="badge badge-draft">Aucune conversion</span>'
-        : (convs === 0) ? '<span class="badge badge-draft">En attente</span>'
-        : '<span class="badge badge-paid">OK</span>';
-      return card(
-        "<h3>Suivi – <b>" + esc(v.campagne) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        '<div class="ws-box"><h4>📈 Indicateurs</h4><table class="admin-table"><tbody>' +
-        "<tr><td>Budget mensuel</td><td class='right'><b>" + fmtMoney(budget) + "</b></td></tr>" +
-        "<tr><td>Coût engagé</td><td class='right'>" + fmtMoney(cout) + "</td></tr>" +
-        "<tr><td>Clics</td><td class='right'>" + (clics) + "</td></tr>" +
-        "<tr><td>CPC moyen</td><td class='right'>" + fmtMoney(cpc) + "</td></tr>" +
-        "<tr><td>Conversions</td><td class='right'>" + (convs) + "</td></tr>" +
-        "<tr><td>Coût / contact (CPA)</td><td class='right'>" + (cpa ? fmtMoney(cpa) : "—") + "</td></tr>" +
-        "<tr><td>Consommation du budget</td><td class='right'>" + (ratio * 100).toFixed(0) + " %</td></tr>" +
-        "</tbody></table></div>" +
-        '<div class="ws-box"><h4>🚦 État de la campagne</h4><p style="font-size:20px;">' + status + "</p>" +
-        '<p class="ws-hint">Conseil : si le coût par contact dépasse ' + fmtMoney(clics ? Math.max(cpa || 0, 5) : 5) + ", revoyez le ciblage ou les mots-clés négatifs. Saisissez à nouveau vos chiffres chaque semaine pour comparer.</p></div></div>"
-      );
-    }
-  });
-
-  /* ---------- 8. Reporting ---------- */
-  TOOLS.push({
-    id: "report",
-    name: "Reporting",
-    desc: "Génère un rapport d'activité automatique à partir de vos factures, devis, contrats et campagnes. Exportable en PDF.",
-    icon: "📊",
-    fields: [
-      { n: "periode", label: "Libellé de la période", type: "text", def: "" , ph: "ex : Septembre 2026" }
-    ],
-    generate: function (v) {
-      var factures = load(LS_FACTURES, []), devis = load(LS_DEVIS, []), contrats = load(LS_CONTRATS, []), clients = load(LS_CLIENTS, []);
-      var ca = 0, payees = 0, enAttente = 0;
-      factures.forEach(function (f) {
-        var tot = f.lignes ? f.lignes.reduce(function (s, l) {
-          var q = Number(l.qte) || 0, p = Number(l.pu) || 0, tv = Number(l.tva) || 0;
-          return s + q * p * (1 + tv / 100);
-        }, 0) : 0;
-        if (f.statut !== "annulee") ca += tot;
-        if (f.statut === "payee") payees++; else if (f.statut === "en_attente") enAttente++;
-      });
-      var devisAttente = devis.filter(function (d) { return d.statut === "en_attente"; }).length;
-      var outils = getTools();
-      var nbCampagnes = (outils.track || []).length;
-      var topClient = null, topVal = 0;
-      factures.forEach(function (f) {
-        var c = clients.filter(function (x) { return x.id === f.clientId; })[0];
-        var val = f.lignes ? f.lignes.reduce(function (s, l) { return s + (Number(l.qte) || 0) * (Number(l.pu) || 0); }, 0) : 0;
-        if (c && val > topVal) { topVal = val; topClient = c; }
-      });
-      return card(
-        "<h3>Rapport d'activité" + (v.periode ? " – " + esc(v.periode) : "") + "</h3>" +
-        '<div class="ws-kpis">' +
-        "<div class='ws-kpi'><b>" + fmtMoney(ca) + "</b><span>Chiffre d'affaires</span></div>" +
-        "<div class='ws-kpi'><b>" + factures.length + "</b><span>Factures</span></div>" +
-        "<div class='ws-kpi'><b>" + clients.length + "</b><span>Clients</span></div>" +
-        "<div class='ws-kpi'><b>" + contrats.length + "</b><span>Contrats actifs</span></div>" +
-        "<div class='ws-kpi'><b>" + devisAttente + "</b><span>Devis en attente</span></div>" +
-        "<div class='ws-kpi'><b>" + nbCampagnes + "</b><span>Campagnes suivies</span></div>" +
-        "</div>" +
-        '<div class="ws-box"><h4>Points clés</h4><ul class="ws-list">' +
-        "<li>" + factures.length + " factures émises, " + payees + " payées, " + enAttente + " en attente de règlement.</li>" +
-        (topClient ? "<li>Meilleur client : <b>" + esc(topClient.name || topClient.company) + "</b> (" + fmtMoney(topVal) + " HT).</li>" : "<li>Aucun client suivi pour le moment.</li>") +
-        "<li>" + devisAttente + " devis en attente – relance d'ici 7 jours conseillée.</li>" +
-        (nbCampagnes ? "<li>" + nbCampagnes + " campagne(s) en cours de suivi.</li>" : "<li>Aucune campagne suivie pour le moment.</li>") +
-        "</ul></div>"
-      );
-    }
-  });
-
-  /* ---------- 9. Accompagnement stratégique ---------- */
-  TOOLS.push({
-    id: "strategy",
-    name: "Accompagnement stratégique",
-    desc: "Décrivez vos objectifs et vos difficultés : l'assistant bâtit une stratégie d'action personnalisée (plan, priorités, KPIs).",
-    icon: "🧭",
-    fields: [
-      { n: "entreprise", label: "Nom de l'entreprise", type: "text", req: true },
-      { n: "objectif", label: "Objectif principal", type: "select", options: ["Gagner des clients", "Développer le chiffre d'affaires", "Améliorer la visibilité", "Mieux gérer l'administratif", "Lancer une nouvelle offre"], def: "Gagner des clients" },
-      { n: "difficulte", label: "Ce qui bloque aujourd'hui", type: "select", options: ["Peu de visibilité en ligne", "Pas assez de contacts", "Temps de gestion trop lourd", "Offre mal définie", "Budget limité"], def: "Peu de visibilité en ligne" },
-      { n: "horizon", label: "Horizon visé", type: "select", options: ["30 jours", "3 mois", "6 mois", "1 an"], def: "3 mois" }
-    ],
-    generate: function (v) {
-      var plans = {
-        "Gagner des clients": [
-          "Activer la fiche Google Business Profile (SEO local)",
-          "Lancer une campagne Google Ads ciblée (recherche locale)",
-          "Mettre en place un système de demande de devis sur le site",
-          "Collecter 5 avis clients en 30 jours sur la fiche Google"
-        ],
-        "Développer le chiffre d'affaires": [
-          "Relancer les devis en attente sous 7 jours",
-          "Proposer une formule d'abonnement mensuel (revenus récurrents)",
-          "Préparer une offre packagée (site + SEO + social) à prix clair",
-          "Analyser le panier moyen et créer une offre complémentaire"
-        ],
-        "Améliorer la visibilité": [
-          "Publier 3 fois par semaine sur les réseaux sociaux (calendrier éditorial)",
-          "Optimiser les pages du site pour le SEO local",
-          "Créer des contenus utiles (conseils, actualités) sur le blog",
-          "Cibler les annonces Google Ads sur un périmètre précis"
-        ],
-        "Mieux gérer l'administratif": [
-          "Centraliser factures et documents (Espace de travail)",
-          "Programmer les échéances comptables et sociales dans le calendrier",
-          "Mettre en place une trésorerie prévisionnelle simple",
-          "Déléguer la relance client de manière automatisée"
-        ],
-        "Lancer une nouvelle offre": [
-          "Valider la demande avec 5 entretiens clients",
-          "Définir une offre simple, packagée, au prix clair",
-          "Préparer une page de vente dédiée sur le site",
-          "Communiquer via une campagne de lancement"
-        ]
-      };
-      var actions = (plans[v.objectif] || plans["Gagner des clients"]).map(function (a, i) {
-        return "<li>" + (i + 1) + ". " + esc(a) + "</li>";
-      }).join("");
-      var kpis = ["Contacts reçus / mois", "Taux de conversion devis → client", "Chiffre d'affaires mensuel", "Nombre d'avis clients"].map(function (k) {
-        return "<li>" + esc(k) + "</li>";
-      }).join("");
-      return card(
-        "<h3>Stratégie personnalisée – <b>" + esc(v.entreprise) + "</b></h3>" +
-        '<div class="ws-grid2">' +
-        '<div class="ws-box"><h4>🎯 Diagnostic</h4><p>Objectif : <b>' + esc(v.objectif) + "</b>.<br>Frein identifié : <b>" + esc(v.difficulte) + "</b>.<br>Horizon : <b>" + esc(v.horizon) + "</b>.</p>" +
-        "<h4>📋 Plan d'action</h4><ol class='ws-list'>" + actions + "</ol></div>" +
-        '<div class="ws-box"><h4>📊 Indicateurs à suivre (KPIs)</h4><ul class="ws-list ws-check">' + kpis + "</ul>" +
-        "<h4>💡 Prochaines étapes</h4><ul class='ws-list'>" +
-        "<li>Relancer les devis en attente dans les 7 jours</li>" +
-        "<li>Programmer 2 rendez-vous de prospection par semaine</li>" +
-        "<li>Mettre à jour cet espace de travail chaque semaine</li></ul></div></div>"
-      );
-    }
-  });
-
-  /* ==================================================================
-     RENDU
-     ================================================================== */
-  function renderAll() {
-    if (!activeTool) { renderHome(); return; }
-    var tool = TOOLS.filter(function (t) { return t.id === activeTool; })[0];
-    if (!tool) { activeTool = null; renderHome(); return; }
-
-    var h = history(activeTool);
-    var rows = h.length
-      ? h.map(function (entry, i) {
-          var pre = (entry.title || entry.inputs || {}).entreprise || (entry.inputs || {}).societe || (entry.inputs || {}).campagne || (entry.inputs || {}).site || "Résultat";
-          return "<div class='ws-hist-item'><span>" + esc(pre) + "</span><small>" + fmtDate(entry.date || today()) + "</small>" +
-            '<span class="row-actions"><button class="mini-btn primary" data-ws-view="' + i + '">Voir</button>' +
-            '<button class="mini-btn danger" data-ws-del="' + i + '">Supprimer</button></span></div>';
-        }).join("")
-      : '<p class="empty-note">Aucun résultat généré pour le moment.</p>';
-
-    var body =
-      pageHead(tool.name, tool.desc) +
-      card(
-        "<h3>🤖 Assistant – remplissez et générez</h3>" +
-        '<form id="ws-form" data-ws-tool="' + tool.id + '">' +
-        '<div class="admin-form-grid">' + tool.fields.map(fieldHTML).join("") + "</div>" +
-        '<div class="admin-form-actions"><button type="submit" class="admin-btn">⚡ Générer automatiquement</button></div>' +
-        "</form>"
-      ) +
-      '<div id="ws-result"></div>' +
-      card("<h3>🗃️ Historique</h3>" + rows);
-
-    adminMain().innerHTML = body;
-
-    var form = $("#ws-form", adminMain());
-    if (form) form.addEventListener("submit", onGenerate);
-
-    /* navigation interne -> ne pas fermer le panneau */
-    $$("[data-ws-home]", adminMain()).forEach(function (a) {
-      a.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); activeTool = null; renderAll(); });
-    });
-    $$("[data-ws-view]", adminMain()).forEach(function (b) {
-      b.addEventListener("click", function () {
-        var i = Number(b.getAttribute("data-ws-view"));
-        var entry = h[i];
-        if (!entry) return;
-        var out = $("#ws-result", adminMain());
-        if (out) out.innerHTML = entry.html;
-        window.scrollTo(0, 0);
-      });
-    });
-    $$("[data-ws-del]", adminMain()).forEach(function (b) {
-      b.addEventListener("click", function () {
-        if (confirm("Supprimer ce résultat ?")) {
-          removeHistory(activeTool, Number(b.getAttribute("data-ws-del")));
-          renderAll();
-        }
-      });
-    });
+  function pageHead(title, sub) {
+    return '<div class="admin-head"><div><h2>' + esc(title) + "</h2><p>" + esc(sub) + '</p></div>' +
+      '<a class="admin-btn admin-btn-ghost" href="#" data-ws-home>← Missions client</a></div>';
+  }
+  function card(inner) { return '<div class="admin-card ws-card">' + inner + "</div>"; }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    try { return new Date(iso + "T00:00:00").toLocaleDateString("fr-FR"); } catch (e) { return iso; }
   }
 
-  function onGenerate(e) {
-    e.preventDefault();
-    var form = e.target;
-    var toolId = form.getAttribute("data-ws-tool");
-    var tool = TOOLS.filter(function (t) { return t.id === toolId; })[0];
-    if (!tool) return;
-    var v = collectFields(form, tool.fields);
-    var missing = tool.fields.filter(function (f) { return f.req && !v[f.n]; });
-    if (missing.length) {
-      var out = $("#ws-result", adminMain());
-      if (out) {
-        out.innerHTML = '<div class="ws-box" style="border-color:#f0c36d;background:#fffbf0;"><p><b>Champs obligatoires :</b> ' +
-          missing.map(function (f) { return esc(f.label); }).join(", ") + ".</p></div>";
-      }
-      return;
-    }
-    var html = tool.generate(v);
-    var entry = { date: today(), inputs: v, html: html, title: (v.entreprise || v.societe || v.campagne || v.site || tool.name) };
-    pushHistory(toolId, entry);
-    currentInputs = {};
-    renderAll();
-    var out = $("#ws-result", adminMain());
-    if (out) { out.innerHTML = html; out.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  function mediaCard() {
+    var medias = getMedia();
+    var cells = medias.map(function (m) {
+      return '<div class="ws-media-cell"><img src="' + m.dataUrl + '" alt=""><span>' + esc(m.name) + '</span>' +
+        '<button class="mini-btn danger" data-media-del="' + m.id + '" style="margin-top:6px;">Supprimer</button></div>';
+    }).join("");
+    return card(
+      "<h3>📁 Bibliothèque média</h3>" +
+      "<p class='ws-hint'>Les photos et logos (des clients ou de vos documents) sont stockés localement et réutilisés par les outils.</p>" +
+      '<div class="ws-media-grid">' + (cells || '<p class="ws-hint">Aucune photo. Téléversez la première ci-dessous.</p>') + "</div>" +
+      '<div class="ws-media-upload"><input type="file" accept="image/*" data-upload-home><span class="ws-hint">Choisir une photo à ajouter (JPG/PNG/WebP).</span></div>'
+    );
   }
 
-  /* ---------- Accueil : grille de 9 outils ---------- */
   function renderHome() {
     var cards = TOOLS.map(function (t) {
       var n = history(t.id).length;
@@ -647,29 +1088,51 @@ window.GestWorkspace = (function () {
     }).join("");
 
     adminMain().innerHTML =
-      pageHead("Espace de travail", "6 outils automatisés pour votre activité : complétez, générez, suivez. Tout est enregistré dans votre navigateur.") +
+      pageHead("Missions client", "Pour chacun de vos clients (gestion administrative & digitale) : choisissez le client, remplissez les étapes, l'assistant prépare le livrable final.") +
       '<div class="ws-grid">' + cards + "</div>" +
-      '<div class="ws-box"><h4>ℹ️ Mode d’emploi</h4><ul class="ws-list">' +
-      "<li>Chaque outil est un <b>assistant</b> : vous remplissez les informations demandées, il génère le contenu automatiquement.</li>" +
-      "<li>Les résultats sont conservés (historique) et **pas envoyés sur le web** : tout reste dans votre navigateur.</li>" +
-      "<li><b>Reporting</b> : le rapport se construit tout seul à partir de vos factures, devis, contrats et campagnes.</li>" +
-      "<li>Une vraie intégration IA/serveur (génération avancée, création automatisée Google Business/Ads) est prévue dans une version suivante.</li>" +
-      "</ul></div>";
+      mediaCard() +
+      '<div class="ws-box" style="margin-top:16px;"><h4>ℹ️ Comment ça marche</h4><ul class="ws-list">' +
+      "<li>Chaque mission est <b>rattachée à un client</b> : choisissez-le dans la liste (vos fiches de l'onglet Clients) ou saisissez son entreprise.</li>" +
+      "<li>Chaque outil est un <b>assistant autonome</b> : il ne demande que ce qui manque, étape par étape.</li>" +
+      "<li>Photos et logos : téléversez-les une fois, ils sont réutilisés (fiches Google, réseaux sociaux, montages).</li>" +
+      "<li>Pour ce qui exige une API (poster, créer la fiche Google, envoyer un emailing), GestAffaires prépare <b>tout le pack final</b> : déposez-le sur le compte du client.</li>" +
+      "<li>Rien n'est envoyé sur internet : tout reste dans votre navigateur.</li></ul></div>";
 
     $$("[data-ws-open]", adminMain()).forEach(function (b) {
       b.addEventListener("click", function () {
-        activeTool = b.getAttribute("data-ws-open");
-        currentInputs = {};
-        history(activeTool).forEach(function (x) {});
+        state.tool = b.getAttribute("data-ws-open");
+        state.step = 0;
+        state.inputs = {};
+        state.resultHtml = null;
         renderAll();
       });
     });
-    $$("[data-ws-home]", adminMain()).forEach(function (a) {
-      a.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); activeTool = null; renderAll(); });
+    var up = $("[data-upload-home]", adminMain());
+    if (up) up.addEventListener("change", function () {
+      var file = up.files && up.files[0];
+      if (!file) return;
+      addMedia(file, function (item) {
+        if (!item) alert("Photo non acceptée (taille ou format).");
+        renderHome();
+      });
     });
+    $$("[data-media-del]", adminMain()).forEach(function (b) {
+      b.addEventListener("click", function () { removeMedia(b.getAttribute("data-media-del")); renderHome(); });
+    });
+    bindHomeLink();
   }
 
-  return {
-    render: renderAll
-  };
+  function activeHome() {
+    state.tool = null; state.step = 0; state.inputs = {}; state.resultHtml = null;
+    renderHome();
+  }
+
+  function renderAll() {
+    if (!state.tool) { renderHome(); return; }
+    var tool = TOOLS.filter(function (t) { return t.id === state.tool; })[0];
+    if (!tool) { activeHome(); return; }
+    renderTool(tool);
+  }
+
+  return { render: renderAll };
 })();
