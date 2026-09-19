@@ -182,6 +182,7 @@
     setUsers(users);
     save(LS_SESSION, users[users.length - 1].id);
     closeModals();
+    refreshAuthUI();
     openPanel();
     return true;
   }
@@ -195,6 +196,7 @@
       if (match && u.pass === hashPass(pass)) {
         save(LS_SESSION, u.id);
         closeModals();
+        refreshAuthUI();
         openPanel();
         return true;
       }
@@ -216,7 +218,7 @@
     var label = $("[data-auth-label]", avatar);
     if (!avatar || !label) return;
     if (u) {
-      label.textContent = u.role === "admin" ? "Admin" : "Mon espace";
+      label.textContent = u.role === "admin" ? "Espace admin" : "Mon espace";
       avatar.classList.add("is-admin");
       avatar.setAttribute("aria-label", "Ouvrir mon espace");
     } else {
@@ -858,8 +860,11 @@
 
   document.addEventListener("click", function (e) {
     /* Ne pas fermer si le clic visait un élément du panneau qui vient
-       d'être re-rendu (retiré du DOM pendant la propagation du clic). */
-    if (panel && !panel.hidden && e.target && !panel.contains(e.target) && document.contains(e.target)) {
+       d'être re-rendu (retiré du DOM pendant la propagation du clic),
+       ni le bouton qui ouvre le panneau (sinon ouverture + fermeture). */
+    var target = e.target;
+    if (panel && !panel.hidden && target && document.contains(target) && !panel.contains(target)) {
+      if (authTrigger && (target === authTrigger || (target.closest && target.closest("#auth-trigger")))) return;
       closePanel();
     }
   });

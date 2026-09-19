@@ -1890,7 +1890,7 @@ html.js .reveal.inview {
   .nav-link { padding: 9px 6px; }
   .nav-cta { padding: 10px 12px; }
   .auth-avatar { padding: 8px 10px; }
-  .auth-avatar [data-auth-label] { display: none; }
+  .auth-avatar.is-admin [data-auth-label] { display: inline; }
 }
 
 @media (max-width: 1200px) {
