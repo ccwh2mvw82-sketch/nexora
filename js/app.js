@@ -249,7 +249,8 @@
     { key: "clients", label: "Clients", adminOnly: true },
     { key: "factures", label: "Factures", adminOnly: true },
     { key: "devis", label: "Devis", adminOnly: true },
-    { key: "contrats", label: "Contrats", adminOnly: true }
+    { key: "contrats", label: "Contrats", adminOnly: true },
+    { key: "workspace", label: "Espace de travail", adminOnly: true }
   ];
 
   function openPanel() {
@@ -299,7 +300,7 @@
       t.classList.toggle("active", t.getAttribute("data-tab") === activeTab);
     });
     if (u.role === "admin") {
-      var fn = { dashboard: renderDashboard, clients: renderClients, factures: renderDocs("factures", "FA"), devis: renderDocs("devis", "DE"), contrats: renderContrats }[activeTab];
+      var fn = { dashboard: renderDashboard, clients: renderClients, factures: renderDocs("factures", "FA"), devis: renderDocs("devis", "DE"), contrats: renderContrats, workspace: renderWorkspace }[activeTab];
       if (fn) fn();
     } else {
       renderMember();
@@ -700,6 +701,18 @@
       renderActive();
     });
     $("[data-action=back-contrats]").addEventListener("click", renderActive);
+  }
+
+  /* ============================================================
+     ESPACE DE TRAVAIL
+     ============================================================ */
+  function renderWorkspace() {
+    if (window.GestWorkspace && typeof window.GestWorkspace.render === "function") {
+      window.GestWorkspace.render();
+    } else {
+      adminMain.innerHTML =
+        '<div class="admin-container"><div class="admin-card"><p>Le module Espace de travail n’est pas chargé.</p></div></div>';
+    }
   }
 
   /* ============================================================
