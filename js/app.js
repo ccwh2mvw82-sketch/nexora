@@ -48,15 +48,7 @@
     return "h" + Math.abs(h).toString(36);
   }
 
-  var LOGO_SVG =
-    '<svg viewBox="0 0 100 126" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-    '<rect x="4" y="4" width="92" height="118" rx="22" fill="#0B1B33"/>' +
-    '<text x="27" y="36" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#0CB5A6">G</text>' +
-    '<g font-family="Inter, Arial, sans-serif" font-size="8" font-weight="700" fill="#7CE8C8" text-anchor="middle">' +
-    '<text x="27" y="47">E</text><text x="27" y="54">S</text><text x="27" y="61">T</text><text x="27" y="68">I</text><text x="27" y="75">O</text><text x="27" y="82">N</text></g>' +
-    '<text x="72" y="36" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#8B6BFF">A</text>' +
-    '<g font-family="Inter, Arial, sans-serif" font-size="5.6" font-weight="700" fill="#C9B8FF" text-anchor="middle">' +
-    '<text x="72" y="44">D</text><text x="72" y="50">M</text><text x="72" y="56">I</text><text x="72" y="62">N</text><text x="72" y="68">I</text><text x="72" y="74">S</text><text x="72" y="80">T</text><text x="72" y="86">R</text><text x="72" y="92">A</text><text x="72" y="98">T</text><text x="72" y="104">I</text><text x="72" y="110">O</text><text x="72" y="116">N</text></g></svg>';
+  var LOGO_SVG = '<img class="ps-logo-img" src="assets/logo.png" alt="Logotype GestAffaires">';
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {

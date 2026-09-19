@@ -86,7 +86,7 @@
   gap: 12px;
   min-width: 0;
 }
-.admin-logo { width: 34px; height: 42px; flex: none; }
+.admin-logo { height: 42px; width: auto; flex: none; object-fit: contain; }
 .admin-top-brand strong { font-size: 16px; color: var(--white); letter-spacing: 0.02em; }
 .admin-role {
   display: block;
@@ -331,7 +331,8 @@
   margin-bottom: 20px;
 }
 .print-sheet .ps-brand { display: flex; align-items: center; gap: 12px; }
-.print-sheet .ps-logo { width: 48px; height: 60px; flex: none; }
+.print-sheet .ps-logo { height: 60px; width: auto; flex: none; }
+.print-sheet .ps-logo-img { height: 60px; width: auto; object-fit: contain; }
 .print-sheet .ps-brand-name { font-size: 22px; font-weight: 800; color: var(--navy-900); letter-spacing: 0.05em; }
 .print-sheet .ps-brand-sub { font-size: 8px; font-weight: 700; letter-spacing: 0.22em; color: var(--navy-700); }
 .print-sheet .ps-title { text-align: right; }
@@ -417,7 +418,7 @@
   .auth-avatar { padding: 8px 12px; }
   .auth-avatar [data-auth-label] { display: inline; }
   .auth-avatar svg { width: 16px; height: 16px; }
-  .admin-logo { width: 28px; height: 36px; }
+  .admin-logo { height: 36px; width: auto; }
   .admin-top-brand strong { font-size: 14px; }
   .admin-btn { padding: 8px 12px; font-size: 12px; }
   .kpi-card { padding: 14px 16px; }

@@ -217,13 +217,12 @@
     var isF = type === "F";
     var st = isF ? doc.statut : doc.statut;
     var stLabel = (isF ? statutF : statutD)[st];
-    var logo = "🅶";
     var rows = doc.lignes.map(function (l) {
       return "<tr><td>" + esc(l.des || "—") + "</td><td class='right'>" + (Number(l.qte) || 0) + "</td><td class='right'>" + fmtMoney(l.pu) + "</td><td class='right'>" + (Number(l.tva) || 0) + " %</td><td class='right'>" + fmtMoney((Number(l.qte) || 0) * (Number(l.pu) || 0)) + "</td></tr>";
     }).join("");
     var body =
       "<table style='width:100%;border-collapse:collapse;'><tr>" +
-      "<td style='vertical-align:top;'><div style='width:76px;height:76px;border-radius:16px;background:#0B1B33;color:#0CB5A6;font-weight:800;font-size:34px;text-align:center;line-height:76px;'>" + logo + "</div><div style='font-size:12px;margin-top:6px;'><b>GestAffaires</b><br>Gestion · Administration · Digital</div></td>" +
+      "<td style='vertical-align:top;'><img src='assets/logo.png' alt='GestAffaires' style='height:72px;width:auto;'></div><div style='font-size:12px;margin-top:6px;'><b>GestAffaires</b><br>Gestion · Administration · Digital</div></td>" +
       "<td style='text-align:right;'><h1 style='margin:0;color:#0B1B33;'>" + (isF ? "FACTURE" : "DEVIS") + "</h1><p style='margin:2px 0;color:#5b6b7b;'>" + esc(doc.num) + "<br>Date : " + fmtDate(doc.date) + (doc.echeance ? (isF ? "<br>Échéance : " : "<br>Valable jusqu'au : ") + fmtDate(doc.echeance) : "") + "</p></td></tr></table>" +
       "<hr style='border:none;border-top:2px solid #0CB5A6;'>" +
       "<table style='width:100%;'><tr><td style='vertical-align:top;'><b>Émetteur</b><br>GestAffaires<br>06 12 34 56 78<br>contact@gestaffaires.fr</td>" +
