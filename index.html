@@ -13,8 +13,9 @@
   <meta property="og:url" content="http://www.gestaffaires.fr">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=7">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=9">
+  <link rel="stylesheet" href="css/admin.css?v=8">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -92,8 +93,13 @@
           <li><a href="#faq" class="nav-link">FAQ</a></li>
           <li><a href="#contact" class="nav-link">Contact</a></li>
         </ul>
-        <a href="#contact" class="btn btn-primary nav-cta">Diagnostic gratuit</a>
+<a href="#contact" class="btn btn-primary nav-cta">Diagnostic gratuit</a>
       </nav>
+
+      <a class="auth-avatar" id="auth-trigger" href="#" aria-label="Connexion" data-auth-trigger>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.2 3.4-5 8-5s8 1.8 8 5"/></svg>
+        <span data-auth-label>Connexion</span>
+      </a>
 
       <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Ouvrir le menu">
         <span></span><span></span><span></span>
@@ -1195,6 +1201,94 @@
     </div>
   </div>
 
+  <!-- Modal connexion -->
+  <div class="modal" id="modal-login" role="dialog" aria-modal="true" aria-labelledby="login-title" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel">
+      <button class="modal-close" data-close aria-label="Fermer">✕</button>
+      <h3 id="login-title">Connexion</h3>
+      <p class="modal-sub">Accédez à votre espace pour gérer vos factures, devis et contrats.</p>
+      <form class="auth-form" id="form-login" novalidate>
+        <div class="form-field">
+          <label for="login-login">Identifiant ou e-mail</label>
+          <input id="login-login" name="login" type="text" autocomplete="username" required>
+        </div>
+        <div class="form-field">
+          <label for="login-pass">Mot de passe</label>
+          <input id="login-pass" name="pass" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="auth-error" id="login-error" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+      </form>
+      <p class="auth-switch">Pas encore de compte ? <a href="#" id="switch-register">Créer un compte</a></p>
+    </div>
+  </div>
+
+  <!-- Modal inscription -->
+  <div class="modal" id="modal-register" role="dialog" aria-modal="true" aria-labelledby="register-title" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel">
+      <button class="modal-close" data-close aria-label="Fermer">✕</button>
+      <h3 id="register-title">Créer un compte</h3>
+      <p class="modal-sub">Le premier compte créé sur cette plateforme devient administrateur.</p>
+      <form class="auth-form" id="form-register" novalidate>
+        <div class="form-field">
+          <label for="reg-name">Nom complet</label>
+          <input id="reg-name" name="name" type="text" autocomplete="name" required>
+        </div>
+        <div class="form-field">
+          <label for="reg-login">Identifiant</label>
+          <input id="reg-login" name="login" type="text" autocomplete="username" required>
+        </div>
+        <div class="form-field">
+          <label for="reg-email">E-mail (optionnel)</label>
+          <input id="reg-email" name="email" type="email" autocomplete="email">
+        </div>
+        <div class="form-field">
+          <label for="reg-pass">Mot de passe</label>
+          <input id="reg-pass" name="pass" type="password" autocomplete="new-password" minlength="4" required>
+        </div>
+        <p class="auth-note">Vos données sont enregistrées localement dans votre navigateur. Une version sécurisée serveur est prévue.</p>
+        <p class="auth-error" id="register-error" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
+      </form>
+      <p class="auth-switch">Déjà inscrit ? <a href="#" id="switch-login">Se connecter</a></p>
+    </div>
+  </div>
+
+  <!-- Espace client / administrateur -->
+  <div class="admin-panel" id="admin-panel" role="dialog" aria-modal="true" aria-labelledby="admin-title" hidden>
+    <header class="admin-top">
+      <div class="admin-top-brand">
+        <svg class="admin-logo" viewBox="0 0 100 126" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="4" y="4" width="92" height="118" rx="22" fill="#0B1B33"/>
+          <text x="27" y="36" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#0CB5A6">G</text>
+          <g font-family="Inter, Arial, sans-serif" font-size="8" font-weight="700" fill="#7CE8C8" text-anchor="middle">
+            <text x="27" y="47">E</text><text x="27" y="54">S</text><text x="27" y="61">T</text><text x="27" y="68">I</text><text x="27" y="75">O</text><text x="27" y="82">N</text>
+          </g>
+          <text x="72" y="36" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="800" fill="#8B6BFF">A</text>
+          <g font-family="Inter, Arial, sans-serif" font-size="5.6" font-weight="700" fill="#C9B8FF" text-anchor="middle">
+            <text x="72" y="44">D</text><text x="72" y="50">M</text><text x="72" y="56">I</text><text x="72" y="62">N</text><text x="72" y="68">I</text><text x="72" y="74">S</text><text x="72" y="80">T</text><text x="72" y="86">R</text><text x="72" y="92">A</text><text x="72" y="98">T</text><text x="72" y="104">I</text><text x="72" y="110">O</text><text x="72" y="116">N</text>
+          </g>
+        </svg>
+        <div>
+          <strong id="admin-title">Espace GestAffaires</strong>
+          <span class="admin-role" id="admin-role"></span>
+        </div>
+      </div>
+      <div class="admin-top-actions">
+        <span class="admin-user" id="admin-user"></span>
+        <button class="admin-btn" type="button" id="admin-logout" data-admin-logout>Se déconnecter</button>
+        <button class="admin-btn admin-btn-ghost" type="button" id="admin-close" data-admin-close>Retour au site</button>
+      </div>
+    </header>
+    <nav class="admin-nav" id="admin-tabs" aria-label="Navigation espace" hidden></nav>
+    <main class="admin-main" id="admin-main"></main>
+  </div>
+
+  <!-- Zone d'impression des documents -->
+  <div class="print-sheet" id="print-sheet" aria-hidden="true"></div>
+
   <!-- Bouton WhatsApp flottant -->
   <a href="https://wa.me/33612345678" class="wa-float" target="_blank" rel="noopener" aria-label="Discuter sur WhatsApp">
     <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9 3 3.4 8.6 3.4 15.6c0 2.2.6 4.4 1.7 6.3L3 29l7.3-1.9c1.8 1 3.8 1.5 5.8 1.5h.1c7 0 12.6-5.6 12.6-12.6C28.8 8.6 23.2 3 16 3Zm0 23h-.1c-1.9 0-3.7-.5-5.3-1.4l-.4-.2-4.4 1.2 1.2-4.3-.3-.4a10.3 10.3 0 0 1-1.6-5.5C5.1 8.6 10 3.7 16 3.7c5.9 0 10.7 4.6 10.7 10.4S22 26 16 26Zm5.8-7.8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.1-.8 1-.9 1.2-.3.2-.6.1a8.4 8.4 0 0 1-3.2-2c-1.2-1-2-2.3-2.3-2.7-.2-.4 0-.6.2-.8l.6-.7c.2-.2.2-.4.3-.6s0-.5 0-.7-.7-1.7-.9-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.1 3.1 1.3 3.3c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.1-.3-.2-.6-.4Z"/></svg>
@@ -1224,7 +1318,8 @@
     document.documentElement.classList.remove('no-js');
     document.documentElement.classList.add('js');
   </script>
-  <script src="js/main.js?v=7"></script>
+<script src="js/main.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>
 

@@ -1883,8 +1883,20 @@ html.js .reveal.inview {
   .work-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 960px) {
-  /* Retirer le backdrop-filter pour ne pas "piéger" les enfants fixed (menu) */
+@media (min-width: 1201px) and (max-width: 1225px) {
+  /* En-tête desktop étroit : resserrer sans passer en menu hamburger */
+  .header-inner { gap: 10px; }
+  .main-nav { gap: 10px; }
+  .nav-link { padding: 9px 6px; }
+  .nav-cta { padding: 10px 12px; }
+  .auth-avatar { padding: 8px 10px; }
+  .auth-avatar [data-auth-label] { display: none; }
+}
+
+@media (max-width: 1200px) {
+  /* En-tête : menu plein écran dès 1200 px pour ne pas déborder
+     avec 9 liens + CTA + bouton compte. Retirer le backdrop-filter
+     pour ne pas "piéger" les enfants fixed (menu) */
   .site-header { backdrop-filter: none; -webkit-backdrop-filter: none; }
   .header-inner { gap: 12px; }
   .nav-toggle { display: flex; flex: none; }
@@ -1940,7 +1952,9 @@ html.js .reveal.inview {
   .nav-link.active { background: var(--teal-soft); color: var(--teal-dark); }
   .nav-cta { margin-top: 20px; width: 100%; padding: 16px 20px; font-size: 16px; }
   .nav-cta.nav-cta--active { display: none; }
+}
 
+@media (max-width: 960px) {
   .hero-inner { grid-template-columns: 1fr; gap: 48px; }
   .hero-visual { max-width: 520px; margin: 0 auto; }
   .fc-1 { left: 0; }
