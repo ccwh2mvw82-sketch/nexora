@@ -857,7 +857,9 @@
   if (btnClose) btnClose.addEventListener("click", closePanel);
 
   document.addEventListener("click", function (e) {
-    if (panel && !panel.hidden && !panel.contains(e.target)) {
+    /* Ne pas fermer si le clic visait un élément du panneau qui vient
+       d'être re-rendu (retiré du DOM pendant la propagation du clic). */
+    if (panel && !panel.hidden && e.target && !panel.contains(e.target) && document.contains(e.target)) {
       closePanel();
     }
   });
