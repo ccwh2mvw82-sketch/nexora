@@ -235,10 +235,11 @@ window.GestWorkspace = (function () {
   function empty(msg) {
     return "<p class='ws-empty'>" + esc(msg) + "</p>";
   }
-  function tableHTML(head, rows, emptyMsg) {
+  function tableHTML(head, rows, emptyMsg, footerCells) {
     if (!rows.length) return empty(emptyMsg || "Aucune donnée pour le moment.");
+    var foot = footerCells && footerCells.length ? "<tfoot class='ws-tfoot'><tr>" + footerCells.map(function (c) { return "<td>" + c + "</td>"; }).join("") + "</tr></tfoot>" : "";
     return "<div class='ws-table-wrap'><table class='ws-table'><thead><tr>" + head.map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr></thead><tbody>" +
-      rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + c + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>";
+      rows.map(function (r) { return "<tr>" + r.map(function (c) { return "<td>" + c + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody>" + foot + "</table></div>";
   }
   function formRow(label, html) {
     return "<div class='ws-frow'><label>" + esc(label) + "</label>" + html + "</div>";
@@ -267,6 +268,44 @@ window.GestWorkspace = (function () {
      NAVIGATION des modules
      ------------------------------------------------------------------ */
   function categoryOf(m) { return m.cat || "Gestion"; }
+
+  function pipeline(clientId) {
+    var is = function (list) { return clientId ? list.filter(function (x) { return x.clientId === clientId; }) : list; };
+    var items = [];
+    is(get(LS_FACTURES)).forEach(function (f) {
+      if (f.statut !== "en_attente") return;
+      var cible = f.echeance && f.echeance < today();
+      items.push({ mod: "gestion", txt: "Facture " + (f.num || "") + (cible ? " en retard depuis le " + fmtDate(f.echeance) : " en attente de règlement") + " (" + fmtMoney(docTotals(f.lignes).ttc) + ")" });
+    });
+    is(get(LS_DEVIS)).forEach(function (d) {
+      if (d.statut === "en_attente") items.push({ mod: "gestion", txt: "Devis " + (d.num || "") + " en attente de décision" });
+    });
+    is(get("ga_echeances")).forEach(function (e) {
+      if (e.statut !== "fait" && e.date <= today()) items.push({ mod: "compta", txt: "Échéance " + (e.type || "") + " de " + fmtMoney(e.montant) + " à régler (prévue le " + fmtDate(e.date) + ")" });
+    });
+    var appels = is(get("ga_appels")).filter(function (a) { return a.statut !== "traite"; }).length;
+    if (appels) items.push({ mod: "secretariat", txt: appels + " appel(s) à traiter au standard" });
+    var pubs = is(get("ga_planif")).filter(function (p) { return p.statut !== "publie"; }).length;
+    if (pubs) items.push({ mod: "communication", txt: pubs + " publication(s) planifiée(s) à publier" });
+    var pros = is(get("ga_prospects")).filter(function (p) { return p.statut === "nouveau"; }).length;
+    if (pros) items.push({ mod: "acquisition", txt: pros + " prospect(s) nouveau(x) à contacter" });
+    return items;
+  }
+
+  function countFor(id) {
+    var idc = state.clientId;
+    var is = function (list) { return idc ? list.filter(function (x) { return x.clientId === idc; }) : list; };
+    switch (id) {
+      case "gestion": return is(get(LS_FACTURES)).filter(function (x) { return x.statut === "en_attente"; }).length + is(get(LS_DEVIS)).filter(function (x) { return x.statut === "en_attente"; }).length;
+      case "compta": return is(get("ga_echeances")).filter(function (x) { return x.statut !== "fait" && x.date <= today(); }).length;
+      case "dossiers": return is(get("ga_documents")).length;
+      case "communication": return is(get("ga_planif")).filter(function (x) { return x.statut !== "publie"; }).length;
+      case "acquisition": return is(get("ga_prospects")).filter(function (x) { return x.statut === "nouveau" || x.statut === "contacte"; }).length;
+      case "secretariat": return is(get("ga_appels")).filter(function (x) { return x.statut !== "traite"; }).length;
+      default: return 0;
+    }
+  }
+
   function moduleNavHTML() {
     var cats = [];
     modules.forEach(function (m) {
@@ -275,7 +314,8 @@ window.GestWorkspace = (function () {
     });
     return cats.map(function (c) {
       var items = modules.filter(function (m) { return categoryOf(m) === c; }).map(function (m) {
-        return "<a href='#' class='ws-mod-nav' data-open='" + m.id + "'><span class='ws-mod-ico'>" + m.icon + "</span><span><b>" + esc(m.name) + "</b><small>" + esc(m.tag || "") + "</small></span></a>";
+        var n = countFor(m.id);
+        return "<a href='#' class='ws-mod-nav' data-open='" + m.id + "'><span class='ws-mod-ico'>" + m.icon + "</span><span><b>" + esc(m.name) + "</b><small>" + esc(m.tag || "") + "</small></span>" + (n ? "<span class='ws-mod-badge'>" + n + "</span>" : "") + "</a>";
       }).join("");
       return "<div class='ws-cat'><h4>" + esc(c) + "</h4><div class='ws-mod-grid'>" + items + "</div></div>";
     }).join("");
@@ -303,6 +343,15 @@ window.GestWorkspace = (function () {
   function homeHTML() {
     var s = synthFor(state.clientId);
     var client = selectedClient();
+    var items = pipeline(state.clientId);
+    var pilot = "";
+    if (items.length) {
+      var rows = items.slice(0, 6).map(function (it) {
+        return "<li class='ws-pilot-i'><span class='ws-pilot-dot'></span><span class='ws-pilot-txt'>" + esc(it.txt) + "</span><a href='#' class='ws-pilot-open' data-restore='" + it.mod + "'>Ouvrir</a></li>";
+      }).join("");
+      if (items.length > 6) rows += "<li class='ws-pilot-more'>+ " + (items.length - 6) + " autre(s) tâche(s)</li>";
+      pilot = "<div class='ws-pilot'><div class='ws-pilot-h'><b>À traiter</b><span>" + items.length + "</span></div><ul>" + rows + "</ul></div>";
+    }
     return "<div class='ws-app'>" +
       clientBar() +
       "<div class='ws-kpis'>" +
@@ -317,6 +366,7 @@ window.GestWorkspace = (function () {
       "</div>" +
       "<div class='ws-accueil'><h3>" + (client ? "Espace de travail · " + esc(clientLabel(client)) : "Espace de travail") + "</h3>" +
       "<p class='ws-sub'>Un vrai outil de travail, réservé à l'administrateur. Choisissez un module pour ouvrir la console correspondante : saisie, suivi, statuts, historique et exports Excel/PDF.</p></div>" +
+      pilot +
       moduleNavHTML() +
       "</div>";
   }
@@ -343,7 +393,7 @@ window.GestWorkspace = (function () {
   function moduleHead(mod) {
     return "<div class='ws-modhead'>" +
       "<button class='ws-tbtn' data-ws-home>← Espace de travail</button>" +
-      "<span class='ws-modhead-t'>" + mod.icon + " " + esc(mod.name) + "</span>" +
+      "<span class='ws-modhead-t'><span class='ws-modhead-ico'>" + mod.icon + "</span> " + esc(mod.name) + "</span>" +
       "<span class='ws-modhead-s'>" + esc(mod.tag || "") + "</span>" +
       "</div>";
   }
@@ -379,6 +429,9 @@ window.GestWorkspace = (function () {
     if (sel) sel.addEventListener("change", function () { setClient(sel.value); render(); });
     $$("[data-open]", main).forEach(function (a) {
       a.addEventListener("click", function (e) { e.preventDefault(); openModule(a.getAttribute("data-open")); });
+    });
+    $$("[data-restore]", main).forEach(function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); openModule(a.getAttribute("data-restore")); });
     });
   }
 

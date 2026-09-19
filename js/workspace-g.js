@@ -34,6 +34,11 @@
   function noClientNote() {
     return "<p class='ws-hint' style='max-width:760px;'>Sélectionnez un client ci-dessus pour ne voir que ses données. Sans client, affichage global.</p>";
   }
+  function fnSlug() {
+    var c = GW.selectedClient();
+    if (!c) return "";
+    return "-" + String(clientLabel(c)).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 40);
+  }
 
   /* ==================================================================
      MODULE : GESTION  (cœur : devis, factures, relances, suivi)
@@ -56,7 +61,6 @@
       var F = get(K.F), D = get(K.D);
       var f = filterBy(F, cid()), d = filterBy(D, cid());
       var total = f.reduce(function (s, x) { return s + docTotals(x.lignes).ttc; }, 0);
-      var encaisse = f.filter(function (x) { return x.statut === "payee"; }).reduce(function (s, x) { return s + docTotals(x.lignes).ttc; }, 0);
       var aEncaisser = f.filter(function (x) { return x.statut !== "payee" && x.statut !== "annulee"; }).reduce(function (s, x) { return s + docTotals(x.lignes).ttc; }, 0);
       var impayees = f.filter(function (x) { return x.statut === "en_attente"; }).length;
       var relances = filterBy(get(K.R), cid());
@@ -72,6 +76,8 @@
         var sbadge = statutF[x.statut] || statutF.brouillon;
         return { obj: x, cl: cl, tot: docTotals(x.lignes), badge: sbadge };
       });
+      var sumFTtc = famount.reduce(function (s, r) { return s + r.tot.ttc; }, 0);
+      var sumFEncaisse = famount.filter(function (r) { return r.obj.statut === "payee"; }).reduce(function (s, r) { return s + r.tot.ttc; }, 0);
       var frows = famount.map(function (r) {
         return [
           "<b>" + esc(r.obj.num) + "</b>",
@@ -87,6 +93,7 @@
         var sbadge = statutD[x.statut] || statutD.brouillon;
         return { obj: x, cl: cl, tot: docTotals(x.lignes), badge: sbadge };
       });
+      var sumDTtc = damount.filter(function (r) { return r.obj.statut !== "annulee"; }).reduce(function (s, r) { return s + r.tot.ttc; }, 0);
       var drows = damount.map(function (r) {
         return [
           "<b>" + esc(r.obj.num) + "</b>",
@@ -102,16 +109,19 @@
         return [fmtDate(r.date), esc(cl ? clientLabel(cl) : "—"), esc(r.docNum || ""), esc(relanceStade(r.stade)), GW.badge(r.etat || "envoi", r.etat === "fait" ? "ok" : "warn"), "<button class='mini-btn' data-relview='" + r.id + "'>Voir</button>"];
       });
 
+      var fFoot = ["<b>Total</b>", "", "", GW.monRight(sumFTtc), "", ""];
+      var dFoot = ["<b>Total</b>", "", "", GW.monRight(sumDTtc), "", ""];
+
       return noClientNote() +
         "<div class='ws-kpis'>" +
         GW.kpi("Total facturé", fmtMoney(total), cname()) +
-        GW.kpi("Encaissé", fmtMoney(encaisse), "factures payées", "ok") +
+        GW.kpi("Encaissé", fmtMoney(sumFEncaisse), "factures payées", "ok") +
         GW.kpi("À encaisser", fmtMoney(aEncaisser), "échéances restantes") +
         GW.kpi("Factures impayées", impayees, "à relancer", "warn") +
         "</div>" +
         GW.toolbar(tbGestion) +
-        "<div class='ws-panel'><h3>📄 Factures</h3>" + GW.tableHTML(["N°", "Client", "Date / échéance", "Total TTC", "Statut", "Actions"], frows, "Aucune facture.") + "</div>" +
-        "<div class='ws-panel'><h3>📝 Devis</h3>" + GW.tableHTML(["N°", "Client", "Date", "Total TTC", "Statut", "Actions"], drows, "Aucun devis.") + "</div>" +
+        "<div class='ws-panel'><h3>📄 Factures</h3>" + GW.tableHTML(["N°", "Client", "Date / échéance", "Total TTC", "Statut", "Actions"], frows, "Aucune facture.", fFoot) + "</div>" +
+        "<div class='ws-panel'><h3>📝 Devis</h3>" + GW.tableHTML(["N°", "Client", "Date", "Total TTC", "Statut", "Actions"], drows, "Aucun devis.", dFoot) + "</div>" +
         "<div class='ws-panel'><h3>📨 Relances émises</h3>" + GW.tableHTML(["Date", "Client", "Document", "Stade", "État", ""], rrows, "Aucune relance pour le moment. Utilisez le bouton « Relancer » sur une facture en attente.") + "</div>";
 
       function docActions(type, obj) {
@@ -142,7 +152,7 @@
             return base.concat(end);
           })
         };
-        var name = (isF ? "factures" : "devis") + "-" + today() + (csv ? ".csv" : ".xls");
+        var name = (isF ? "factures" : "devis") + fnSlug() + "-" + today() + (csv ? ".csv" : ".xls");
         if (csv) GW.exportCSV(name, rows); else GW.exportExcel(name, rows);
       }
 
@@ -322,6 +332,7 @@
         var ok = x.statut === "fait";
         return [fmtDate(x.date), esc(x.type || ""), esc(cl ? clientLabel(cl) : "—"), GW.monRight(x.montant || 0), GW.badge(ok ? "Fait" : "À faire", ok ? "ok" : "warn"), "<button class='mini-btn' data-echok='" + x.id + "'>" + (ok ? "Annuler" : "Marquer fait") + "</button>"];
       });
+      var dpFoot = ["<b>Total</b>", "", "", "", "", GW.monRight(totHT), GW.monRight(totTVA), ""];
 
       return noClientNote() +
         "<div class='ws-kpis'>" +
@@ -329,7 +340,7 @@
         GW.kpi("TVA déductible", fmtMoney(totTVA), "à récupérer") +
         "</div>" +
         GW.toolbar(tbCompta) +
-        "<div class='ws-panel'><h3>💶 Dépenses</h3>" + GW.tableHTML(["Date", "Client", "Fournisseur", "Catégorie", "Libellé", "Montant HT", "TVA", ""], dpRows, "Aucune dépense saisie.") + "</div>" +
+        "<div class='ws-panel'><h3>💶 Dépenses</h3>" + GW.tableHTML(["Date", "Client", "Fournisseur", "Catégorie", "Libellé", "Montant HT", "TVA", ""], dpRows, "Aucune dépense saisie.", dpFoot) + "</div>" +
         "<div class='ws-panel'><h3>🗂 Répartition par catégorie</h3>" + GW.tableHTML(["Catégorie", "Montant HT", "Part"], catRows, "Saisissez des dépenses pour voir la répartition.") + "</div>" +
         "<div class='ws-panel'><h3>📅 Échéances (TVA · URSSAF · CFE …)</h3>" + GW.tableHTML(["Date", "Type", "Client", "Montant", "État", ""], ecRows, "Aucune échéance.") + "</div>";
     },
@@ -546,6 +557,8 @@
       if (impayes > 0) alertRows.push(["⚠️", "Impays", "Factures en attente pour " + fmtMoney(impayes), "warn"]);
       echs.forEach(function (x) { alertRows.push(["🔔", "Échéance dépassée", esc(x.type) + " prévue le " + fmtDate(x.date), "warn"]); });
       if (!alertRows.length) alertRows.push(["✅", "OK", "Aucune alerte pour ce client.", "ok"]);
+      var totMontant = heures.reduce(function (s, x) { return s + (Number(x.heures) || 0) * (Number(x.tarif) || 45); }, 0);
+      var hFoot = ["<b>Total</b>", "", totH, GW.monRight(totMontant), "", ""];
       tbReporting = [
         { action: "add-h", label: "＋ Noter des heures", fn: function () { heuresForm(); } },
         { action: "pdf-report", label: "Rapport mensuel (PDF)", fn: function () { printReport(); } }
@@ -559,7 +572,7 @@
         "</div>" +
         GW.toolbar(tbReporting) +
         "<div class='ws-panel'><h3>🔔 Alertes</h3>" + GW.tableHTML(["", "Type", "Détail", ""], alertRows.map(function (a) { return [a[0], "<b>" + esc(a[1]) + "</b>", esc(a[2]), GW.badge(a[3] === "warn" ? "ATTENTION" : "OK", a[3] === "warn" ? "warn" : "ok")]; })) + "</div>" +
-        "<div class='ws-panel'><h3>⏱ Heures d'accompagnement (formules modulables)</h3>" + GW.tableHTML(["Mois", "Client", "Heures", "Montant (45 €/h)", "Statut", "Commandes"], hRows, "Aucune heure notée.") + "</div>";
+        "<div class='ws-panel'><h3>⏱ Heures d'accompagnement (formules modulables)</h3>" + GW.tableHTML(["Mois", "Client", "Heures", "Montant (45 €/h)", "Statut", "Commandes"], hRows, "Aucune heure notée.", hFoot) + "</div>";
     },
     afterRender: function () {
       GW.bindToolbar(tbReporting);

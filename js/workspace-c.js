@@ -110,12 +110,21 @@
       GW.formRow("Date de publication", GW.input("date", today(), "", "type='date'")) +
       GW.formRow("Canal", GW.select("canal", CANAUX)) +
       GW.formRow("Type de contenu", GW.select("type", THEMES)) +
-      GW.formRow("Message (optionnel, laissez vide pour générer)", GW.textarea("contenu", "", "Ex : notre salon de coiffure rouvre à 9 h…", 4)) +
+      GW.formRow("Message (optionnel, laissez vide pour générer)", GW.textarea("contenu", "", "Ex : notre salon de coiffure rouvre à 9 h…", 4) + "<span class='ws-hint' id='post-count'>0 caractère · 0 mot</span>") +
       GW.formRow("Visuel (pense-bête)", GW.select("media", mediaChoices())) +
       "<div class='ws-actions'><button class='admin-btn' type='submit'>Enregistrer au calendrier</button>" +
       "<button class='admin-btn admin-btn-ghost' type='button' data-gen>🎛 Générer avec l'IA</button>" +
       "<button class='admin-btn admin-btn-ghost' type='button' data-svg>🎨 Créer un visuel</button></div></form></div>";
     var txt = $("#ws-post-form textarea");
+    var pc = $("#post-count");
+    if (txt && pc) {
+      var updCount = function () {
+        var words = txt.value.trim() ? txt.value.trim().split(/\s+/).length : 0;
+        pc.textContent = txt.value.length + " caractère(s) · " + words + " mot(s)";
+      };
+      txt.addEventListener("input", updCount);
+      updCount();
+    }
     $("[data-gen]").addEventListener("click", function () {
       var cl2 = GW.findClient($("#ws-post-form [name=clientId]").value);
       GW.save("ws_ia_pending", JSON.stringify({ what: "post", ctx: { client: cl2 ? clientLabel(cl2) : "", canal: $("#ws-post-form [name=canal]").value, type: $("#ws-post-form [name=type]").value } }));
@@ -233,7 +242,9 @@
         var cl = findClient(x.clientId);
         var lbl = PLAB[x.statut] || x.statut;
         var kind = x.statut === "gagne" ? "ok" : x.statut === "perdu" ? "danger" : x.statut === "rdv" ? "warn" : "grey";
-        return [fmtDate(x.date), esc(cl ? clientLabel(cl) : "—"), esc(x.nom || ""), esc(x.societe || ""), esc(x.src || ""), esc(x.tel || ""), GW.badge(lbl, kind), "<button class='mini-btn' data-pst='" + x.id + "'>Suivant +</button> <button class='mini-btn danger' data-pdel='" + x.id + "'>✕</button>"];
+        var act = "<button class='mini-btn' data-pst='" + x.id + "'>Suivant +</button> <button class='mini-btn danger' data-pdel='" + x.id + "'>✕</button>";
+        if (x.statut === "gagne") act = "<button class='mini-btn ok' data-adopt='" + x.id + "'>⇢ Client</button> " + act;
+        return [fmtDate(x.date), esc(cl ? clientLabel(cl) : "—"), esc(x.nom || ""), esc(x.societe || ""), esc(x.src || ""), esc(x.tel || ""), GW.badge(lbl, kind), act];
       });
       var cRows = camp.map(function (x) {
         var cl = findClient(x.clientId);
@@ -283,6 +294,18 @@
         b.addEventListener("click", function () {
           put(K.PROSP, get(K.PROSP).filter(function (x) { return x.id !== b.getAttribute("data-pdel"); }));
           GW.toast("Prospect supprimé");
+          GW.render();
+        });
+      });
+      $$("[data-adopt]", adminMain()).forEach(function (b) {
+        b.addEventListener("click", function () {
+          var p = get(K.PROSP).filter(function (x) { return x.id === b.getAttribute("data-adopt"); })[0];
+          if (!p) return;
+          var clients = GW.getClients();
+          if (clients.filter(function (c) { return c.name === p.nom && c.phone === p.tel; }).length) { GW.toast("Ce prospect est déjà client"); return; }
+          clients.push({ id: uid(), name: p.nom, company: p.societe || "", email: "", phone: p.tel || "", address: "", dispo: "", created: new Date().toISOString() });
+          GW.put("ga_clients", clients);
+          GW.toast("Prospect converti en client (onglet Clients)");
           GW.render();
         });
       });
@@ -553,7 +576,7 @@
           { v: "livre", l: "Plan de publication mensuel" },
           { v: "mail", l: "E-mail de bienvenue client" }
         ], what)) +
-        GW.formRow("Consigne", GW.textarea("ia_prompt", tpl, "La consigne envoyée à l'IA…", 4)) +
+        GW.formRow("Consigne", GW.textarea("ia_prompt", tpl, "La consigne envoyée à l'IA…", 4) + "<span class='ws-hint' id='ia-count'></span>") +
         "</div>" +
         "<div class='ws-actions'>" +
         "<button class='admin-btn' data-ia-save>💾 Enregistrer la clé</button>" +
@@ -563,6 +586,12 @@
     afterRender: function () {
       $("[data-ia-save]").addEventListener("click", saveIAKey);
       $("[data-ia-run]").addEventListener("click", runIA);
+      var ip = $("[name=ia_prompt]"), ic = $("#ia-count");
+      if (ip && ic) {
+        var upd = function () { ic.textContent = ip.value.length + " caractère(s) dans la consigne"; };
+        ip.addEventListener("input", upd);
+        upd();
+      }
     }
   });
 
@@ -585,11 +614,16 @@
     if (!cfg.key) {
       /* mode hors-ligne : réponse basée sur des modèles */
       var base = "🤖 (Hors-ligne, sans clé) Voici une ébauche à personnaliser :\n\n";
+      var offline = "";
       if (what && what.value === "relance") {
-        out.innerHTML = "<pre class='ws-pre'>" + esc(base + "Bonjour,\nNous revenons vers vous au sujet de la facture en attente. Nous restons disponibles pour toute question et vous remercions de votre règlement prochain.\nCordialement") + "</pre>";
+        offline = base + "Bonjour,\nNous revenons vers vous au sujet de la facture en attente. Nous restons disponibles pour toute question et vous remercions de votre règlement prochain.\nCordialement";
       } else {
-        out.innerHTML = "<pre class='ws-pre'>" + esc(base + "Bonjour à tous ! Une nouveauté à découvrir chez nous. Contactez-nous pour en savoir plus.\n\n👉 Astuce : ajoutez votre clé Gemini pour une rédaction personnalisée et complète.") + "</pre>";
+        offline = base + "Bonjour à tous ! Une nouveauté à découvrir chez nous. Contactez-nous pour en savoir plus.\n\n👉 Astuce : ajoutez votre clé Gemini pour une rédaction personnalisée et complète.";
       }
+      GW.save("ws_ia_last", offline);
+      out.innerHTML = "<div class='ws-actions'><button class='mini-btn' data-ia-copy>📋 Copier</button></div>" +
+        "<pre class='ws-pre'>" + esc(offline) + "</pre>";
+      $("[data-ia-copy]").addEventListener("click", function () { GW.copyText(offline); });
       return;
     }
     out.innerHTML = "<p class='ws-hint'>🤖 Génération en cours…</p>";
