@@ -1,5 +1,5 @@
 /* ============================================================
-   NEXORA – Gestion & Digital
+   GestAffaires – Gestion · Administration · Digital
    Interactions : menu mobile, header, scrollspy, reveal,
    simulateur d'heures, FAQ, formulaires, modales, WhatsApp.
    ============================================================ */
