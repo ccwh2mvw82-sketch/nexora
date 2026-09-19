@@ -1230,7 +1230,7 @@
     <div class="modal-panel">
       <button class="modal-close" data-close aria-label="Fermer">✕</button>
       <h3 id="register-title">Créer un compte</h3>
-      <p class="modal-sub">Le premier compte créé sur cette plateforme devient administrateur.</p>
+      <p class="modal-sub">Un compte client. Pour un compte administrateur, saisissez le code d'inscription fourni par GestAffaires.</p>
       <form class="auth-form" id="form-register" novalidate>
         <div class="form-field">
           <label for="reg-name">Nom complet</label>
@@ -1248,7 +1248,11 @@
           <label for="reg-pass">Mot de passe</label>
           <input id="reg-pass" name="pass" type="password" autocomplete="new-password" minlength="4" required>
         </div>
-        <p class="auth-note">Vos données sont enregistrées localement dans votre navigateur. Une version sécurisée serveur est prévue.</p>
+        <div class="form-field">
+          <label for="reg-code">Code d'inscription admin (facultatif)</label>
+          <input id="reg-code" name="code" type="text" autocomplete="off" placeholder="Réservé aux administrateurs">
+        </div>
+        <p class="auth-note">Sans le code, votre compte est un espace client. Vos données sont enregistrées localement dans votre navigateur. Une version sécurisée serveur est prévue.</p>
         <p class="auth-error" id="register-error" hidden></p>
         <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
       </form>
@@ -1319,7 +1323,8 @@
     document.documentElement.classList.add('js');
   </script>
 <script src="js/main.js?v=8"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="js/app.js?v=11"></script>
 </body>
 </html>
+
 

@@ -19,6 +19,10 @@
   var LS_CONTRATS = "ga_contrats";
   var LS_SEQ = "ga_seq";
 
+  /* Code secret requis à l'inscription pour obtenir le rôle admin.
+     Les visiteurs sans ce code créent un compte client. */
+  var ADMIN_CODE = "GEST-2026";
+
   /* ---------- Stockage ---------- */
   function load(key, def) {
     try {
@@ -167,17 +171,19 @@
   watchModalClose(modalLogin);
   watchModalClose(modalRegister);
 
-  function registerUser(name, login, email, pass) {
+  function registerUser(name, login, email, pass, code) {
     var users = getUsers();
     name = (name || "").trim();
     login = (login || "").trim();
     email = (email || "").trim();
+    code = (code || "").trim();
     if (!name || !login || pass.length < 4) { showErr(authErrorRegister, "Veuillez remplir le nom, l'identifiant et un mot de passe d'au moins 4 caractères."); return false; }
     for (var i = 0; i < users.length; i++) {
       if (users[i].login.toLowerCase() === login.toLowerCase()) { showErr(authErrorRegister, "Cet identifiant est déjà utilisé."); return false; }
       if (email && users[i].email && users[i].email.toLowerCase() === email.toLowerCase()) { showErr(authErrorRegister, "Cet e-mail est déjà utilisé."); return false; }
     }
-    var role = users.length === 0 ? "admin" : "client";
+    if (code && code !== ADMIN_CODE) { showErr(authErrorRegister, "Le code d'inscription est invalide."); return false; }
+    var role = code === ADMIN_CODE ? "admin" : "client";
     users.push({ id: uid(), name: name, login: login, email: email, pass: hashPass(pass), role: role, created: new Date().toISOString() });
     setUsers(users);
     save(LS_SESSION, users[users.length - 1].id);
@@ -844,7 +850,8 @@
       var login = $("#reg-login").value;
       var email = $("#reg-email").value;
       var pass = $("#reg-pass").value;
-      registerUser(name, login, email, pass);
+      var code = $("#reg-code").value;
+      registerUser(name, login, email, pass, code);
     });
   }
 
