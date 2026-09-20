@@ -225,13 +225,13 @@
       "<td style='vertical-align:top;'><img src='assets/logo.png' alt='GestAffaires' style='height:72px;width:auto;'></div><div style='font-size:12px;margin-top:6px;'><b>GestAffaires</b><br>Gestion · Administration · Digital</div></td>" +
       "<td style='text-align:right;'><h1 style='margin:0;color:#0B1B33;'>" + (isF ? "FACTURE" : "DEVIS") + "</h1><p style='margin:2px 0;color:#5b6b7b;'>" + esc(doc.num) + "<br>Date : " + fmtDate(doc.date) + (doc.echeance ? (isF ? "<br>Échéance : " : "<br>Valable jusqu'au : ") + fmtDate(doc.echeance) : "") + "</p></td></tr></table>" +
       "<hr style='border:none;border-top:2px solid #0CB5A6;'>" +
-      "<table style='width:100%;'><tr><td style='vertical-align:top;'><b>Émetteur</b><br>GestAffaires<br>06 12 34 56 78<br>contact@gestaffaires.fr</td>" +
+      "<table style='width:100%;'><tr><td style='vertical-align:top;'><b>Émetteur</b><br>GestAffaires<br>06 12 34 56 78<br>gestaffaires45@gmail.com</td>" +
       "<td style='vertical-align:top;text-align:right;'><b>" + esc(isF ? "Client" : "Client") + "</b><br>" + esc(cl ? (cl.name + (cl.company ? "<br>" + cl.company : "") + (cl.address ? "<br>" + cl.address : "") + (cl.email ? "<br>" + cl.email : "") + (cl.phone ? "<br>" + cl.phone : "")) : "—") + "</td></tr></table>" +
       (doc.notes ? "<p style='font-size:12px;'>Note : " + esc(doc.notes) + "</p>" : "") +
       "<table class='ps-table'><thead><tr><th>Désignation</th><th>Qté</th><th>PU HT</th><th>TVA</th><th>Total</th></tr></thead><tbody>" + rows + "</tbody></table>" +
       "<table style='width:260px;margin-left:auto;' class='ps-table'><tr><td>Total HT</td><td class='right'>" + fmtMoney(tot.ht) + "</td></tr><tr><td>TVA</td><td class='right'>" + fmtMoney(tot.tva) + "</td></tr><tr><td><b>Total TTC</b></td><td class='right'><b>" + fmtMoney(tot.ttc) + "</b></td></tr><tr><td colspan='2'><span class='ws-pill " + (stLabel ? stLabel[1] : "") + "'>" + (stLabel ? esc(stLabel[0]) : "") + "</span></td></tr></table>" +
       "<table style='width:100%;margin-top:22px;'><tr><td style='width:50%;'>Le prestataire</td><td style='width:50%;text-align:right;'>Le client</td></tr><tr><td style='height:48px;'></td><td></td></tr></table>" +
-      "<p style='font-size:11px;color:#8a98a8;'>GestAffaires – Gestion &amp; Digital · 06 12 34 56 78 · contact@gestaffaires.fr</p>";
+      "<p style='font-size:11px;color:#8a98a8;'>GestAffaires – Gestion &amp; Digital · 06 12 34 56 78 · gestaffaires45@gmail.com</p>";
     GW.printHTML(isF ? "Facture" : "Devis", body);
   }
 

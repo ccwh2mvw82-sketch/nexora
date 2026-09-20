@@ -38,7 +38,6 @@
      ================================================================== */
   var CANAUX = ["Facebook", "Instagram", "LinkedIn", "Google Business", "Newsletter", "Autre"];
   var THEMES = ["Info / actualité", "Conseil métier", "Promotion / offre", "Témoignage client", "Coulisses", "Événement"];
-  var FICTIFS = ["Lou", "Sarah", "Thomas", "Camille", "Julien"];
   var tbCom = [];
   var tbAcq = [];
   var tbSec = [];
@@ -188,7 +187,7 @@
       "<text x='120' y='392' font-family='Arial' font-size='36' fill='" + col + "'>" + stripXml(intro) + "</text>" +
       "<rect x='120' y='460' width='840' height='4' fill='#E3EAF4'/>" +
       "<text x='120' y='560' font-family='Arial' font-size='44' fill='#1B3358'>" + stripXml(msg) + "</text>" +
-      "<text x='120' y='920' font-family='Arial' font-size='30' fill='#8a98a8'>06 12 34 56 78 · contact@gestaffaires.fr</text>" +
+      "<text x='120' y='920' font-family='Arial' font-size='30' fill='#8a98a8'>06 12 34 56 78 · gestaffaires45@gmail.com</text>" +
       "<rect x='760' y='860' width='160' height='60' rx='16' fill='" + col + "'/><text x='840' y='892' font-family='Arial' font-size='28' fill='#fff' text-anchor='middle'>Découvrir</text>" +
       "</svg>";
     var dataUrl = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
