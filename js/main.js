@@ -76,6 +76,7 @@
     "solution": "solution",
     "formules": "home",
     "tarifs": "home",
+    "creer-ma-formule": "home",
     "creation-site": "creation",
     "processus": "creation",
     "secretariat": "secretariat",

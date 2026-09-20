@@ -2308,7 +2308,6 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   border-radius: 12px;
 }
 .pf-head h3 { font-size: 18px; font-weight: 700; margin-bottom: 5px; letter-spacing: 0.01em; }
-.pf-head p { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
 .pf-tiers { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
 .pf-row {
