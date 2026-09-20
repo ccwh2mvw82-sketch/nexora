@@ -18,16 +18,58 @@
     { key: "surmesure", label: "Solution sur mesure", ico: "✨" },
     { key: "contact", label: "Contact & diagnostic", ico: "📩" }
   ];
-  var STEP = 360 / MENUS.length;
-
   var shell = $("#mob-shell");
   if (!shell) return;
 
   var ring = $("#mob-ring");
   var orbEls = [];
   var current = 0;
-  var angle = 0;
-  var wheelAcc = 0;
+  var rx = 0;
+  var ry = 0;
+  var dragging = false;
+  var dragX = 0;
+  var dragY = 0;
+  var moved = 0;
+  var blockClick = false;
+  var R = 168;
+  var SLOTS = [
+    { az: 0, alt: 0 },      /* 0 formules — devant */
+    { az: 180, alt: 0 },    /* 1 builder — arrière */
+    { az: 90, alt: 0 },     /* 2 site — droite */
+    { az: 270, alt: 0 },    /* 3 teleph — gauche */
+    { az: 0, alt: 78 },     /* 4 surmesure — haut */
+    { az: 0, alt: -78 }     /* 5 contact — bas */
+  ];
+
+  function seg(v) { return v * Math.PI / 180; }
+
+  function clampRx() {
+    if (rx > 90) rx = 90;
+    if (rx < -90) rx = -90;
+  }
+
+  /* Profondeur caméra d'un orbe (la plus grande = le plus proche) */
+  function orbDepth(i) {
+    var a = seg(SLOTS[i].az), t = seg(SLOTS[i].alt);
+    var vx = 0, vy = 0, vz = R;
+    var cs = Math.cos(t), sn = Math.sin(t);
+    var ny = vy * cs - vz * sn;
+    var nz = vy * sn + vz * cs;
+    vy = ny; vz = nz;
+    cs = Math.cos(a); sn = Math.sin(a);
+    var nx = vx * cs + vz * sn;
+    var nz2 = -vx * sn + vz * cs;
+    vx = nx; vz = nz2;
+    cs = Math.cos(seg(ry)); sn = Math.sin(seg(ry));
+    nx = vx * cs + vz * sn;
+    nz2 = -vx * sn + vz * cs;
+    vx = nx; vz = nz2;
+    cs = Math.cos(seg(rx)); sn = Math.sin(seg(rx));
+    ny = vy * cs - vz * sn;
+    nz2 = vy * sn + vz * cs;
+    vy = ny; vz = nz2;
+    return vz;
+  }
 
   /* ---------- Sphère 3D ---------- */
   MENUS.forEach(function (m, i) {
@@ -36,8 +78,9 @@
     orb.className = "mob-orb" + (i === current ? " active" : "");
     orb.setAttribute("aria-label", m.label);
     orb.textContent = m.ico;
-    orb.style.transform = "rotateX(" + (i * STEP) + "deg) translateZ(168px)";
+    orb.style.transform = "rotateY(" + SLOTS[i].az + "deg) rotateX(" + SLOTS[i].alt + "deg) translateZ(" + R + "px)";
     orb.addEventListener("click", function () {
+      if (blockClick) { blockClick = false; return; }
       openScreen(m.key);
     });
     ring.appendChild(orb);
@@ -52,52 +95,72 @@
     $("#mob-open-label").textContent = MENUS[current].label;
   }
 
-  function applyAngle(animate) {
-    if (reduceMotion.matches) animate = false;
-    if (animate) {
-      ring.style.transition = "transform .45s cubic-bezier(.22,.61,.36,1)";
-    } else {
-      ring.style.transition = "none";
+  function render() {
+    if (!ring) return;
+    ring.style.transition = (dragging || reduceMotion.matches) ? "none" : "transform .16s ease-out";
+    ring.style.transform = "rotateX(" + rx + "deg) rotateY(" + ry + "deg)";
+    var best = 0, bz = -Infinity;
+    orbEls.forEach(function (orb, i) {
+      var z = orbDepth(i);
+      if (z > bz) { bz = z; best = i; }
+      var s = 0.7 + 0.35 * (z / R + 1) / 2;
+      orb.style.transform = "rotateY(" + SLOTS[i].az + "deg) rotateX(" + SLOTS[i].alt + "deg) translateZ(" + R + "px) scale(" + s.toFixed(3) + ")";
+    });
+    if (best !== current) {
+      current = best;
+      refreshOrbs();
     }
-    angle = -(current * STEP);
-    ring.style.transform = "rotateX(" + angle + "deg)";
-  }
-
-  function turn(delta) {
-    var prev = current;
-    current = (current + delta + MENUS.length) % MENUS.length;
-    if (current !== prev) refreshOrbs();
-    applyAngle(true);
   }
 
   $("#mob-open").addEventListener("click", function () {
+    if (blockClick) { blockClick = false; return; }
     openScreen(MENUS[current].key);
   });
 
-  /* Rotation via molette / geste vertical sur l'accueil */
+  /* Rotation libre : glisser dans toutes les directions, la sphère suit le doigt */
+  window.addEventListener("pointerdown", function (e) {
+    if (!MOB.matches || !isHomeActive()) return;
+    dragging = true;
+    blockClick = false;
+    dragX = e.clientX;
+    dragY = e.clientY;
+    moved = 0;
+    ring.style.transition = "none";
+  });
+
+  window.addEventListener("pointermove", function (e) {
+    if (!dragging || !MOB.matches || !isHomeActive()) return;
+    var dx = e.clientX - dragX;
+    var dy = e.clientY - dragY;
+    dragX = e.clientX;
+    dragY = e.clientY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    ry += dx * 0.45;
+    rx -= dy * 0.45;
+    clampRx();
+    render();
+  });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    if (moved > 10) blockClick = true;
+    render();
+  }
+
+  window.addEventListener("pointerup", endDrag);
+  window.addEventListener("pointercancel", endDrag);
+
+  /* Rotation via molette / pavé tactile (vertical : bascule, horizontal : orbite) */
   var screenHome = $("#mob-screen-home");
   window.addEventListener("wheel", function (e) {
     if (!MOB.matches || !isHomeActive()) return;
     e.preventDefault();
-    wheelAcc += e.deltaY;
-    var thresh = 60;
-    while (wheelAcc >= thresh) { turn(1); wheelAcc -= thresh; }
-    while (wheelAcc <= -thresh) { turn(-1); wheelAcc += thresh; }
+    ry += e.deltaX * 0.15;
+    rx += e.deltaY * 0.15;
+    clampRx();
+    render();
   }, { passive: false });
-
-  var touchStartY = null;
-  window.addEventListener("touchstart", function (e) {
-    if (!MOB.matches || !isHomeActive()) return;
-    touchStartY = e.touches[0] ? e.touches[0].clientY : null;
-  }, { passive: true });
-
-  window.addEventListener("touchend", function (e) {
-    if (!MOB.matches || !isHomeActive() || touchStartY === null) return;
-    var dy = touchStartY - (e.changedTouches[0] ? e.changedTouches[0].clientY : touchStartY);
-    touchStartY = null;
-    if (Math.abs(dy) < 40) return;
-    turn(dy > 0 ? 1 : -1);
-  }, { passive: true });
 
   function isHomeActive() {
     return screenHome && !screenHome.hasAttribute("hidden");
@@ -126,12 +189,22 @@
   function openScreen(view) {
     if (!view) return;
     if (view === "home") {
-      applyAngle(true);
+      render();
     } else if (view === "formules") {
       resetCarousel();
     }
     setScreen(view);
   }
+
+  /* Boutons d'action présents dans les écrans (hors menu et hors sections elles-mêmes) */
+  $$("#mob-shell [data-mob-view]").forEach(function (el) {
+    if (menuPanel && menuPanel.contains(el)) return;
+    if (el.classList && el.classList.contains("mob-screen")) return;
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      openScreen(el.getAttribute("data-mob-view"));
+    });
+  });
 
   if (menuPanel) {
     menuPanel.addEventListener("click", function (e) {
@@ -277,13 +350,13 @@
   buildDots();
   resetCarousel();
   refreshOrbs();
-  applyAngle(false);
+  render();
 
   if (MOB.addEventListener) {
     MOB.addEventListener("change", function () {
       var active = $("#mob-screen-" + (MOB.matches ? "home" : "home"));
       setScreen("home");
-      applyAngle(false);
+      render();
     });
   }
 

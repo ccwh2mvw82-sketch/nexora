@@ -2643,6 +2643,10 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     margin: 6px auto;
     perspective: 900px;
     -webkit-perspective: 900px;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
   .mob-ring {
     position: absolute;
@@ -2670,6 +2674,7 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     -webkit-backface-visibility: hidden;
     opacity: 0.85;
     transition: opacity 0.3s ease, box-shadow 0.3s ease;
+    will-change: transform;
   }
   .mob-orb.active {
     opacity: 1;
@@ -2965,6 +2970,49 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     font-weight: 800;
     margin: 0 0 6px;
   }
+
+  .mob-subblock {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(12, 181, 166, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+  .mob-subblock-ico {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(12, 181, 166, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .mob-subblock-body { flex: 1; min-width: 0; }
+  .mob-subblock-body strong {
+    display: block;
+    font-size: 14.5px;
+    font-weight: 800;
+    margin-bottom: 3px;
+  }
+  .mob-subblock-body p {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.82);
+    margin: 0;
+  }
+  .mob-subblock-link {
+    flex: 0 0 auto;
+    color: #0cb5a6;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .mob-subblock-link:hover { text-decoration: underline; }
 
   .mob-coords {
     display: flex;

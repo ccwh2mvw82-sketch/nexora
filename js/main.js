@@ -227,6 +227,7 @@
     devis:      { h: 2, g: "admin" },
     factures:   { h: 3, g: "admin" },
     relances:   { h: 2, g: "admin" },
+    impayes:    { h: 3, g: "admin" },
     suivi:      { h: 2, g: "admin" },
     classement: { h: 2, g: "admin" },
     tableaux:   { h: 2, g: "admin" },

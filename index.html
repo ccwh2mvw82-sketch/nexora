@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=16">
+  <link rel="stylesheet" href="css/style.css?v=17">
   <link rel="stylesheet" href="css/admin.css?v=18">
   <script type="application/ld+json">
   {
@@ -263,7 +263,8 @@
             <ul class="serv-list">
               <li>Devis</li>
               <li>Facturation</li>
-              <li>Relances clients</li>
+<li>Relances clients</li>
+              <li>Récupération &amp; suivi des impayés</li>
               <li>Suivi des règlements</li>
               <li>Classement de documents</li>
               <li>Organisation administrative</li>
@@ -583,6 +584,7 @@
               <label class="bitem"><input type="checkbox" data-b="devis"><span>Devis</span></label>
               <label class="bitem"><input type="checkbox" data-b="factures"><span>Facturation</span></label>
               <label class="bitem"><input type="checkbox" data-b="relances"><span>Relances clients</span></label>
+              <label class="bitem"><input type="checkbox" data-b="impayes"><span>Récupération &amp; suivi des impayés</span></label>
               <label class="bitem"><input type="checkbox" data-b="suivi"><span>Suivi administratif</span></label>
               <label class="bitem"><input type="checkbox" data-b="classement"><span>Classement et archivage</span></label>
               <label class="bitem"><input type="checkbox" data-b="tableaux"><span>Tableaux de gestion</span></label>
@@ -1065,7 +1067,8 @@
               <label for="f-besoin">Principal besoin</label>
               <select id="f-besoin" name="besoin">
                 <option value="">Sélectionnez…</option>
-                <option value="admin">Gestion administrative</option>
+<option value="admin">Gestion administrative</option>
+                <option value="impayes">Récupération des impayés</option>
                 <option value="tel">Secrétariat téléphonique</option>
                 <option value="site">Site Internet</option>
                 <option value="google">Google Business / SEO</option>
@@ -1539,6 +1542,7 @@
             <label class="bitem"><input type="checkbox" data-b="devis"><span>Devis</span></label>
             <label class="bitem"><input type="checkbox" data-b="factures"><span>Facturation</span></label>
             <label class="bitem"><input type="checkbox" data-b="relances"><span>Relances clients</span></label>
+            <label class="bitem"><input type="checkbox" data-b="impayes"><span>Récupération &amp; suivi des impayés</span></label>
             <label class="bitem"><input type="checkbox" data-b="suivi"><span>Suivi administratif</span></label>
             <label class="bitem"><input type="checkbox" data-b="classement"><span>Classement et archivage</span></label>
             <label class="bitem"><input type="checkbox" data-b="tableaux"><span>Tableaux de gestion</span></label>
@@ -1632,6 +1636,14 @@
           <span>💻 Présence digitale</span>
           <span>🚀 Acquisition de prospects</span>
         </div>
+        <div class="mob-subblock">
+          <span class="mob-subblock-ico">💶</span>
+          <div class="mob-subblock-body">
+            <strong>Récupération &amp; suivi des impayés</strong>
+            <p>Relances amiable écrites et téléphoniques, propositions d'échéancier, suivi de chaque dossier jusqu'au règlement — dans le cadre réglementé du recouvrement amiable de créances.</p>
+          </div>
+          <a class="mob-subblock-link" href="#" data-mob-view="builder">Ajouter à ma formule →</a>
+        </div>
         <button class="btn btn-primary btn-block" data-mob-view="contact">Demander mon offre personnalisée</button>
       </section>
 
@@ -1661,6 +1673,7 @@
             <select id="mob-besoin" name="besoin">
               <option value="">Sélectionnez…</option>
               <option value="admin">Gestion administrative</option>
+              <option value="impayes">Récupération des impayés</option>
               <option value="formule">Un abonnement ou une formule</option>
               <option value="tel">Secrétariat téléphonique</option>
               <option value="site">Site Internet</option>
@@ -1696,8 +1709,8 @@
     document.documentElement.classList.remove('no-js');
     document.documentElement.classList.add('js');
   </script>
-<script src="js/main.js?v=12"></script>
-<script src="js/mobile.js?v=2"></script>
+<script src="js/main.js?v=13"></script>
+<script src="js/mobile.js?v=3"></script>
   <script src="js/app.js?v=14"></script>
 <script src="js/workspace.js?v=8"></script>
 <script src="js/workspace-g.js?v=4"></script>
