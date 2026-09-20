@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    GestAffaires – Espace de travail · Modules DIGITAL & SERVICES
    workspace-c.js
    Modules : Communication, Acquisition, Secrétariat, IA.
@@ -530,6 +530,9 @@
   /* ==================================================================
      MODULE : ASSISTANT IA (Google Gemini – clé optionnelle)
      ================================================================== */
+  var FALLBACK_MODEL = "gemini-3.5-flash";
+  var MODELS_OK = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+  function saneModel(m) { return MODELS_OK.indexOf(m) >= 0 ? m : FALLBACK_MODEL; }
   var presets = {
     post: "Rédige une publication pour {canal} au nom de l'entreprise « {client} » (type : {type}). Ton : proche, simple, efficace, sans emojis excessifs. 3 à 5 phrases, avec appel à l'action et contact. Donne uniquement le texte de la publication.",
     relance: "Rédige une relance de paiement polie mais ferme (1er niveau, J+7) au nom d'un prestataire de gestion pour son client entreprise « {client} ». 3 phrases maximum.",
@@ -567,7 +570,7 @@
         "<p class='ws-hint'>Fonctionne avec la clé API <b>Google Gemini</b> (gratuite pour un usage modéré : aistudio.google.com/apikey). La clé reste stockée sur votre appareil (never envoyée nulle part ailleurs). Sans clé, le module indique seulement les étapes + suggestions.</p>" +
         "<div class='ws-form'>" +
         GW.formRow("Clé API Gemini", GW.input("ia_key", cfg.key || "", "Pastez votre clé AI…", "type='password'")) +
-        GW.formRow("Modèle", GW.select("ia_model", ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"], cfg.model || "gemini-2.0-flash")) +
+        GW.formRow("Modèle", GW.select("ia_model", MODELS_OK, saneModel(cfg.model))) +
         GW.formRow("Type de rédaction", GW.select("ia_what", [
           { v: "post", l: "Publication réseaux sociaux" },
           { v: "relance", l: "Relance de paiement" },
@@ -600,7 +603,7 @@
     var el = $("[name=ia_key]");
     var key = el ? el.value.trim() : "";
     var mod = $("[name=ia_model]");
-    GW.save(K.IA, { key: key, model: mod ? mod.value : "gemini-2.0-flash" });
+    GW.save(K.IA, { key: key, model: mod ? saneModel(mod.value) : FALLBACK_MODEL });
     GW.toast(key ? "Clé enregistrée" : "Clé effacée");
     GW.render();
   }
@@ -609,7 +612,7 @@
     var el = $("[name=ia_key]");
     var key = (el && el.value.trim()) || GW.load(K.IA, {}).key || "";
     var mod = $("[name=ia_model]");
-    var model = mod ? mod.value : "gemini-2.0-flash";
+    var model = mod ? saneModel(mod.value) : FALLBACK_MODEL;
     var out = $("#ia-out");
     if (!key) { GW.toast("Collez d'abord votre clé Gemini"); return; }
     out.innerHTML = "<p class='ws-hint'>🔍 Vérification de la clé…</p>";
@@ -622,9 +625,13 @@
       var txt = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
       if (!txt) {
         var er = data && data.error;
-        out.innerHTML = "<p class='ws-hint' style='color:#b3423a;'>❌ Clé refusée — " + esc(er && (er.message || er.status) || "réponse vide") + "</p>";
-        if (er && /API_KEY|KEY|invalid|INVALID/.test(er.message || "|" + er.status)) {
-          out.innerHTML += "<p class='ws-hint'>Vérifiez la clé sur aistudio.google.com/apikey puis collez-la au-dessus. Les clés commencent généralement par « AIza ».</p>";
+        var em = (er && (er.message || er.status)) || "réponse vide";
+        out.innerHTML = "<p class='ws-hint' style='color:#b3423a;'>❌ " + esc(em) + "</p>";
+        if (er && /API_KEY|KEY|invalid|INVALID/.test(em)) {
+          out.innerHTML += "<p class='ws-hint'>Vérifiez la clé sur aistudio.google.com/apikey puis collez-la au-dessus. Les clés commencent par « AIza » ou « AQ. ».</p>";
+        }
+        if (er && /notFound|404|Model/.test(em)) {
+          out.innerHTML += "<p class='ws-hint'>Le modèle choisi n'est pas disponible sur votre compte. Sélectionnez-en un autre dans la liste « Modèle » (ex : gemini-3.5-flash, gemini-flash-latest) puis re-tester.</p>";
         }
         return;
       }
@@ -660,7 +667,8 @@
     }
     out.innerHTML = "<p class='ws-hint'>🤖 Génération en cours…</p>";
     var body = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(cfg.model || "gemini-2.0-flash") + ":generateContent?key=" + encodeURIComponent(cfg.key);
+    var model = saneModel(cfg.model || FALLBACK_MODEL);
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(cfg.key);
     fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
       .then(function (data) {
