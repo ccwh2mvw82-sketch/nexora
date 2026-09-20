@@ -1340,6 +1340,41 @@ h1, h2, h3, h4 {
 }
 .modal-panel h3 { font-size: 22px; margin-bottom: 16px; }
 .modal-panel p { font-size: 15px; color: var(--text); margin-bottom: 12px; }
+.modal-sub { color: var(--muted) !important; font-size: 14px !important; line-height: 1.5 !important; }
+.modal-sub strong { color: var(--teal-dark); }
+.modal-check { list-style: none; padding: 0; margin: 0 0 16px; }
+.modal-check li {
+  position: relative;
+  padding: 8px 0 8px 28px;
+  font-size: 15px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.modal-check li::before {
+  content: "✓";
+  position: absolute;
+  left: 2px;
+  top: 8px;
+  color: var(--teal-dark);
+  font-weight: 800;
+}
+.modal-note {
+  font-size: 13px !important;
+  color: var(--muted) !important;
+  font-style: italic;
+  margin-bottom: 18px !important;
+}
+.modal-gift {
+  border: 1px dashed var(--teal);
+  background: rgba(12, 181, 166, 0.1);
+  color: var(--teal-dark);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 800;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 14px;
+}
 .modal-placeholder {
   font-size: 13px !important;
   color: var(--muted) !important;
@@ -2312,15 +2347,18 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
 .pf-tiers { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
 .pf-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   background: var(--bg-soft);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
   transition: border-color 0.25s ease;
 }
+.pf-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pf-end { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pf-more { font-size: 12.5px; font-weight: 700; color: var(--teal); text-decoration: none; }
+.pf-more:hover { text-decoration: underline; }
 .pf-row:hover { border-color: rgba(12, 181, 166, 0.4); }
 .pf-row .pf-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 15px; font-weight: 700; }
 .pf-row .pf-desc { font-size: 12.5px; color: var(--muted); white-space: nowrap; }

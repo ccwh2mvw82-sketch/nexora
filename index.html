@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=14">
+  <link rel="stylesheet" href="css/style.css?v=15">
   <link rel="stylesheet" href="css/admin.css?v=18">
   <script type="application/ld+json">
   {
@@ -479,19 +479,34 @@
             </header>
             <div class="pf-tiers">
               <div class="pf-row">
-                <span class="pf-name">Essentiel</span>
-                <span class="pf-desc">10 h / mois</span>
-                <span class="pf-price">350 €</span>
+                <div class="pf-top">
+                  <span class="pf-name">Essentiel</span>
+                  <span class="pf-desc">10 h / mois</span>
+                </div>
+                <div class="pf-end">
+                  <span class="pf-price">350 €</span>
+                  <a class="pf-more" href="#" data-modal="f-essentiel">En savoir plus</a>
+                </div>
               </div>
               <div class="pf-row hot">
-                <span class="pf-name">Confort <span class="pf-tag">Le plus choisi</span></span>
-                <span class="pf-desc">20 h / mois</span>
-                <span class="pf-price">600 €</span>
+                <div class="pf-top">
+                  <span class="pf-name">Confort <span class="pf-tag">Le plus choisi</span></span>
+                  <span class="pf-desc">20 h / mois</span>
+                </div>
+                <div class="pf-end">
+                  <span class="pf-price">600 €</span>
+                  <a class="pf-more" href="#" data-modal="f-confort">En savoir plus</a>
+                </div>
               </div>
               <div class="pf-row">
-                <span class="pf-name">Pro</span>
-                <span class="pf-desc">40 h / mois</span>
-                <span class="pf-price">1 000 €</span>
+                <div class="pf-top">
+                  <span class="pf-name">Pro</span>
+                  <span class="pf-desc">40 h / mois</span>
+                </div>
+                <div class="pf-end">
+                  <span class="pf-price">1 000 €</span>
+                  <a class="pf-more" href="#" data-modal="f-pro">En savoir plus</a>
+                </div>
               </div>
             </div>
           </article>
@@ -504,14 +519,24 @@
             </header>
             <div class="pf-tiers">
               <div class="pf-row">
-                <span class="pf-name">Visibilité</span>
-                <span class="pf-desc">15 h / mois</span>
-                <span class="pf-price">690 €</span>
+                <div class="pf-top">
+                  <span class="pf-name">Visibilité</span>
+                  <span class="pf-desc">15 h / mois</span>
+                </div>
+                <div class="pf-end">
+                  <span class="pf-price">690 €</span>
+                  <a class="pf-more" href="#" data-modal="f-visibilite">En savoir plus</a>
+                </div>
               </div>
               <div class="pf-row">
-                <span class="pf-name">Visibilité Plus</span>
-                <span class="pf-desc">20 h / mois</span>
-                <span class="pf-price">850 €</span>
+                <div class="pf-top">
+                  <span class="pf-name">Visibilité Plus</span>
+                  <span class="pf-desc">20 h / mois</span>
+                </div>
+                <div class="pf-end">
+                  <span class="pf-price">850 €</span>
+                  <a class="pf-more" href="#" data-modal="f-visibilite-plus">En savoir plus</a>
+                </div>
               </div>
             </div>
           </article>
@@ -524,9 +549,14 @@
             </header>
             <div class="pf-tiers">
               <div class="pf-row hot">
-                <span class="pf-name">Développement <span class="pf-tag">Accompagnement complet</span></span>
-                <span class="pf-desc">25 h / mois</span>
-                <span class="pf-price">1 290 €</span>
+                <div class="pf-top">
+                  <span class="pf-name">Développement <span class="pf-tag">Accompagnement complet</span></span>
+                  <span class="pf-desc">25 h / mois</span>
+                </div>
+                <div class="pf-end">
+                  <span class="pf-price">1 290 €</span>
+                  <a class="pf-more" href="#" data-modal="f-developpement">En savoir plus</a>
+                </div>
               </div>
             </div>
             <p class="pf-opt">☎️ Option secrétariat téléphonique : <b>+150 € / mois</b></p>
@@ -624,7 +654,7 @@
                 <li>Design personnalisé</li>
                 <li>Version mobile</li>
                 <li>Plusieurs pages</li>
-                <li>Formulaire de contact</li>
+                <li>Formuleire de contact</li>
                 <li>Google Maps</li>
                 <li>SEO de base</li>
                 <li>Mise en ligne</li>
@@ -1122,7 +1152,144 @@
     </div>
   </footer>
 
-  <!-- Modal mentions légales -->
+  <!-- Modal formule Essentiel -->
+<div class="modal" id="modal-f-essentiel" role="dialog" aria-modal="true" aria-labelledby="f-essentiel-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Fermer">✕</button>
+    <span class="eyebrow">Formule Essentiel</span>
+    <h3 id="f-essentiel-title">Gestion administrative · 10 h / mois</h3>
+    <p class="modal-sub"><strong>350 € HT / mois</strong></p>
+    <ul class="modal-check">
+      <li>Devis</li>
+      <li>Facturation</li>
+      <li>Relances clients</li>
+      <li>Suivi administratif</li>
+      <li>Classement et archivage</li>
+      <li>Tableaux de gestion</li>
+      <li>Préparation des éléments pour le comptable</li>
+    </ul>
+    <p class="modal-note">Volume modulable d'un mois à l'autre · Heure supplémentaire : 35 € / h.</p>
+    <a href="#contact" class="btn btn-primary" data-close>Choisir cette formule</a>
+  </div>
+</div>
+
+<!-- Modal formule Confort -->
+<div class="modal" id="modal-f-confort" role="dialog" aria-modal="true" aria-labelledby="f-confort-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Fermer">✕</button>
+    <span class="eyebrow">Formule Confort</span>
+    <h3 id="f-confort-title">Gestion administrative · 20 h / mois</h3>
+    <p class="modal-sub"><strong>600 € HT / mois</strong> · Notre formule la plus choisie</p>
+    <ul class="modal-check">
+      <li>Devis</li>
+      <li>Facturation</li>
+      <li>Relances clients</li>
+      <li>Suivi administratif</li>
+      <li>Classement et archivage</li>
+      <li>Tableaux de gestion</li>
+      <li>Préparation des éléments pour le comptable</li>
+    </ul>
+    <p class="modal-note">Volume modulable d'un mois à l'autre · Heure supplémentaire : 35 € / h.</p>
+    <a href="#contact" class="btn btn-primary" data-close>Choisir cette formule</a>
+  </div>
+</div>
+
+<!-- Modal formule Pro -->
+<div class="modal" id="modal-f-pro" role="dialog" aria-modal="true" aria-labelledby="f-pro-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Fermer">✕</button>
+    <span class="eyebrow">Formule Pro</span>
+    <h3 id="f-pro-title">Gestion administrative · 40 h / mois</h3>
+    <p class="modal-sub"><strong>1 000 € HT / mois</strong> · Le maximum de temps pour votre administration</p>
+    <ul class="modal-check">
+      <li>Devis</li>
+      <li>Facturation</li>
+      <li>Relances clients</li>
+      <li>Suivi administratif</li>
+      <li>Classement et archivage</li>
+      <li>Tableaux de gestion</li>
+      <li>Préparation des éléments pour le comptable</li>
+      <li>Traitement prioritaire de vos dossiers</li>
+    </ul>
+    <p class="modal-note">Volume modulable d'un mois à l'autre · Heure supplémentaire : 35 € / h.</p>
+    <a href="#contact" class="btn btn-primary" data-close>Choisir cette formule</a>
+  </div>
+</div>
+
+<!-- Modal formule Visibilité -->
+<div class="modal" id="modal-f-visibilite" role="dialog" aria-modal="true" aria-labelledby="f-visibilite-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Fermer">✕</button>
+    <span class="eyebrow">Formule Visibilité</span>
+    <h3 id="f-visibilite-title">Gestion + visibilité digitale · 15 h / mois</h3>
+    <p class="modal-sub"><strong>690 € HT / mois</strong></p>
+    <ul class="modal-check">
+      <li>Gestion administrative (devis, factures, relances…)</li>
+      <li>Google Business Profile</li>
+      <li>Référencement local</li>
+      <li>Optimisation de la présence en ligne</li>
+      <li>Gestion de votre présence sur un réseau social</li>
+      <li>Publications et programmation (4 par mois)</li>
+      <li>Reporting mensuel</li>
+    </ul>
+    <p class="modal-note">Heure supplémentaire : 35 € / h.</p>
+    <a href="#contact" class="btn btn-primary" data-close>Choisir cette formule</a>
+  </div>
+</div>
+
+<!-- Modal formule Visibilité Plus -->
+<div class="modal" id="modal-f-visibilite-plus" role="dialog" aria-modal="true" aria-labelledby="f-visibilite-plus-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Fermer">✕</button>
+    <span class="eyebrow">Formule Visibilité Plus</span>
+    <h3 id="f-visibilite-plus-title">Gestion + visibilité digitale · 20 h / mois</h3>
+    <p class="modal-sub"><strong>850 € HT / mois</strong></p>
+    <ul class="modal-check">
+      <li>Gestion administrative (devis, factures, relances…)</li>
+      <li>Google Business Profile</li>
+      <li>Référencement local / SEO</li>
+      <li>Gestion de 2 réseaux sociaux (8 publications / mois)</li>
+      <li>Création de visuels</li>
+      <li>Gestion des avis Google</li>
+      <li>Optimisation de la présence en ligne</li>
+      <li>Reporting mensuel</li>
+    </ul>
+    <p class="modal-note">Heure supplémentaire : 35 € / h.</p>
+    <a href="#contact" class="btn btn-primary" data-close>Choisir cette formule</a>
+  </div>
+</div>
+
+<!-- Modal formule Développement -->
+<div class="modal" id="modal-f-developpement" role="dialog" aria-modal="true" aria-labelledby="f-developpement-title" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Fermer">✕</button>
+    <span class="eyebrow">Formule Développement</span>
+    <h3 id="f-developpement-title">Gestion + digital + acquisition · 25 h / mois</h3>
+    <p class="modal-sub"><strong>1 290 € HT / mois</strong> · Accompagnement complet</p>
+    <div class="modal-gift">🎁 Création de votre site Internet offerte + 1 an de maintenance inclus</div>
+    <ul class="modal-check">
+      <li>Gestion administrative (devis, factures, relances…)</li>
+      <li>Google Business Profile</li>
+      <li>Référencement local / SEO</li>
+      <li>Gestion de 2 réseaux sociaux</li>
+      <li>Création de contenus et de visuels</li>
+      <li>Google Ads : mise en place et suivi des campagnes</li>
+      <li>WhatsApp Business</li>
+      <li>Accompagnement stratégique</li>
+      <li>Reporting mensuel</li>
+    </ul>
+    <p class="modal-note">Option secrétariat téléphonique : +150 € / mois · Budget Google Ads non inclus.</p>
+    <a href="#contact" class="btn btn-primary" data-close>Choisir cette formule</a>
+  </div>
+</div>
+
+<!-- Modal mentions légales -->
   <div class="modal" id="modal-mentions" role="dialog" aria-modal="true" aria-labelledby="mentions-title" hidden>
     <div class="modal-backdrop" data-close></div>
     <div class="modal-panel">
