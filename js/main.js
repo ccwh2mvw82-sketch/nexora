@@ -221,101 +221,111 @@
     });
   });
 
-  /* ---------- Calculateur (2 filtres : périmètre + heures) ---------- */
-  var FAMILIES = {
-    admin: { tiers: [
+  /* ---------- Composez votre formule ---------- */
+  var PRESTATIONS = {
+    devis:      { h: 2, g: "admin" },
+    factures:   { h: 3, g: "admin" },
+    relances:   { h: 2, g: "admin" },
+    suivi:      { h: 2, g: "admin" },
+    classement: { h: 2, g: "admin" },
+    tableaux:   { h: 2, g: "admin" },
+    compta:     { h: 4, g: "admin" },
+    gbp:        { h: 2, g: "visib" },
+    seo:        { h: 3, g: "visib" },
+    presence:   { h: 2, g: "visib" },
+    avis:       { h: 1, g: "visib" },
+    res1:       { h: 5, g: "visib" },
+    res2:       { h: 4, g: "visib" },
+    visuels:    { h: 3, g: "visib" },
+    contenus:   { h: 3, g: "visib" },
+    ads:        { h: 7, g: "acq" },
+    adsopt:     { h: 3, g: "acq" },
+    site:       { h: 5, g: "acq" },
+    wa:         { h: 2, g: "acq" },
+    strat:      { h: 2, g: "acq" },
+    secre:      { h: 4, g: "acq" }
+  };
+  var POOLS = {
+    admin: [
       { h: 10, p: 350, n: "Essentiel" },
       { h: 20, p: 600, n: "Confort" },
       { h: 40, p: 1000, n: "Pro" }
-    ] },
-    visib: { tiers: [
+    ],
+    visib: [
       { h: 15, p: 690, n: "Visibilité" },
       { h: 20, p: 850, n: "Visibilité Plus" }
-    ] },
-    dev: { tiers: [
+    ],
+    acq: [
+      { h: 15, p: 690, n: "Visibilité" },
+      { h: 20, p: 850, n: "Visibilité Plus" },
       { h: 25, p: 1290, n: "Développement" }
-    ] }
+    ]
   };
-
-  var calcOptions = $("#calc-options");
-  var calcPrice = $("#calc-price");
-  var calcNote = $("#calc-note");
-  var calcResult = $("#calc-result");
 
   function formatPrice(n) {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
   }
 
-  var currentFamily = "admin";
-  var currentHours = "20";
+  var builderTime = $("#bresult-time");
+  var builderPrice = $("#bresult-price");
+  var builderNote = $("#bresult-note");
+  var builderBoxes = Array.prototype.slice.call(document.querySelectorAll(".bitem input[data-b]"));
 
-  function recommend(family, selHours) {
-    var tiers = FAMILIES[family].tiers.slice().sort(function (a, b) { return a.h - b.h; });
-    for (var i = 0; i < tiers.length; i++) {
-      if (tiers[i].h === selHours) return { tier: tiers[i], kind: "exact" };
-    }
-    for (var j = 0; j < tiers.length; j++) {
-      if (tiers[j].h > selHours) return { tier: tiers[j], kind: "above" };
-    }
-    return { tier: tiers[tiers.length - 1], kind: "over" };
-  }
+  function builderUpdate() {
+    var totalH = 0;
+    var scope = null;
+    builderBoxes.forEach(function (cb) {
+      if (!cb.checked) return;
+      var p = PRESTATIONS[cb.getAttribute("data-b")];
+      if (!p) return;
+      totalH += p.h;
+      if (p.g === "acq") scope = "acq";
+      else if (p.g === "visib" && scope !== "acq") scope = "visib";
+      else if (p.g === "admin" && !scope) scope = "admin";
+    });
 
-  function updateCalc() {
-    var fam = FAMILIES[currentFamily];
-    if (!fam) return;
-    var selHours = parseInt(currentHours, 10);
+    if (!builderTime || !builderPrice || !builderNote) return;
 
-    if (isNaN(selHours)) {
-      calcPrice.innerHTML = "<span id='calcPriceNum'>—</span><small> / mois</small>";
-      calcNote.innerHTML = "Choisissez un périmètre et un volume d'heures pour voir votre estimation.";
+    if (!totalH) {
+      builderTime.textContent = "≈ 0 h / mois";
+      builderPrice.textContent = "—";
+      builderNote.textContent = "Cochez une ou plusieurs prestations : nous calculons le temps nécessaire et la formule la plus adaptée.";
       return;
     }
 
-    var rec = recommend(currentFamily, selHours);
-    var t = rec.tier;
+    builderTime.textContent = "≈ " + totalH + " h / mois";
 
-    calcPrice.innerHTML = "<span id='calcPriceNum'>" + formatPrice(t.p) + "</span><small> / mois</small>";
-
-    var note;
-    if (rec.kind === "exact") {
-      note = "<strong>" + t.n + "</strong> — " + t.h + " h incluses ≈ " + formatPrice(t.p) + " / mois";
-    } else if (rec.kind === "above") {
-      note = "≈ " + selHours + " h / mois : la formule <strong>" + t.n + "</strong> (" + t.h + " h) vous laisse de la marge ≈ " + formatPrice(t.p) + " / mois";
-    } else {
-      note = "≈ " + selHours + " h / mois : la formule <strong>" + t.n + "</strong> (" + t.h + " h) ≈ " + formatPrice(t.p) + " / mois, au-delà : 35 € / h supplémentaires";
+    if (totalH < 8) {
+      builderPrice.textContent = "Sur devis";
+      builderNote.textContent = "Besoin ponctuel : chaque prestation est facturée à l'unité, sans engagement.";
+      return;
     }
-    calcNote.innerHTML = note + "<br><a href=\"#solution\">Ajustez votre périmètre sur mesure.</a>";
-    if (calcResult) calcResult.setAttribute("data-hours", selHours);
+
+    var pool = POOLS[scope || "admin"];
+    var tier = null;
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i].h >= totalH) { tier = pool[i]; break; }
+    }
+    var note;
+    if (!tier) {
+      tier = pool[pool.length - 1];
+      note = "Formule la plus proche : <strong>" + tier.n + "</strong> (" + tier.h + " h incluses) — au-delà : 35 € / h supplémentaires.";
+    } else {
+      note = "Formule adaptée : <strong>" + tier.n + "</strong> (" + tier.h + " h incluses).";
+    }
+    builderPrice.innerHTML = "<span id='builderPriceNum'>" + formatPrice(tier.p) + "</span><small> / mois</small>";
+    builderNote.innerHTML = note;
   }
 
-  if (calcOptions && calcPrice && calcNote) {
-    var hoursOptions = $$(".calc-opt[data-hours]", calcOptions);
-    var familyOptions = $$(".calc-opt[data-family]", calcOptions);
-
-    function markSelected(buttons, attr, value) {
-      buttons.forEach(function (opt) {
-        opt.classList.toggle("selected", opt.getAttribute(attr) === value);
-      });
-    }
-
-    familyOptions.forEach(function (opt) {
-      opt.addEventListener("click", function () {
-        currentFamily = opt.getAttribute("data-family");
-        markSelected(familyOptions, "data-family", currentFamily);
-        updateCalc();
+  if (builderBoxes.length) {
+    builderBoxes.forEach(function (cb) {
+      cb.addEventListener("change", function () {
+        var lab = cb.closest(".bitem");
+        if (lab) lab.classList.toggle("on", cb.checked);
+        builderUpdate();
       });
     });
-    hoursOptions.forEach(function (opt) {
-      opt.addEventListener("click", function () {
-        currentHours = opt.getAttribute("data-hours");
-        markSelected(hoursOptions, "data-hours", currentHours);
-        updateCalc();
-      });
-    });
-
-    markSelected(familyOptions, "data-family", currentFamily);
-    markSelected(hoursOptions, "data-hours", currentHours);
-    updateCalc();
+    builderUpdate();
   }
 
   /* ---------- Formulaires ---------- */
