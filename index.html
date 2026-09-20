@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=11">
+  <link rel="stylesheet" href="css/style.css?v=12">
   <link rel="stylesheet" href="css/admin.css?v=18">
   <script type="application/ld+json">
   {
@@ -432,18 +432,16 @@
             </div>
             <div class="form-field">
               <label for="s-heures">Nombre d'heures estimé / mois</label>
-              <select id="s-heures" name="heures">
-                <option value="">Sélectionnez…</option>
-                <option value="4">4 h</option>
-                <option value="6">6 h</option>
-                <option value="7">7 h</option>
-                <option value="8">8 h</option>
-                <option value="10">10 h</option>
-                <option value="12">12 h</option>
-                <option value="15">15 h</option>
-                <option value="20plus">20 h et +</option>
-                <option value="ne">Je ne sais pas</option>
-              </select>
+<select id="s-heures" name="heures">
+<option value="">Sélectionnez.</option>
+<option value="10">10 h</option>
+<option value="15">15 h</option>
+<option value="20">20 h</option>
+<option value="25">25 h</option>
+<option value="40">40 h</option>
+<option value="plus">Plus de 40 h</option>
+<option value="ne">Je ne sais pas</option>
+</select>
             </div>
             <div class="form-field">
               <label for="s-msg">Message</label>
@@ -472,83 +470,236 @@
           <p class="section-sub">Chaque entreprise possède un volume de travail différent. Nos formules fonctionnent donc avec des heures mensuelles incluses et peuvent évoluer avec votre activité.</p>
         </div>
 
-        <p class="swipe-hint" aria-hidden="true">Glissez → pour voir toutes les formules</p>
-        <div class="price-grid">
-          <!-- Essentiel -->
-          <article class="price-card">
-            <h3 class="price-name">Essentiel</h3>
-            <div class="price-amount"><span>249 €</span> / mois</div>
-            <div class="price-hours">4 h incluses / mois</div>
-            <p class="price-cat">Gestion administrative</p>
-            <ul class="price-list">
-              <li>Devis</li>
-              <li>Facturation</li>
-              <li>Relances clients</li>
-              <li>Suivi administratif</li>
-              <li>Classement</li>
-              <li>Tableaux de gestion</li>
-              <li>Préparation des éléments pour le comptable</li>
-            </ul>
-            <div class="price-extra">Heure supplémentaire : +45 €</div>
-            <a href="#contact" class="btn btn-outline btn-block">Choisir Essentiel</a>
+<div class="price-families">
+          <!-- Famille 1 : Gestion administrative -->
+          <article class="pf-card">
+            <header class="pf-head">
+              <span class="pf-ico">📋</span>
+              <div><h3>Gestion administrative</h3><p>Devis, facturation, relances, classement, préparation pour le comptable.</p></div>
+            </header>
+
+            <div class="pf-tier">
+              <div class="pf-top"><span class="pf-name">Essentiel</span><span class="pf-price">350 €<small>HT / mois</small></span></div>
+              <span class="price-hours">10 h incluses · 35 € HT / h</span>
+              <ul class="pf-list">
+                <li>Devis</li>
+                <li>Facturation</li>
+                <li>Relances clients</li>
+                <li>Suivi administratif</li>
+                <li>Classement et archivage</li>
+                <li>Tableaux de gestion</li>
+                <li>Préparation des éléments pour le comptable</li>
+              </ul>
+            </div>
+
+            <div class="pf-tier hot">
+              <span class="pf-badge">Le plus choisi</span>
+              <div class="pf-top"><span class="pf-name">Confort</span><span class="pf-price">600 €<small>HT / mois</small></span></div>
+              <span class="price-hours">20 h incluses · 30 € HT / h</span>
+              <ul class="pf-list">
+                <li>Devis</li>
+                <li>Facturation</li>
+                <li>Relances clients</li>
+                <li>Suivi administratif</li>
+                <li>Classement et archivage</li>
+                <li>Tableaux de gestion</li>
+                <li>Préparation des éléments pour le comptable</li>
+              </ul>
+            </div>
+
+            <div class="pf-tier">
+              <div class="pf-top"><span class="pf-name">Pro</span><span class="pf-price">1 000 €<small>HT / mois</small></span></div>
+              <span class="price-hours">40 h incluses · 25 € HT / h</span>
+              <ul class="pf-list">
+                <li>Devis</li>
+                <li>Facturation</li>
+                <li>Relances clients</li>
+                <li>Suivi administratif</li>
+                <li>Classement et archivage</li>
+                <li>Tableaux de gestion</li>
+                <li>Préparation des éléments pour le comptable</li>
+              </ul>
+            </div>
+
+            <p class="pf-foot">Heure supplémentaire : <b>35 € HT / heure</b></p>
           </article>
 
-          <!-- Essentiel + -->
-          <article class="price-card">
-            <h3 class="price-name">Essentiel <span class="plus">+</span></h3>
-            <div class="price-amount"><span>À partir de 319 €</span> / mois</div>
-            <div class="price-hours">Volume adapté à votre activité</div>
-            <p class="price-cat">Gestion administrative</p>
-            <ul class="price-scale">
-              <li><span>6 h</span><span>319 € / mois</span></li>
-              <li><span>8 h</span><span>389 € / mois</span></li>
-              <li><span>10 h</span><span>459 € / mois</span></li>
-            </ul>
-            <p class="price-cat-sm">Mêmes prestations que l'Essentiel, avec davantage d'heures.</p>
-            <div class="price-extra">Heure supplémentaire : +45 €</div>
-            <a href="#contact" class="btn btn-outline btn-block">Adapter mon forfait</a>
+          <!-- Famille 2 : Gestion + visibilité digitale -->
+          <article class="pf-card">
+            <header class="pf-head">
+              <span class="pf-ico">🖥️</span>
+              <div><h3>Gestion + visibilité digitale</h3><p>Votre administratif, votre Google Business Profile et vos réseaux sociaux.</p></div>
+            </header>
+
+            <div class="pf-tier">
+              <div class="pf-top"><span class="pf-name">Visibilité</span><span class="pf-price">690 €<small>HT / mois</small></span></div>
+              <span class="price-hours">15 h incluses</span>
+              <ul class="pf-list">
+                <li>Gestion administrative</li>
+                <li>Google Business Profile</li>
+                <li>Référencement local</li>
+                <li>Optimisation de la présence en ligne</li>
+                <li>Gestion de 1 réseau social</li>
+                <li>Création de 4 publications / mois</li>
+                <li>Programmation des publications</li>
+                <li>Reporting mensuel</li>
+              </ul>
+            </div>
+
+            <div class="pf-tier hot">
+              <span class="pf-badge">Le plus complet</span>
+              <div class="pf-top"><span class="pf-name">Visibilité Plus</span><span class="pf-price">850 €<small>HT / mois</small></span></div>
+              <span class="price-hours">20 h incluses</span>
+              <ul class="pf-list">
+                <li>Gestion administrative</li>
+                <li>Google Business Profile</li>
+                <li>Référencement local</li>
+                <li>Gestion de 2 réseaux sociaux</li>
+                <li>Création de 8 publications / mois</li>
+                <li>Création de visuels</li>
+                <li>Gestion des avis Google</li>
+                <li>Optimisation de la présence en ligne</li>
+                <li>Reporting mensuel</li>
+              </ul>
+            </div>
+
+            <p class="pf-foot">Heure supplémentaire : <b>35 € HT / heure</b></p>
           </article>
 
-          <!-- Business (mise en avant) -->
-          <article class="price-card featured">
-            <span class="featured-badge">La plus choisie</span>
-            <h3 class="price-name">Business</h3>
-            <div class="price-amount"><span>449 €</span> / mois</div>
-            <div class="price-hours">7 h incluses / mois</div>
-            <p class="price-cat">Gestion + visibilité digitale</p>
-            <ul class="price-list">
-              <li>Gestion administrative</li>
-              <li>Google Business Profile</li>
-              <li>Référencement local</li>
-              <li>Gestion de base des réseaux sociaux</li>
-              <li>Optimisation de la présence en ligne</li>
-              <li>Reporting mensuel</li>
-            </ul>
-            <div class="price-extra">Heure supplémentaire : +45 €</div>
-            <a href="#contact" class="btn btn-primary btn-block">Choisir Business</a>
-          </article>
+          <!-- Famille 3 : Gestion + digital + acquisition -->
+          <article class="pf-card">
+            <header class="pf-head">
+              <span class="pf-ico">🚀</span>
+              <div><h3>Gestion + digital + acquisition</h3><p>Le pilotage complet : administration, contenus, publicité et site web.</p></div>
+            </header>
 
-          <!-- Premium -->
-          <article class="price-card">
-            <h3 class="price-name">Premium</h3>
-            <div class="price-amount"><span>699 €</span> / mois</div>
-            <div class="price-hours">10 h incluses / mois</div>
-            <p class="price-cat">Gestion + digital + acquisition</p>
-            <ul class="price-list">
-              <li>Gestion administrative</li>
-              <li>Google Business Profile</li>
-              <li>Réseaux sociaux</li>
-              <li>Création de contenus &amp; visuels</li>
-              <li>SEO local</li>
-              <li>Google Ads</li>
-              <li>Suivi des campagnes</li>
-              <li>Reporting</li>
-              <li>Accompagnement stratégique</li>
-            </ul>
-            <div class="price-extra">Heure supplémentaire : +45 €</div>
-            <p class="price-hint">Le budget publicitaire Google Ads est facturé séparément et reste payé directement par le client.</p>
-            <a href="#contact" class="btn btn-outline btn-block">Choisir Premium</a>
+            <div class="pf-tier hot">
+              <span class="pf-badge">Accompagnement complet</span>
+              <div class="pf-top"><span class="pf-name">Développement</span><span class="pf-price">1 290 €<small>HT / mois</small></span></div>
+              <span class="price-hours">25 h incluses</span>
+              <ul class="pf-list">
+                <li>Gestion administrative</li>
+                <li>Google Business Profile</li>
+                <li>Référencement local / SEO local</li>
+                <li>Gestion de 2 réseaux sociaux</li>
+                <li>Création de contenus</li>
+                <li>Création de visuels</li>
+                <li>Google Ads</li>
+                <li>Suivi et optimisation des campagnes</li>
+                <li>Reporting mensuel</li>
+                <li>Accompagnement stratégique</li>
+                <li>Gestion WhatsApp Business</li>
+                <li>Création et gestion de site internet</li>
+              </ul>
+            </div>
+
+            <div class="pf-option">
+              <span class="pf-opt-name">☎️ Option secrétariat téléphonique</span>
+              <span class="pf-opt-price">+150 €<small> HT / mois</small></span>
+              <p>Création du numéro + secrétariat téléphonique + gestion des appels + prise de messages + transmission des demandes.</p>
+            </div>
+
+            <p class="pf-foot">Heure supplémentaire : <b>35 € HT / heure</b> · Budget publicitaire Google Ads non inclus</p>
           </article>
+        </div>
+
+        <p class="tarif-note center">Tous les prix sont en <b>HT</b>. Le budget publicitaire Google Ads reste payé directement par le client. Vous hésitez entre deux formules ? <a href="#solution">Demandez un avis gratuit.</a></p>
+
+        <!-- ============ PRESTATIONS À L'UNITÉ ============ -->
+        <div class="tarifs" id="tarifs">
+          <div class="section-head">
+            <span class="eyebrow">À l'unité</span>
+            <h2>Prestations à l'unité</h2>
+            <p class="section-sub">Pas besoin d'un forfait complet ? Cette grille vous permet de payer selon le besoin, sans engagement. Tous les prix sont en HT.</p>
+          </div>
+
+          <div class="unit-grid">
+            <article class="unit-card">
+              <h3>📋 Gestion administrative</h3>
+              <ul class="unit-list">
+                <li><span>Devis simple</span><b>15 €</b></li>
+                <li><span>Devis complexe</span><b>25 €</b></li>
+                <li><span>Facture</span><b>10 €</b></li>
+                <li><span>Avoir</span><b>10 €</b></li>
+                <li><span>Relance client simple</span><b>10 €</b></li>
+                <li><span>Relance client personnalisée</span><b>20 €</b></li>
+                <li><span>Tableau de suivi</span><b>40 €</b></li>
+                <li><span>Tableau de gestion personnalisé</span><b>60 €</b></li>
+                <li><span>Classement / archivage</span><b>35 € / h</b></li>
+                <li><span>Préparation comptable</span><b>40 € / h</b></li>
+                <li><span>Gestion administrative</span><b>35 € / h</b></li>
+              </ul>
+            </article>
+
+            <article class="unit-card">
+              <h3>📍 Google Business &amp; SEO local</h3>
+              <ul class="unit-list">
+                <li><span>Création Google Business Profile</span><b>120 €</b></li>
+                <li><span>Optimisation Google Business Profile</span><b>90 €</b></li>
+                <li><span>Mise à jour de la fiche Google</span><b>45 €</b></li>
+                <li><span>Gestion Google Business Profile</span><b>90 € / mois</b></li>
+                <li><span>Gestion des avis Google</span><b>60 € / mois</b></li>
+                <li><span>Audit référencement local</span><b>150 €</b></li>
+                <li><span>Optimisation SEO local</span><b>250 €</b></li>
+                <li><span>Suivi SEO local</span><b>150 € / mois</b></li>
+                <li><span>Optimisation de la présence en ligne</span><b>120 €</b></li>
+              </ul>
+            </article>
+
+            <article class="unit-card">
+              <h3>📱 Réseaux sociaux</h3>
+              <ul class="unit-list">
+                <li><span>Publication simple</span><b>25 €</b></li>
+                <li><span>Publication + visuel</span><b>40 €</b></li>
+                <li><span>Carrousel</span><b>50 €</b></li>
+                <li><span>Story</span><b>15 €</b></li>
+                <li><span>Pack 5 stories</span><b>60 €</b></li>
+                <li><span>Reel simple</span><b>60 €</b></li>
+                <li><span>Calendrier éditorial</span><b>80 €</b></li>
+                <li><span>Programmation des publications</span><b>50 € / mois</b></li>
+                <li><span>Gestion Facebook</span><b>250 € / mois</b></li>
+                <li><span>Gestion Instagram</span><b>250 € / mois</b></li>
+                <li><span>Gestion Facebook + Instagram</span><b>450 € / mois</b></li>
+                <li><span>Réseau social supplémentaire</span><b>150 € / mois</b></li>
+              </ul>
+            </article>
+
+            <article class="unit-card">
+              <h3>🎨 Contenus &amp; visuels</h3>
+              <ul class="unit-list">
+                <li><span>Visuel simple</span><b>30 €</b></li>
+                <li><span>Visuel professionnel</span><b>45 €</b></li>
+                <li><span>Affiche</span><b>50 €</b></li>
+                <li><span>Flyer</span><b>60 €</b></li>
+                <li><span>Carte de visite</span><b>50 €</b></li>
+                <li><span>Bannière réseaux sociaux</span><b>40 €</b></li>
+                <li><span>Template personnalisé</span><b>60 €</b></li>
+                <li><span>Pack 5 visuels</span><b>150 €</b></li>
+                <li><span>Pack 10 visuels</span><b>280 €</b></li>
+              </ul>
+            </article>
+
+            <article class="unit-card">
+              <h3>📈 Google Ads</h3>
+              <ul class="unit-list">
+                <li><span>Audit Google Ads</span><b>300 €</b></li>
+                <li><span>Création d'une campagne</span><b>400 €</b></li>
+                <li><span>Paramétrage initial</span><b>250 €</b></li>
+                <li><span>Gestion mensuelle</span><b>350 € / mois</b></li>
+                <li><span>Optimisation mensuelle</span><b>250 € / mois</b></li>
+                <li><span>Gestion + optimisation + reporting</span><b>450 € / mois</b></li>
+              </ul>
+              <p class="unit-note">Budget publicitaire jamais inclus, payé directement par le client.</p>
+            </article>
+
+            <article class="unit-card">
+              <h3>🌐 Création de site Internet</h3>
+              <ul class="unit-list">
+                <li class="unit-site"><span>Site Internet Essentiel<small>30 € / mois de maintenance · engagement de 6 mois</small></span><b>399 €</b></li>
+                <li class="unit-site"><span>Site Internet + 1 an de maintenance<small>Maintenance incluse pendant 12 mois</small></span><b>650 €</b></li>
+              </ul>
+            </article>
+          </div>
         </div>
 
         <!-- ============ SYSTÈME D'HEURES MODULABLES ============ -->
@@ -559,22 +710,32 @@
             <p>Vous n'avez pas le même volume de travail tous les mois ? Pas de problème. Augmentez ou réduisez votre volume d'heures selon vos besoins.</p>
           </div>
 
-          <div class="calculator">
+<div class="calculator">
             <div class="calc-head">
               <span class="eyebrow">Simulateur</span>
-              <h3>De combien d'heures avez-vous besoin ?</h3>
-              <p>Sélectionnez votre volume mensuel approximatif pour obtenir une estimation immédiate.</p>
+              <h3>Quelle formule vous correspond ?</h3>
+              <p>Choisissez votre périmètre puis votre volume d'heures approximatif pour obtenir une estimation immédiate.</p>
             </div>
 
-            <div class="calc-options" id="calc-options" role="group" aria-label="Nombre d'heures mensuelles">
-              <button type="button" class="calc-opt" data-hours="4">4 h</button>
-              <button type="button" class="calc-opt" data-hours="6">6 h</button>
-              <button type="button" class="calc-opt" data-hours="7">7 h</button>
-              <button type="button" class="calc-opt" data-hours="8">8 h</button>
-              <button type="button" class="calc-opt" data-hours="10">10 h</button>
-              <button type="button" class="calc-opt" data-hours="12">12 h</button>
-              <button type="button" class="calc-opt" data-hours="15">15 h</button>
-              <button type="button" class="calc-opt" data-hours="20">20 h+</button>
+            <div class="calc-filters" id="calc-options">
+              <div class="calc-group">
+                <span class="calc-hint">1 · Périmètre</span>
+                <div class="calc-options" role="group" aria-label="Périmètre">
+                  <button type="button" class="calc-opt" data-family="admin">Gestion administrative</button>
+                  <button type="button" class="calc-opt" data-family="visib">+ visibilité digitale</button>
+                  <button type="button" class="calc-opt" data-family="dev">+ digital &amp; acquisition</button>
+                </div>
+              </div>
+              <div class="calc-group">
+                <span class="calc-hint">2 · Heures estimées / mois</span>
+                <div class="calc-options" role="group" aria-label="Nombre d'heures mensuelles">
+                  <button type="button" class="calc-opt" data-hours="10">10 h</button>
+                  <button type="button" class="calc-opt" data-hours="15">15 h</button>
+                  <button type="button" class="calc-opt" data-hours="20">20 h</button>
+                  <button type="button" class="calc-opt" data-hours="25">25 h</button>
+                  <button type="button" class="calc-opt" data-hours="40">40 h</button>
+                </div>
+              </div>
             </div>
 
             <div class="calc-result" id="calc-result" aria-live="polite">
@@ -613,9 +774,9 @@
             <h2>Votre entreprise mérite un site à votre image.</h2>
             <p class="section-sub-text">Un site Internet professionnel permet de présenter votre activité, rassurer vos prospects et faciliter la prise de contact.</p>
 
-            <div class="creation-option">
-              <div class="co-price">À partir de <strong>790 €</strong></div>
-              <h3>Site vitrine</h3>
+<div class="creation-option">
+              <div class="co-price"><strong>399 €</strong> une fois</div>
+              <h3>Site Internet Essentiel</h3>
               <ul>
                 <li>Design personnalisé</li>
                 <li>Version mobile</li>
@@ -625,16 +786,18 @@
                 <li>SEO de base</li>
                 <li>Mise en ligne</li>
               </ul>
+              <p class="price-hint">Maintenance : 30 € / mois · engagement de 6 mois</p>
               <a href="#contact" class="btn btn-primary">Parler de mon projet</a>
             </div>
 
             <div class="creation-option slim">
-              <div class="co-price">À partir de <strong>49 € / mois</strong></div>
-              <h3>Maintenance</h3>
+              <div class="co-price"><strong>650 €</strong> une fois</div>
+              <h3>Site Internet + 1 an de maintenance</h3>
               <ul>
+                <li>Toutes les prestations Essentiel</li>
+                <li>Maintenance incluse pendant 12 mois</li>
                 <li>Petites modifications</li>
-                <li>Mises à jour</li>
-                <li>Assistance</li>
+                <li>Mises à jour &amp; assistance</li>
                 <li>Suivi technique</li>
               </ul>
             </div>
@@ -906,7 +1069,7 @@
           </div>
           <div class="faq-item">
             <button class="faq-q" aria-expanded="false">Que se passe-t-il si je dépasse mon forfait ?<span class="faq-chev" aria-hidden="true"></span></button>
-            <div class="faq-a"><p>Les heures supplémentaires sont facturées 45 € / heure après validation, ou vous pouvez passer à un volume supérieur.</p></div>
+            <div class="faq-a"><p>Les heures supplémentaires sont facturées 35 € / heure après validation, ou vous pouvez passer à un volume supérieur.</p></div>
           </div>
           <div class="faq-item">
             <button class="faq-q" aria-expanded="false">Les heures non utilisées sont-elles reportées ?<span class="faq-chev" aria-hidden="true"></span></button>
@@ -930,11 +1093,11 @@
           </div>
           <div class="faq-item">
             <button class="faq-q" aria-expanded="false">Est-ce que vous pouvez créer mon site ?<span class="faq-chev" aria-hidden="true"></span></button>
-            <div class="faq-a"><p>Oui. Nous proposons la création de sites vitrines à partir de 790 €, avec possibilité de maintenance mensuelle.</p></div>
+            <div class="faq-a"><p>Oui. Nous proposons la création de sites vitrines à partir de 399 €, avec possibilité de maintenance mensuelle à 30 € / mois.</p></div>
           </div>
           <div class="faq-item">
             <button class="faq-q" aria-expanded="false">Gérez-vous Google Ads ?<span class="faq-chev" aria-hidden="true"></span></button>
-            <div class="faq-a"><p>Oui, dans la formule Premium ou dans le cadre d'une prestation spécifique. Le budget publicitaire est payé directement par le client.</p></div>
+            <div class="faq-a"><p>Oui, dans la formule Développement ou dans le cadre d'une prestation spécifique. Le budget publicitaire est payé directement par le client.</p></div>
           </div>
           <div class="faq-item">
             <button class="faq-q" aria-expanded="false">Puis-je prendre uniquement une prestation digitale ?<span class="faq-chev" aria-hidden="true"></span></button>
@@ -1255,7 +1418,7 @@
     document.documentElement.classList.remove('no-js');
     document.documentElement.classList.add('js');
   </script>
-<script src="js/main.js?v=8"></script>
+<script src="js/main.js?v=9"></script>
   <script src="js/app.js?v=14"></script>
 <script src="js/workspace.js?v=8"></script>
 <script src="js/workspace-g.js?v=4"></script>

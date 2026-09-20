@@ -2263,3 +2263,220 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   html.js .reveal { opacity: 1; transform: none; }
   .floating-card { animation: none; }
 }
+
+/* ============================================================
+   FORMULES → 3 FAMILLES
+   ============================================================ */
+.price-families {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.pf-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 26px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.pf-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(12, 181, 166, 0.35);
+}
+.pf-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.pf-ico {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: var(--teal-soft);
+  border-radius: 12px;
+}
+.pf-head h3 { font-size: 19px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.01em; }
+.pf-head p { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+
+.pf-tier {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  background: var(--white);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.pf-tier:hover { border-color: rgba(12, 181, 166, 0.4); }
+.pf-tier.hot {
+  border: 2px solid var(--teal);
+  padding-top: 30px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fdfb 100%);
+  box-shadow: 0 14px 34px rgba(12, 181, 166, 0.18);
+}
+.pf-badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 15px;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(12, 181, 166, 0.35);
+  white-space: nowrap;
+}
+.pf-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.pf-name { font-size: 16.5px; font-weight: 700; }
+.pf-price { font-size: 24px; font-weight: 800; color: var(--teal-dark); letter-spacing: -0.02em; white-space: nowrap; }
+.pf-price small { display: block; font-size: 11.5px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+
+.pf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.pf-list li {
+  position: relative;
+  padding-left: 22px;
+  font-size: 13.8px;
+  color: var(--text);
+  line-height: 1.45;
+}
+.pf-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--teal-dark);
+  font-weight: 700;
+}
+
+.pf-foot {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.pf-foot b { color: var(--ink); }
+
+.pf-option {
+  border: 1px dashed var(--teal);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  background: var(--bg-soft);
+}
+.pf-opt-name { display: block; font-size: 14.5px; font-weight: 700; margin-bottom: 4px; }
+.pf-opt-price { display: block; font-size: 22px; font-weight: 800; color: var(--teal-dark); margin-bottom: 8px; }
+.pf-opt-price small { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.pf-option p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+.tarif-note { text-align: center; font-size: 13.5px; color: var(--muted); margin-bottom: 44px; }
+.tarif-note b { color: var(--ink); }
+.tarif-note a { color: var(--teal-dark); font-weight: 600; }
+
+/* ============================================================
+   PRESTATIONS À L'UNITÉ
+   ============================================================ */
+.tarifs { margin-top: 10px; }
+.tarifs .section-head { margin-bottom: 34px; }
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.unit-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 22px;
+  box-shadow: var(--shadow-sm);
+}
+.unit-card h3 { font-size: 16.5px; font-weight: 700; margin-bottom: 16px; }
+.unit-list { display: flex; flex-direction: column; gap: 0; }
+.unit-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+}
+.unit-list li:last-child { border-bottom: none; }
+.unit-list li b { color: var(--teal-dark); font-weight: 700; white-space: nowrap; }
+.unit-list li.unit-site { flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 0; }
+.unit-list li.unit-site small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.unit-note { font-size: 12.5px; color: var(--muted); font-style: italic; margin-top: 12px; }
+
+/* ============================================================
+   SIMULATEUR → 2 FILTRES
+   ============================================================ */
+.calc-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 34px;
+}
+.calc-group {
+  flex: 1;
+  background: var(--bg-soft);
+  border-radius: 16px;
+  padding: 20px 20px 16px;
+  text-align: left;
+}
+.calc-group .calc-options {
+  justify-content: flex-start;
+  margin: 0;
+  gap: 10px;
+}
+.calc-hint {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.calc-group .calc-opt { padding: 12px 18px; font-size: 14.5px; }
+
+@media (max-width: 1100px) {
+  .price-families { grid-template-columns: 1fr; }
+  .unit-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 720px) {
+  .calc-filters { flex-direction: column; gap: 12px; }
+  .calc-group { padding: 16px 16px 14px; }
+  .calc-group .calc-opt { flex: 1 1 calc(50% - 6px); padding: 13px 10px; font-size: 14px; }
+  .unit-grid { grid-template-columns: 1fr; }
+  .pf-card { padding: 22px 18px; }
+  .pf-price { font-size: 22px; }
+}

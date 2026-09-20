@@ -75,6 +75,7 @@
     "services": "services",
     "solution": "solution",
     "formules": "home",
+    "tarifs": "home",
     "creation-site": "creation",
     "processus": "creation",
     "secretariat": "secretariat",
@@ -220,17 +221,20 @@
     });
   });
 
-  /* ---------- Calculateur d'heures ---------- */
-  var ORDER = ["4", "6", "7", "8", "10", "12", "15", "20"];
-  var PRICING = {
-    "4":  { price: 249, formula: "Formule conseillée : Essentiel" },
-    "6":  { price: 319, formula: "Formule conseillée : Essentiel+" },
-    "7":  { price: 449, formula: "Formule conseillée : Business", plus: "La plus choisie" },
-    "8":  { price: 389, formula: "Formule conseillée : Essentiel+" },
-    "10": { price: 459, formula: "Formule conseillée : Essentiel+ 10 h", plus: "ou Premium (699 €) pour un accompagnement digital complet" },
-    "12": { price: null, label: "Sur devis" },
-    "15": { price: null, label: "Sur devis" },
-    "20": { price: null, label: "Sur devis" }
+  /* ---------- Calculateur (2 filtres : périmètre + heures) ---------- */
+  var FAMILIES = {
+    admin: { tiers: [
+      { h: 10, p: 350, n: "Essentiel" },
+      { h: 20, p: 600, n: "Confort" },
+      { h: 40, p: 1000, n: "Pro" }
+    ] },
+    visib: { tiers: [
+      { h: 15, p: 690, n: "Visibilité" },
+      { h: 20, p: 850, n: "Visibilité Plus" }
+    ] },
+    dev: { tiers: [
+      { h: 25, p: 1290, n: "Développement" }
+    ] }
   };
 
   var calcOptions = $("#calc-options");
@@ -242,36 +246,76 @@
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
   }
 
-  if (calcOptions && calcPrice && calcNote) {
-    var options = $$(".calc-opt", calcOptions);
+  var currentFamily = "admin";
+  var currentHours = "20";
 
-    function selectOption(hours) {
-      options.forEach(function (opt) {
-        opt.classList.toggle("selected", opt.getAttribute("data-hours") === hours);
-      });
-      var data = PRICING[hours];
-      if (!data) return;
+  function recommend(family, selHours) {
+    var tiers = FAMILIES[family].tiers.slice().sort(function (a, b) { return a.h - b.h; });
+    for (var i = 0; i < tiers.length; i++) {
+      if (tiers[i].h === selHours) return { tier: tiers[i], kind: "exact" };
+    }
+    for (var j = 0; j < tiers.length; j++) {
+      if (tiers[j].h > selHours) return { tier: tiers[j], kind: "above" };
+    }
+    return { tier: tiers[tiers.length - 1], kind: "over" };
+  }
 
-      if (data.price === null) {
-        var label = data.label || "Sur devis";
-        calcPrice.innerHTML = label;
-        calcNote.innerHTML = "<strong>Besoin de plus de 10 heures ?</strong> <a href=\"#solution\">Demandez une offre sur mesure.</a>";
-      } else {
-        calcPrice.innerHTML = "<span id='calcPriceNum'>" + formatPrice(data.price) + "</span><small> / mois</small>";
-        var note = "<strong>" + data.formula + "</strong> ≈ " + formatPrice(data.price) + " / mois";
-        if (data.plus) note += "<br>" + data.plus + ".";
-        calcNote.innerHTML = note;
-      }
-      if (calcResult) calcResult.setAttribute("data-hours", hours);
+  function updateCalc() {
+    var fam = FAMILIES[currentFamily];
+    if (!fam) return;
+    var selHours = parseInt(currentHours, 10);
+
+    if (isNaN(selHours)) {
+      calcPrice.innerHTML = "<span id='calcPriceNum'>—</span><small> / mois</small>";
+      calcNote.innerHTML = "Choisissez un périmètre et un volume d'heures pour voir votre estimation.";
+      return;
     }
 
-    options.forEach(function (opt) {
+    var rec = recommend(currentFamily, selHours);
+    var t = rec.tier;
+
+    calcPrice.innerHTML = "<span id='calcPriceNum'>" + formatPrice(t.p) + "</span><small> / mois</small>";
+
+    var note;
+    if (rec.kind === "exact") {
+      note = "<strong>" + t.n + "</strong> — " + t.h + " h incluses ≈ " + formatPrice(t.p) + " / mois";
+    } else if (rec.kind === "above") {
+      note = "≈ " + selHours + " h / mois : la formule <strong>" + t.n + "</strong> (" + t.h + " h) vous laisse de la marge ≈ " + formatPrice(t.p) + " / mois";
+    } else {
+      note = "≈ " + selHours + " h / mois : la formule <strong>" + t.n + "</strong> (" + t.h + " h) ≈ " + formatPrice(t.p) + " / mois, au-delà : 35 € / h supplémentaires";
+    }
+    calcNote.innerHTML = note + "<br><a href=\"#solution\">Ajustez votre périmètre sur mesure.</a>";
+    if (calcResult) calcResult.setAttribute("data-hours", selHours);
+  }
+
+  if (calcOptions && calcPrice && calcNote) {
+    var hoursOptions = $$(".calc-opt[data-hours]", calcOptions);
+    var familyOptions = $$(".calc-opt[data-family]", calcOptions);
+
+    function markSelected(buttons, attr, value) {
+      buttons.forEach(function (opt) {
+        opt.classList.toggle("selected", opt.getAttribute(attr) === value);
+      });
+    }
+
+    familyOptions.forEach(function (opt) {
       opt.addEventListener("click", function () {
-        selectOption(opt.getAttribute("data-hours"));
+        currentFamily = opt.getAttribute("data-family");
+        markSelected(familyOptions, "data-family", currentFamily);
+        updateCalc();
+      });
+    });
+    hoursOptions.forEach(function (opt) {
+      opt.addEventListener("click", function () {
+        currentHours = opt.getAttribute("data-hours");
+        markSelected(hoursOptions, "data-hours", currentHours);
+        updateCalc();
       });
     });
 
-    selectOption("8");
+    markSelected(familyOptions, "data-family", currentFamily);
+    markSelected(hoursOptions, "data-hours", currentHours);
+    updateCalc();
   }
 
   /* ---------- Formulaires ---------- */
