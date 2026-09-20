@@ -579,11 +579,13 @@
         "</div>" +
         "<div class='ws-actions'>" +
         "<button class='admin-btn' data-ia-save>💾 Enregistrer la clé</button>" +
+        "<button class='admin-btn' data-ia-test>🔍 Tester la clé</button>" +
         "<button class='admin-btn primary' data-ia-run>" + (hasKey ? "🤖 Générer maintenant" : "🤖 Tester sans clé (hors-ligne)") + "</button></div>" +
         "<div id='ia-out' class='ws-box' style='margin-top:14px;'>" + (hasKey ? "" : "<h4>Comment obtenir la clé</h4><ol class='ws-list'><li>Allez sur aistudio.google.com/apikey</li><li>Créez une clé (gratuite)</li><li>Collez-la ci-dessus puis cliquez « Enregistrer la clé »</li></ol>") + "</div></div>";
     },
     afterRender: function () {
       $("[data-ia-save]").addEventListener("click", saveIAKey);
+      $("[data-ia-test]").addEventListener("click", testIAKey);
       $("[data-ia-run]").addEventListener("click", runIA);
       var ip = $("[name=ia_prompt]"), ic = $("#ia-count");
       if (ip && ic) {
@@ -601,6 +603,37 @@
     GW.save(K.IA, { key: key, model: mod ? mod.value : "gemini-2.0-flash" });
     GW.toast(key ? "Clé enregistrée" : "Clé effacée");
     GW.render();
+  }
+
+  function testIAKey() {
+    var el = $("[name=ia_key]");
+    var key = (el && el.value.trim()) || GW.load(K.IA, {}).key || "";
+    var mod = $("[name=ia_model]");
+    var model = mod ? mod.value : "gemini-2.0-flash";
+    var out = $("#ia-out");
+    if (!key) { GW.toast("Collez d'abord votre clé Gemini"); return; }
+    out.innerHTML = "<p class='ws-hint'>🔍 Vérification de la clé…</p>";
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Réponds uniquement : OK" }] }] })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      var txt = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+      if (!txt) {
+        var er = data && data.error;
+        out.innerHTML = "<p class='ws-hint' style='color:#b3423a;'>❌ Clé refusée — " + esc(er && (er.message || er.status) || "réponse vide") + "</p>";
+        if (er && /API_KEY|KEY|invalid|INVALID/.test(er.message || "|" + er.status)) {
+          out.innerHTML += "<p class='ws-hint'>Vérifiez la clé sur aistudio.google.com/apikey puis collez-la au-dessus. Les clés commencent généralement par « AIza ».</p>";
+        }
+        return;
+      }
+      GW.toast("Clé valide ✓");
+      out.innerHTML = "<p class='ws-hint' style='color:#0b7a46;'>✅ Clé valide ! Réponse du modèle « " + esc(model) + " » : " + esc(txt) + "</p>" +
+        "<p class='ws-hint'>Cliquez sur « 💾 Enregistrer la clé » puis « 🤖 Générer maintenant » pour rédiger votre contenu.</p>";
+    }).catch(function (e) {
+      out.innerHTML = "<p class='ws-hint' style='color:#b3423a;'>❌ Erreur réseau : " + esc(e.message) + "</p>";
+    });
   }
 
   function runIA() {

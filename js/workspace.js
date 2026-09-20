@@ -289,6 +289,11 @@ window.GestWorkspace = (function () {
     if (pubs) items.push({ mod: "communication", txt: pubs + " publication(s) planifiée(s) à publier" });
     var pros = is(get("ga_prospects")).filter(function (p) { return p.statut === "nouveau"; }).length;
     if (pros) items.push({ mod: "acquisition", txt: pros + " prospect(s) nouveau(x) à contacter" });
+    if (!clientId) {
+      getClients().forEach(function (cl) {
+        if (!cl.formule || !cl.siret) items.push({ mod: "clients", txt: "Dossier « " + clientLabel(cl) + " » à compléter (fiche incomplète)" });
+      });
+    }
     return items;
   }
 
@@ -302,6 +307,7 @@ window.GestWorkspace = (function () {
       case "communication": return is(get("ga_planif")).filter(function (x) { return x.statut !== "publie"; }).length;
       case "acquisition": return is(get("ga_prospects")).filter(function (x) { return x.statut === "nouveau" || x.statut === "contacte"; }).length;
       case "secretariat": return is(get("ga_appels")).filter(function (x) { return x.statut !== "traite"; }).length;
+      case "clients": return getClients().filter(function (x) { return !x.formule || !x.siret; }).length;
       default: return 0;
     }
   }
@@ -354,6 +360,10 @@ window.GestWorkspace = (function () {
     }
     return "<div class='ws-app'>" +
       clientBar() +
+      "<div class='ws-actions ws-home-actions'>" +
+      "<button class='admin-btn primary' data-new-client>＋ Nouveau client</button>" +
+      "<button class='admin-btn' data-sec>🔐 Données &amp; sécurité</button>" +
+      "</div>" +
       "<div class='ws-kpis'>" +
       kpi("Facturé", fmtMoney(s.total), "total factures") +
       kpi("Encaissé", fmtMoney(s.payees), "payées") +
@@ -433,6 +443,13 @@ window.GestWorkspace = (function () {
     $$("[data-restore]", main).forEach(function (a) {
       a.addEventListener("click", function (e) { e.preventDefault(); openModule(a.getAttribute("data-restore")); });
     });
+    var nc = $("[data-new-client]", main);
+    if (nc) nc.addEventListener("click", function (e) {
+      e.preventDefault();
+      if (window.GestWorkspace.openClientNew) window.GestWorkspace.openClientNew(); else openModule("clients");
+    });
+    var sec = $("[data-sec]", main);
+    if (sec) sec.addEventListener("click", function (e) { e.preventDefault(); openModule("securite"); });
   }
 
   /* ------------------------------------------------------------------
