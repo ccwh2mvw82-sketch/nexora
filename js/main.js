@@ -139,7 +139,7 @@
   }
 
   document.addEventListener("click", function (e) {
-    if (!mqMobile.matches) return;
+    if (mqMobile.matches) return;
     var link = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
     if (!link) return;
     link.blur && link.blur();
@@ -266,6 +266,12 @@
   function formatPrice(n) {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
   }
+
+  window.GA = {
+    PRESTATIONS: PRESTATIONS,
+    POOLS: POOLS,
+    formatPrice: formatPrice
+  };
 
   var builderTime = $("#bresult-time");
   var builderPrice = $("#bresult-price");

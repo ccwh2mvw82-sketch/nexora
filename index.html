@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=15">
+  <link rel="stylesheet" href="css/style.css?v=16">
   <link rel="stylesheet" href="css/admin.css?v=18">
   <script type="application/ld+json">
   {
@@ -1415,10 +1415,278 @@
       <span class="ab-label">WhatsApp</span>
     </a>
     <a href="#contact" class="ab-action ab-primary">
-      <span class="ab-ico">📅</span>
+<span class="ab-ico">📅</span>
       <span class="ab-label">RDV</span>
     </a>
   </nav>
+
+  <!-- ============ APPLICATION MOBILE (téléphone ≤ 720 px) ============ -->
+  <div id="mob-shell" aria-hidden="true">
+
+    <header class="mob-top">
+      <button class="mob-back" id="mob-back" aria-label="Retour à l'accueil" hidden>←</button>
+      <div class="mob-brand"><img class="brand-mark" src="assets/logo.png" alt="Logotype GestAffaires"><span>GestAffaires</span></div>
+      <button class="mob-burger" id="mob-burger" aria-expanded="false" aria-controls="mob-menu" aria-label="Ouvrir le menu">☰</button>
+    </header>
+
+    <nav class="mob-menu" id="mob-menu" aria-label="Menu" hidden>
+      <a href="#" data-mob-view="home">Accueil</a>
+      <a href="#" data-mob-view="formules">Nos formules</a>
+      <a href="#" data-mob-view="builder">Créer ma formule</a>
+      <a href="#" data-mob-view="site">Création de site Internet</a>
+      <a href="#" data-mob-view="teleph">Service téléphonique</a>
+      <a href="#" data-mob-view="surmesure">Solution sur mesure</a>
+      <a href="#" data-mob-view="contact">Contact &amp; diagnostic</a>
+      <div class="mob-menu-cta">
+        <a href="tel:+33612345678">📞 06 12 34 56 78</a>
+        <a href="https://wa.me/33612345678" target="_blank" rel="noopener">💬 WhatsApp</a>
+      </div>
+    </nav>
+
+    <main class="mob-main">
+
+      <!-- Accueil : sphère 3D -->
+      <section class="mob-screen mob-home active" id="mob-screen-home" data-mob-view="home">
+        <p class="mob-home-sub">Vous gérez votre métier.</p>
+        <h1 class="mob-home-title">Nous gérons le reste.</h1>
+        <div class="mob-sphere" id="mob-sphere">
+          <div class="mob-ring" id="mob-ring"></div>
+          <div class="mob-globe" aria-hidden="true"></div>
+        </div>
+        <button class="mob-open" id="mob-open">
+          <span class="mob-open-ico" id="mob-open-ico">💶</span>
+          <span id="mob-open-label">Nos formules</span>
+          <span class="mob-open-go">→</span>
+        </button>
+        <p class="mob-hint">Faites défiler ou glissez pour tourner la sphère</p>
+      </section>
+
+      <!-- Nos formules : carrousel -->
+      <section class="mob-screen" id="mob-screen-formules" data-mob-view="formules">
+        <div class="mob-screen-title"><span>Nos formules</span><em>Prix HT · Heure supplémentaire 35 € / h</em></div>
+        <div class="mob-cards" id="mob-cards">
+
+          <article class="mob-card active" data-f="essentiel">
+            <span class="mob-fam">Gestion administrative</span>
+            <h2>Essentiel</h2>
+            <p class="mob-fh">10 h / mois</p>
+            <p class="mob-fprice">350 €</p>
+            <p class="mob-fnote">/ mois · HT</p>
+            <a class="btn btn-outline btn-block" href="#" data-modal="f-essentiel">En savoir plus</a>
+          </article>
+
+          <article class="mob-card" data-f="confort">
+            <span class="mob-fam">Gestion administrative</span>
+            <h2>Confort <span class="pf-tag">Le plus choisi</span></h2>
+            <p class="mob-fh">20 h / mois</p>
+            <p class="mob-fprice">600 €</p>
+            <p class="mob-fnote">/ mois · HT</p>
+            <a class="btn btn-outline btn-block" href="#" data-modal="f-confort">En savoir plus</a>
+          </article>
+
+          <article class="mob-card" data-f="visibilite">
+            <span class="mob-fam">Gestion + visibilité digitale</span>
+            <h2>Visibilité</h2>
+            <p class="mob-fh">15 h / mois</p>
+            <p class="mob-fprice">690 €</p>
+            <p class="mob-fnote">/ mois · HT</p>
+            <a class="btn btn-outline btn-block" href="#" data-modal="f-visibilite">En savoir plus</a>
+          </article>
+
+          <article class="mob-card" data-f="visibilite-plus">
+            <span class="mob-fam">Gestion + visibilité digitale</span>
+            <h2>Visibilité Plus</h2>
+            <p class="mob-fh">20 h / mois</p>
+            <p class="mob-fprice">850 €</p>
+            <p class="mob-fnote">/ mois · HT</p>
+            <a class="btn btn-outline btn-block" href="#" data-modal="f-visibilite-plus">En savoir plus</a>
+          </article>
+
+          <article class="mob-card" data-f="pro">
+            <span class="mob-fam">Gestion administrative</span>
+            <h2>Pro</h2>
+            <p class="mob-fh">40 h / mois</p>
+            <p class="mob-fprice">1 000 €</p>
+            <p class="mob-fnote">/ mois · HT</p>
+            <a class="btn btn-outline btn-block" href="#" data-modal="f-pro">En savoir plus</a>
+          </article>
+
+          <article class="mob-card" data-f="developpement">
+            <span class="mob-fam">Gestion + digital + acquisition</span>
+            <h2>Développement <span class="pf-tag">Accompagnement complet</span></h2>
+            <p class="mob-fh">25 h / mois</p>
+            <p class="mob-fprice">1 290 €</p>
+            <p class="mob-fnote">/ mois · HT</p>
+            <p class="mob-gift">🎁 Site Internet offert + 1 an de maintenance inclus</p>
+            <a class="btn btn-outline btn-block" href="#" data-modal="f-developpement">En savoir plus</a>
+          </article>
+
+        </div>
+        <div class="mob-carousel-nav">
+          <button class="mob-arrow" id="mob-prev" aria-label="Formule moins chère">‹</button>
+          <div class="mob-dots" id="mob-dots"></div>
+          <button class="mob-arrow" id="mob-next" aria-label="Formule plus chère">›</button>
+        </div>
+        <button class="btn btn-primary btn-block mob-choose" data-mob-view="contact">Choisir cette formule</button>
+      </section>
+
+      <!-- Créer ma formule -->
+      <section class="mob-screen" id="mob-screen-builder" data-mob-view="builder">
+        <div class="mob-screen-title"><span>Créer ma formule</span><em>Cochez vos prestations, on estime votre temps et la formule adaptée. Sans engagement.</em></div>
+        <div class="mob-builder" id="mob-builder">
+          <fieldset class="bgroup-card">
+            <legend>📋 Gestion administrative</legend>
+            <label class="bitem"><input type="checkbox" data-b="devis"><span>Devis</span></label>
+            <label class="bitem"><input type="checkbox" data-b="factures"><span>Facturation</span></label>
+            <label class="bitem"><input type="checkbox" data-b="relances"><span>Relances clients</span></label>
+            <label class="bitem"><input type="checkbox" data-b="suivi"><span>Suivi administratif</span></label>
+            <label class="bitem"><input type="checkbox" data-b="classement"><span>Classement et archivage</span></label>
+            <label class="bitem"><input type="checkbox" data-b="tableaux"><span>Tableaux de gestion</span></label>
+            <label class="bitem"><input type="checkbox" data-b="compta"><span>Préparation pour le comptable</span></label>
+          </fieldset>
+          <fieldset class="bgroup-card">
+            <legend>📍 Visibilité digitale</legend>
+            <label class="bitem"><input type="checkbox" data-b="gbp"><span>Google Business Profile</span></label>
+            <label class="bitem"><input type="checkbox" data-b="seo"><span>Référencement local / SEO</span></label>
+            <label class="bitem"><input type="checkbox" data-b="presence"><span>Optimisation de la présence en ligne</span></label>
+            <label class="bitem"><input type="checkbox" data-b="avis"><span>Gestion des avis Google</span></label>
+            <label class="bitem"><input type="checkbox" data-b="res1"><span>1 réseau social (4 publications / mois)</span></label>
+            <label class="bitem"><input type="checkbox" data-b="res2"><span>Un 2e réseau social en plus</span></label>
+            <label class="bitem"><input type="checkbox" data-b="visuels"><span>Création de visuels</span></label>
+            <label class="bitem"><input type="checkbox" data-b="contenus"><span>Création de contenus</span></label>
+          </fieldset>
+          <fieldset class="bgroup-card">
+            <legend>🚀 Digital &amp; acquisition</legend>
+            <label class="bitem"><input type="checkbox" data-b="ads"><span>Google Ads (création + gestion)</span></label>
+            <label class="bitem"><input type="checkbox" data-b="adsopt"><span>Suivi et optimisation des campagnes</span></label>
+            <label class="bitem"><input type="checkbox" data-b="site"><span>Création et gestion du site internet</span></label>
+            <label class="bitem"><input type="checkbox" data-b="wa"><span>WhatsApp Business</span></label>
+            <label class="bitem"><input type="checkbox" data-b="strat"><span>Accompagnement stratégique</span></label>
+            <label class="bitem"><input type="checkbox" data-b="secre"><span>☎️ Secrétariat téléphonique</span></label>
+          </fieldset>
+        </div>
+        <aside class="mob-bresult" aria-live="polite">
+          <p class="mob-bresult-label">Votre formule estimée</p>
+          <p class="mob-bresult-time" id="mob-btime">≈ 0 h / mois</p>
+          <p class="mob-bresult-price" id="mob-bprice">—</p>
+          <p class="mob-bresult-note" id="mob-bnote">Cochez une ou plusieurs prestations : on estime le temps nécessaire et la formule la plus adaptée.</p>
+          <button class="btn btn-primary btn-block" data-mob-view="contact">Valider ce besoin</button>
+        </aside>
+      </section>
+
+      <!-- Création de site -->
+      <section class="mob-screen" id="mob-screen-site" data-mob-view="site">
+        <div class="mob-screen-title"><span>Création de site Internet</span><em>Un site professionnel à votre image.</em></div>
+        <div class="mob-option">
+          <p class="mob-opt-price"><strong>399 €</strong> une fois</p>
+          <h3>Site Internet Essentiel</h3>
+          <ul>
+            <li>Design personnalisé</li>
+            <li>Version mobile</li>
+            <li>Plusieurs pages</li>
+            <li>Formulaire de contact</li>
+            <li>Google Maps</li>
+            <li>SEO de base + mise en ligne</li>
+          </ul>
+          <p class="mob-opt-hint">Maintenance : 30 € / mois · engagement de 6 mois</p>
+        </div>
+        <div class="mob-option slim">
+          <p class="mob-opt-price"><strong>650 €</strong> une fois</p>
+          <h3>Site + 1 an de maintenance</h3>
+          <ul>
+            <li>Tout Essentiel</li>
+            <li>Maintenance incluse 12 mois</li>
+            <li>Petites modifications</li>
+            <li>Mises à jour &amp; assistance</li>
+          </ul>
+        </div>
+        <button class="btn btn-primary btn-block" data-mob-view="contact">Parler de mon projet</button>
+      </section>
+
+      <!-- Service téléphonique -->
+      <section class="mob-screen" id="mob-screen-teleph" data-mob-view="teleph">
+        <div class="mob-screen-title"><span>Service téléphonique</span><em>Vos appels, notre organisation.</em></div>
+        <p class="mob-p">Nous prenons en charge une partie de vos appels professionnels avec une solution de téléphonie professionnelle. Votre numéro reste votre numéro.</p>
+        <div class="mob-capgrid">
+          <span>📞 Réception</span>
+          <span>✍️ Messages</span>
+          <span>🗓 Rendez-vous</span>
+          <span>🔁 Transfert</span>
+          <span>🎯 Filtrage</span>
+          <span>📋 Compte rendu</span>
+        </div>
+        <div class="mob-tarifcard">
+          <p class="mob-tarif-title">Tarif sur mesure</p>
+          <p class="mob-p">Selon le volume d'appels traités et vos horaires de permanence. Proposition personnalisée.</p>
+        </div>
+        <button class="btn btn-primary btn-block" data-mob-view="contact">Demander mon tarif</button>
+      </section>
+
+      <!-- Solution sur mesure -->
+      <section class="mob-screen" id="mob-screen-surmesure" data-mob-view="surmesure">
+        <div class="mob-screen-title"><span>Solution sur mesure</span><em>Une entreprise, des besoins différents.</em></div>
+        <p class="mob-p">Besoin de plusieurs services ou d'un volume particulier ? Nous construisons une solution adaptée à votre activité.</p>
+        <div class="mob-svgrid">
+          <span>🧾 Gestion administrative</span>
+          <span>📞 Secrétariat téléphonique</span>
+          <span>💻 Présence digitale</span>
+          <span>🚀 Acquisition de prospects</span>
+        </div>
+        <button class="btn btn-primary btn-block" data-mob-view="contact">Demander mon offre personnalisée</button>
+      </section>
+
+      <!-- Contact -->
+      <section class="mob-screen" id="mob-screen-contact" data-mob-view="contact">
+        <div class="mob-screen-title"><span>Contact &amp; diagnostic</span><em>Réponse sous 24 h ouvrées · sans engagement</em></div>
+        <div class="mob-coords">
+          <a href="tel:+33612345678">📞 06 12 34 56 78</a>
+          <a href="mailto:gestaffaires45@gmail.com">✉️ gestaffaires45@gmail.com</a>
+          <a href="https://wa.me/33612345678" target="_blank" rel="noopener">💬 WhatsApp</a>
+        </div>
+        <form class="js-form mob-form" data-success="mob-success" novalidate>
+          <div class="form-field">
+            <label for="mob-nom">Nom / Prénom *</label>
+            <input type="text" id="mob-nom" name="nom" required autocomplete="name" placeholder="Jean Dupont">
+          </div>
+          <div class="form-field">
+            <label for="mob-tel">Téléphone</label>
+            <input type="tel" id="mob-tel" name="telephone" autocomplete="tel" placeholder="06 00 00 00 00">
+          </div>
+          <div class="form-field">
+            <label for="mob-email">Email *</label>
+            <input type="email" id="mob-email" name="email" required autocomplete="email" placeholder="jean@exemple.fr">
+          </div>
+          <div class="form-field">
+            <label for="mob-besoin">Votre besoin</label>
+            <select id="mob-besoin" name="besoin">
+              <option value="">Sélectionnez…</option>
+              <option value="admin">Gestion administrative</option>
+              <option value="formule">Un abonnement ou une formule</option>
+              <option value="tel">Secrétariat téléphonique</option>
+              <option value="site">Site Internet</option>
+              <option value="google">Google Business / SEO</option>
+              <option value="reseaux">Réseaux sociaux</option>
+              <option value="ads">Google Ads</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="mob-msg">Message</label>
+            <textarea id="mob-msg" name="message" rows="3" placeholder="Parlez-nous de votre activité…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Demander mon diagnostic gratuit</button>
+          <p class="form-legal">En envoyant ce formulaire, vous acceptez d'être recontacté par GestAffaires. Vos données ne sont jamais transmises à des tiers.</p>
+        </form>
+        <div class="form-success" id="mob-success" role="status" hidden>
+          <span class="success-ico" aria-hidden="true">✓</span>
+          <h3>Merci !</h3>
+          <p>Votre demande a bien été envoyée. Nous revenons vers vous rapidement.</p>
+          <button class="btn btn-outline" data-mob-view="home">Retour à l'accueil</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <noscript>
     <p class="noscript-note">Merci d'activer JavaScript pour profiter des fonctionnalités interactives (simulateur, menu mobile, FAQ).</p>
@@ -1428,7 +1696,8 @@
     document.documentElement.classList.remove('no-js');
     document.documentElement.classList.add('js');
   </script>
-<script src="js/main.js?v=11"></script>
+<script src="js/main.js?v=12"></script>
+<script src="js/mobile.js?v=2"></script>
   <script src="js/app.js?v=14"></script>
 <script src="js/workspace.js?v=8"></script>
 <script src="js/workspace-g.js?v=4"></script>

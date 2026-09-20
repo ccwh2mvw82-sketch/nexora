@@ -2487,3 +2487,513 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   .pf-card { padding: 22px 18px; }
   .pf-price { font-size: 18px; }
 }
+
+/* ============================================================
+   APPLICATION MOBILE (téléphone ≤ 720 px) — sphère 3D
+   La version ordinateur (> 720 px) n'est jamais affectée.
+   ============================================================ */
+#mob-shell { display: none; }
+
+@media (max-width: 720px) {
+
+  /* Masque l'expérience ordinateur sur téléphone */
+  header.site-header,
+  main#contenu,
+  footer.site-footer,
+  .action-bar,
+  .wa-float,
+  #back-home,
+  .mobile-cta { display: none !important; }
+
+  #mob-shell {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0;
+    z-index: 940;
+    background: linear-gradient(180deg, #06131f 0%, #063b49 55%, #0b6d63 100%);
+    color: #ffffff;
+    overflow: hidden;
+  }
+
+  /* ---- Barre du haut ---- */
+  .mob-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(6, 19, 31, 0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    z-index: 6;
+  }
+  .mob-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+  .mob-brand img { height: 30px; width: auto; }
+  .mob-back,
+  .mob-burger {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .mob-back[hidden] { display: none; }
+
+  /* ---- Menu coulissant (haut droite) ---- */
+  .mob-menu {
+    position: absolute;
+    top: 62px;
+    right: 12px;
+    left: 12px;
+    z-index: 7;
+    background: rgba(10, 32, 46, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 18px;
+    padding: 8px;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .mob-menu[hidden] { display: none; }
+  .mob-menu a {
+    padding: 13px 14px;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .mob-menu a:hover { background: rgba(12, 181, 166, 0.22); }
+  .mob-menu-cta {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding-top: 8px;
+  }
+  .mob-menu-cta a {
+    flex: 1;
+    text-align: center;
+    background: rgba(12, 181, 166, 0.16);
+  }
+
+  /* ---- Écrans ---- */
+  .mob-main { flex: 1; position: relative; }
+  .mob-screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    padding: 14px 18px 28px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    color: #ffffff;
+  }
+  .mob-screen.active { display: flex; }
+  .mob-screen[hidden] { display: none !important; }
+
+  .mob-screen-title span {
+    display: block;
+    font-size: 23px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+  .mob-screen-title em {
+    display: block;
+    font-style: normal;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.72);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+
+  /* ---- Accueil / sphère ---- */
+  .mob-home { justify-content: center; align-items: center; text-align: center; overflow: hidden; }
+  .mob-home-sub {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+  .mob-home-title {
+    font-size: 27px;
+    font-weight: 800;
+    margin: 4px 0 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .mob-sphere {
+    position: relative;
+    width: 340px;
+    height: 340px;
+    margin: 6px auto;
+    perspective: 900px;
+    -webkit-perspective: 900px;
+  }
+  .mob-ring {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+  }
+  .mob-orb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 56px;
+    height: 56px;
+    margin: -28px 0 0 -28px;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    background: radial-gradient(circle at 30% 25%, #2ad1c0, #0cb5a6 48%, #078a7e);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4), inset 0 -4px 10px rgba(0, 0, 0, 0.25);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    opacity: 0.85;
+    transition: opacity 0.3s ease, box-shadow 0.3s ease;
+  }
+  .mob-orb.active {
+    opacity: 1;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 26px rgba(12, 181, 166, 0.85);
+  }
+  .mob-globe {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 172px;
+    height: 172px;
+    margin: -86px 0 0 -86px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #3adcca, #0cb5a6 42%, #06444f 100%);
+    box-shadow: 0 0 44px rgba(12, 181, 166, 0.55), inset -16px -20px 44px rgba(0, 0, 0, 0.4);
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    animation: mobGlobeSpin 30s linear infinite;
+  }
+  .mob-globe::before,
+  .mob-globe::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+  }
+  .mob-globe::before {
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    border-left-color: transparent;
+    border-right-color: transparent;
+    transform: rotateY(24deg);
+  }
+  .mob-globe::after {
+    border: 2px solid rgba(255, 255, 255, 0.24);
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+    transform: rotateX(78deg);
+  }
+  @keyframes mobGlobeSpin {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+  }
+
+  .mob-open {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #0cb5a6, #0c8f85);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .mob-open:active { transform: scale(0.97); }
+  .mob-open-ico { font-size: 18px; }
+  .mob-open-go { font-size: 15px; }
+  .mob-hint {
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.62);
+    margin: 0;
+  }
+
+  /* ---- Carrousel formules ---- */
+  .mob-cards { position: relative; }
+  .mob-card {
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    background: #ffffff;
+    color: var(--ink);
+    border-radius: 20px;
+    padding: 20px 20px 22px;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+  }
+  .mob-card.active { display: flex; }
+  .mob-fam {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--teal-dark);
+    margin-bottom: 6px;
+  }
+  .mob-card h2 {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    color: var(--ink);
+  }
+  .mob-fh {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    margin: 0;
+  }
+  .mob-fprice {
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--teal-dark);
+    letter-spacing: -0.04em;
+    margin: 8px 0 0;
+  }
+  .mob-fnote {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .mob-gift {
+    border: 1px dashed var(--teal);
+    background: rgba(12, 181, 166, 0.1);
+    color: var(--teal-dark);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-weight: 800;
+    font-size: 13px;
+    text-align: center;
+    margin: 6px 0 12px;
+  }
+  .mob-card .btn { margin-top: auto; }
+
+  .mob-carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .mob-arrow {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    font-size: 26px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .mob-arrow:disabled { opacity: 0.35; cursor: default; }
+  .mob-dots {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    flex: 1;
+  }
+  .mob-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+  }
+  .mob-dot.on { background: #ffffff; }
+  .mob-choose { margin-top: 4px; }
+
+  /* ---- Écrans contenu ---- */
+  .mob-p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.88);
+    margin: 0;
+  }
+
+  .mob-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .mob-builder .bgroup-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .mob-builder .bgroup-card legend { font-size: 14px; }
+
+  .mob-bresult {
+    background: #ffffff;
+    color: var(--ink);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .mob-bresult-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  .mob-bresult-time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 4px;
+  }
+  .mob-bresult-price {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--teal-dark);
+    letter-spacing: -0.03em;
+    margin: 0 0 6px;
+  }
+  .mob-bresult-note {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin: 0 0 16px;
+  }
+
+  .mob-option {
+    background: #ffffff;
+    color: var(--ink);
+    border-radius: 18px;
+    padding: 20px;
+  }
+  .mob-option.slim {
+    border: 2px solid rgba(12, 181, 166, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+  }
+  .mob-opt-price { font-size: 14px; color: var(--muted); margin: 0 0 4px; }
+  .mob-opt-price strong {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--teal-dark);
+    margin-right: 4px;
+  }
+  .mob-option.slim .mob-opt-price strong { color: #ffffff; }
+  .mob-option h3 { font-size: 18px; font-weight: 800; margin: 0 0 10px; }
+  .mob-option ul {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 4px;
+  }
+  .mob-option li {
+    position: relative;
+    padding: 5px 0 5px 24px;
+    font-size: 14px;
+  }
+  .mob-option li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 5px;
+    color: var(--teal-dark);
+    font-weight: 800;
+  }
+  .mob-opt-hint {
+    font-size: 12.5px;
+    color: var(--muted);
+    font-style: italic;
+    margin: 8px 0 0;
+  }
+
+  .mob-capgrid,
+  .mob-svgrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .mob-capgrid span,
+  .mob-svgrid span {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .mob-tarifcard {
+    background: rgba(12, 181, 166, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .mob-tarif-title {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0 0 6px;
+  }
+
+  .mob-coords {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mob-coords a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 13px 16px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .mob-form {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 18px;
+    color: var(--ink);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mob-globe { animation: none; }
+    .mob-ring { transition: none !important; }
+  }
+}
