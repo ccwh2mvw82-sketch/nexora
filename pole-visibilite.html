@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" type="image/png" href="assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=19">
-  <link rel="stylesheet" href="css/admin.css?v=19">
+  <link rel="stylesheet" href="css/style.css?v=20">
+  <link rel="stylesheet" href="css/admin.css?v=20">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -699,8 +699,18 @@
     <header class="mob-top">
       <button class="mob-back" id="mob-back" aria-label="Retour à l'accueil" hidden>←</button>
       <div class="mob-brand"><img class="brand-mark" src="assets/logo.png" alt="Logotype GestAffaires"><span>GestAffaires</span></div>
+      <a class="mob-cta" href="#" data-mob-view="contact">Diagnostic gratuit</a>
       <button class="mob-burger" id="mob-burger" aria-expanded="false" aria-controls="mob-menu" aria-label="Ouvrir le menu">☰</button>
     </header>
+
+    <nav class="mob-nav" aria-label="Navigation">
+      <a href="#" data-mob-view="home">Accueil</a>
+      <a href="#" data-mob-view="pole-temps">Pôle temps</a>
+      <a href="#" data-mob-view="pole-visib">Pôle visibilité</a>
+      <a href="#" data-mob-view="pole-marches">Pôle marchés</a>
+      <a href="#" data-mob-view="surmesure">Solution sur mesure</a>
+      <a href="#" data-mob-view="contact">Contact</a>
+    </nav>
 
     <nav class="mob-menu" id="mob-menu" aria-label="Menu" hidden>
       <a href="#" data-mob-view="home">Accueil</a>
@@ -732,7 +742,18 @@
           <span id="mob-open-label">Vous manquez de temps</span>
           <span class="mob-open-go">→</span>
         </button>
-        <p class="mob-hint">Glissez pour choisir votre pôle</p>
+        <p class="mob-hint">Tournez la sphére pour choisir votre pôle</p>
+        <div class="mob-home-intro">
+          <p>Gagnez du temps, structurez votre entreprise et développez votre visibilité : nous prenons en charge le quotidien administratif de votre activité.</p>
+        </div>
+        <div class="mob-home-services">
+          <a href="#" data-mob-view="teleph"><span>📞</span>Secrétariat téléphonique</a>
+          <a href="#" data-mob-view="builder"><span>🧾</span>Devis, factures &amp; relances</a>
+          <a href="#" data-mob-view="site"><span>💻</span>Création de site Internet</a>
+          <a href="#" data-mob-view="appels"><span>🎯</span>Appels d'offres</a>
+          <a href="#" data-mob-view="surmesure"><span>✨</span>Solution sur mesure</a>
+          <a href="#" data-mob-view="formules"><span>💼</span>Nos formules</a>
+        </div>
       </section>
 
       <!-- Pôle : vous manquez de temps -->
@@ -1056,7 +1077,7 @@
     document.documentElement.classList.add('js');
   </script>
 <script src="js/main.js?v=14"></script>
-<script src="js/mobile.js?v=5"></script>
+<script src="js/mobile.js?v=6"></script>
   <script src="js/app.js?v=14"></script>
 <script src="js/workspace.js?v=8"></script>
 <script src="js/workspace-g.js?v=4"></script>

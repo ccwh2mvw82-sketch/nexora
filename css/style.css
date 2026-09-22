@@ -2740,10 +2740,53 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   }
   .mob-back[hidden] { display: none; }
 
+  /* ---- Navigation du "head" adapté mobile ---- */
+  .mob-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    background: rgba(6, 19, 31, 0.55);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    padding: 0 16px 12px;
+    margin-top: -4px;
+    z-index: 6;
+  }
+  .mob-nav::-webkit-scrollbar { display: none; }
+  .mob-nav a {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .mob-nav a:active { background: rgba(12, 181, 166, 0.35); }
+  .mob-cta {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #ffffff;
+    text-decoration: none;
+    background: linear-gradient(135deg, #0cb5a6, #0c8f85);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  }
+  .mob-cta:active { transform: scale(0.97); }
+
   /* ---- Menu coulissant (haut droite) ---- */
   .mob-menu {
     position: absolute;
-    top: 62px;
+    top: 118px;
     right: 12px;
     left: 12px;
     z-index: 7;
@@ -2811,19 +2854,59 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   }
 
   /* ---- Accueil / sphère ---- */
-  .mob-home { justify-content: center; align-items: center; text-align: center; overflow: hidden; }
+  .mob-home { justify-content: flex-start; align-items: center; text-align: center; overflow-y: auto; padding-top: 8px; }
   .mob-home-sub {
-    font-size: 14px;
+    font-size: 13px;
     color: rgba(255, 255, 255, 0.8);
     margin: 0;
     letter-spacing: 0.02em;
   }
   .mob-home-title {
-    font-size: 27px;
+    font-size: 25px;
     font-weight: 800;
-    margin: 4px 0 6px;
+    margin: 2px 0 4px;
     letter-spacing: -0.02em;
   }
+
+  .mob-home-intro {
+    max-width: 330px;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.92);
+    margin: 2px auto 0;
+  }
+  .mob-home-services {
+    width: 100%;
+    max-width: 340px;
+    margin: 10px auto 4px;
+    text-align: left;
+  }
+  .mob-home-services > strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 8px;
+    text-align: center;
+  }
+  .mob-home-services a {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 13px;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 8px;
+  }
+  .mob-home-services a:active { background: rgba(12, 181, 166, 0.3); }
+  .mob-home-services a span { font-size: 18px; }
 
   .mob-sphere {
     position: relative;
@@ -2871,6 +2954,9 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   .mob-orb:nth-child(3) {
     background: radial-gradient(circle at 30% 25%, #ffe08a, #ffb02e 48%, #e08600);
   }
+  .mob-orb:nth-child(4) {
+    background: radial-gradient(circle at 30% 25%, #ffb0d0, #f5529b 48%, #b3226f);
+  }
   .mob-orb.active {
     opacity: 1;
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 26px rgba(12, 181, 166, 0.85);
@@ -2881,6 +2967,9 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   }
   .mob-orb:nth-child(3).active {
     box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 26px rgba(255, 176, 46, 0.85);
+  }
+  .mob-orb:nth-child(4).active {
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.9), 0 0 26px rgba(245, 82, 155, 0.85);
   }
   .mob-globe {
     position: absolute;
@@ -2894,7 +2983,7 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     box-shadow: 0 0 44px rgba(12, 181, 166, 0.55), inset -16px -20px 44px rgba(0, 0, 0, 0.4);
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
-    animation: mobGlobeSpin 30s linear infinite;
+    will-change: transform;
   }
   .mob-globe::before,
   .mob-globe::after {
@@ -3348,7 +3437,7 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mob-globe { animation: none; }
+    .mob-globe { transition: none; }
     .mob-ring { transition: none !important; }
   }
 }

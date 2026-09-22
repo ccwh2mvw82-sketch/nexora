@@ -13,59 +13,33 @@
   var POLES = [
     { key: "pole-temps", label: "Vous manquez de temps", ico: "⏱" },
     { key: "pole-visib", label: "On ne vous trouve pas", ico: "🌐" },
-    { key: "pole-marches", label: "Vous visez de nouveaux marchés", ico: "🏆" }
+    { key: "pole-marches", label: "Vous visez de nouveaux marchés", ico: "🏆" },
+    { key: "surmesure", label: "Solution sur mesure", ico: "✨" }
   ];
   var shell = $("#mob-shell");
   if (!shell) return;
-
   var ring = $("#mob-ring");
+  var globe = $(".mob-globe");
   var orbEls = [];
   var current = 0;
   var rx = 0;
   var ry = 0;
   var dragging = false;
   var dragX = 0;
-  var dragY = 0;
+  var acc = 0;
   var moved = 0;
   var blockClick = false;
   var R = 140;
+  var STEP = 90;  /* ecart angulaire entre les poles */
+  var TRIG = 60;  /* deltas px pour declencher un pas */
   var SLOTS = [
-    { az: 0, alt: 0 },     /* 0 temps — devant */
-    { az: 120, alt: 0 },   /* 1 visibilité — droite arrière */
-    { az: 240, alt: 0 }    /* 2 marchés — gauche arrière */
+    { az: 0, alt: 0 },
+    { az: 90, alt: 0 },
+    { az: 180, alt: 0 },
+    { az: 270, alt: 0 }
   ];
-
   function seg(v) { return v * Math.PI / 180; }
-
-  function clampRx() {
-    if (rx > 90) rx = 90;
-    if (rx < -90) rx = -90;
-  }
-
-  /* Profondeur caméra d'un orbe (la plus grande = le plus proche) */
-  function orbDepth(i) {
-    var a = seg(SLOTS[i].az), t = seg(SLOTS[i].alt);
-    var vx = 0, vy = 0, vz = R;
-    var cs = Math.cos(t), sn = Math.sin(t);
-    var ny = vy * cs - vz * sn;
-    var nz = vy * sn + vz * cs;
-    vy = ny; vz = nz;
-    cs = Math.cos(a); sn = Math.sin(a);
-    var nx = vx * cs + vz * sn;
-    var nz2 = -vx * sn + vz * cs;
-    vx = nx; vz = nz2;
-    cs = Math.cos(seg(ry)); sn = Math.sin(seg(ry));
-    nx = vx * cs + vz * sn;
-    nz2 = -vx * sn + vz * cs;
-    vx = nx; vz = nz2;
-    cs = Math.cos(seg(rx)); sn = Math.sin(seg(rx));
-    ny = vy * cs - vz * sn;
-    nz2 = vy * sn + vz * cs;
-    vy = ny; vz = nz2;
-    return vz;
-  }
-
-  /* ---------- Sphère 3D ---------- */
+  /* ---------- Sphere 3D : rotation par pas (le tour suivant est selectionne) ---------- */
   POLES.forEach(function (m, i) {
     var orb = document.createElement("button");
     orb.type = "button";
@@ -80,7 +54,6 @@
     ring.appendChild(orb);
     orbEls.push(orb);
   });
-
   function refreshOrbs() {
     orbEls.forEach(function (orb, i) {
       orb.classList.toggle("active", i === current);
@@ -88,74 +61,72 @@
     $("#mob-open-ico").textContent = POLES[current].ico;
     $("#mob-open-label").textContent = POLES[current].label;
   }
-
-  function render() {
+  function animateRing() {
     if (!ring) return;
-    ring.style.transition = (dragging || reduceMotion.matches) ? "none" : "transform .16s ease-out";
+    var dur = (reduceMotion.matches) ? "none" : "transform .55s cubic-bezier(.3,1.4,.4,1)";
+    ring.style.transition = dur;
     ring.style.transform = "rotateX(" + rx + "deg) rotateY(" + ry + "deg)";
-    var best = 0, bz = -Infinity;
-    orbEls.forEach(function (orb, i) {
-      var z = orbDepth(i);
-      if (z > bz) { bz = z; best = i; }
-      var s = 0.7 + 0.35 * (z / R + 1) / 2;
-      orb.style.transform = "rotateY(" + SLOTS[i].az + "deg) rotateX(" + SLOTS[i].alt + "deg) translateZ(" + R + "px) scale(" + s.toFixed(3) + ")";
-    });
-    if (best !== current) {
-      current = best;
-      refreshOrbs();
+    if (globe) {
+      globe.style.transition = dur;
+      globe.style.transform = "rotateY(" + (-ry) + "deg)";
     }
   }
-
+  function step(dir) {
+    current = (current + dir + POLES.length) % POLES.length;
+    ry = -current * STEP;
+    refreshOrbs();
+    animateRing();
+  }
+  function render() {
+    ry = -current * STEP;
+    refreshOrbs();
+    animateRing();
+  }
   $("#mob-open").addEventListener("click", function () {
     if (blockClick) { blockClick = false; return; }
     openScreen(POLES[current].key);
   });
-
-  /* Rotation libre : glisser dans toutes les directions, la sphère suit le doigt */
+  /* Glisser : chaque deplacement declenche directement le pole suivant (direct) */
   window.addEventListener("pointerdown", function (e) {
     if (!MOB.matches || !isHomeActive()) return;
     dragging = true;
     blockClick = false;
     dragX = e.clientX;
-    dragY = e.clientY;
+    acc = 0;
     moved = 0;
-    ring.style.transition = "none";
   });
-
   window.addEventListener("pointermove", function (e) {
     if (!dragging || !MOB.matches || !isHomeActive()) return;
     var dx = e.clientX - dragX;
-    var dy = e.clientY - dragY;
     dragX = e.clientX;
-    dragY = e.clientY;
-    moved += Math.abs(dx) + Math.abs(dy);
-    ry += dx * 0.45;
-    rx -= dy * 0.45;
-    clampRx();
-    render();
+    moved += Math.abs(dx);
+    acc += dx;
+    while (Math.abs(acc) >= TRIG) {
+      step(acc >= 0 ? 1 : -1);
+      acc -= TRIG * (acc >= 0 ? 1 : -1);
+    }
   });
-
   function endDrag() {
     if (!dragging) return;
     dragging = false;
     if (moved > 10) blockClick = true;
-    render();
   }
-
   window.addEventListener("pointerup", endDrag);
   window.addEventListener("pointercancel", endDrag);
-
-  /* Rotation via molette / pavé tactile (vertical : bascule, horizontal : orbite) */
-  var screenHome = $("#mob-screen-home");
+  /* Molette / pad tactile : un pas par cran (vertical ou horizontal) */
+  var wheelAcc = 0;
+  var TRIGW = 120;
   window.addEventListener("wheel", function (e) {
     if (!MOB.matches || !isHomeActive()) return;
     e.preventDefault();
-    ry += e.deltaX * 0.3;
-    rx += e.deltaY * 0.3;
-    clampRx();
-    render();
-  }, { passive: false });
+    wheelAcc += (e.deltaY + e.deltaX);
+    while (Math.abs(wheelAcc) >= TRIGW) {
+      step(wheelAcc >= 0 ? 1 : -1);
+      wheelAcc -= TRIGW * (wheelAcc >= 0 ? 1 : -1);
+    }
+}, { passive: false });
 
+  var screenHome = $("#mob-screen-home");
   function isHomeActive() {
     return screenHome && !screenHome.hasAttribute("hidden");
   }
