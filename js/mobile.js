@@ -10,13 +10,10 @@
   var MOB = window.matchMedia("(max-width: 720px)");
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  var MENUS = [
-    { key: "formules", label: "Nos formules", ico: "💶" },
-    { key: "builder", label: "Créer ma formule", ico: "🧩" },
-    { key: "site", label: "Création de site", ico: "💻" },
-    { key: "teleph", label: "Service téléphonique", ico: "📞" },
-    { key: "surmesure", label: "Solution sur mesure", ico: "✨" },
-    { key: "contact", label: "Contact & diagnostic", ico: "📩" }
+  var POLES = [
+    { key: "pole-temps", label: "Vous manquez de temps", ico: "⏱" },
+    { key: "pole-visib", label: "On ne vous trouve pas", ico: "🌐" },
+    { key: "pole-marches", label: "Vous visez de nouveaux marchés", ico: "🏆" }
   ];
   var shell = $("#mob-shell");
   if (!shell) return;
@@ -31,14 +28,11 @@
   var dragY = 0;
   var moved = 0;
   var blockClick = false;
-  var R = 168;
+  var R = 140;
   var SLOTS = [
-    { az: 0, alt: 0 },      /* 0 formules — devant */
-    { az: 180, alt: 0 },    /* 1 builder — arrière */
-    { az: 90, alt: 0 },     /* 2 site — droite */
-    { az: 270, alt: 0 },    /* 3 teleph — gauche */
-    { az: 0, alt: 78 },     /* 4 surmesure — haut */
-    { az: 0, alt: -78 }     /* 5 contact — bas */
+    { az: 0, alt: 0 },     /* 0 temps — devant */
+    { az: 120, alt: 0 },   /* 1 visibilité — droite arrière */
+    { az: 240, alt: 0 }    /* 2 marchés — gauche arrière */
   ];
 
   function seg(v) { return v * Math.PI / 180; }
@@ -72,7 +66,7 @@
   }
 
   /* ---------- Sphère 3D ---------- */
-  MENUS.forEach(function (m, i) {
+  POLES.forEach(function (m, i) {
     var orb = document.createElement("button");
     orb.type = "button";
     orb.className = "mob-orb" + (i === current ? " active" : "");
@@ -91,8 +85,8 @@
     orbEls.forEach(function (orb, i) {
       orb.classList.toggle("active", i === current);
     });
-    $("#mob-open-ico").textContent = MENUS[current].ico;
-    $("#mob-open-label").textContent = MENUS[current].label;
+    $("#mob-open-ico").textContent = POLES[current].ico;
+    $("#mob-open-label").textContent = POLES[current].label;
   }
 
   function render() {
@@ -114,7 +108,7 @@
 
   $("#mob-open").addEventListener("click", function () {
     if (blockClick) { blockClick = false; return; }
-    openScreen(MENUS[current].key);
+    openScreen(POLES[current].key);
   });
 
   /* Rotation libre : glisser dans toutes les directions, la sphère suit le doigt */
@@ -156,8 +150,8 @@
   window.addEventListener("wheel", function (e) {
     if (!MOB.matches || !isHomeActive()) return;
     e.preventDefault();
-    ry += e.deltaX * 0.15;
-    rx += e.deltaY * 0.15;
+    ry += e.deltaX * 0.3;
+    rx += e.deltaY * 0.3;
     clampRx();
     render();
   }, { passive: false });
