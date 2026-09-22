@@ -549,6 +549,8 @@ h1, h2, h3, h4 {
   padding: 32px 28px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  color: inherit;
+  text-decoration: none;
 }
 .serv-pole:hover { transform: translateY(-6px); box-shadow: var(--shadow-md); }
 .serv-pole .serv-tag { margin-bottom: 16px; }
@@ -3349,4 +3351,67 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     .mob-globe { animation: none; }
     .mob-ring { transition: none !important; }
   }
+}
+
+/* ============================================================
+   PAGES PÔLES
+   ============================================================ */
+.back-home {
+  position: sticky;
+  top: 72px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 24px;
+  margin-top: 16px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent, #2563eb);
+  text-decoration: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.back-home:hover {
+  background: #ffffff;
+  transform: translateX(-2px);
+}
+
+.hero-pole {
+  padding: 88px 0 72px;
+}
+.hero-pole .hero-inner {
+  display: block;
+}
+.hero-pole .hero-content {
+  max-width: 820px;
+}
+.hero-pole .hero-lead {
+  max-width: 640px;
+}
+.hero-pole .hero-actions {
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+
+.pole-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+.pole-flags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--surface-soft, #f1f5f9);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  color: var(--ink, #0f172a);
+  font-size: 14px;
+  font-weight: 600;
 }
