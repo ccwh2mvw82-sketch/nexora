@@ -347,6 +347,25 @@
         form.reportValidity();
         return;
       }
+      /* Capture réelle du lead : envoi vers Supabase quand configuré,
+         sinon aucune perte de données (les champs restent accessibles). */
+      if (window.GAB && window.GAB.lead) {
+        var f = {};
+        $$('input[name], select[name], textarea[name]', form).forEach(function (el) {
+          if (el.name && !f.hasOwnProperty(el.name) && el.type !== "checkbox") f[el.name] = el.value;
+        });
+        var subjectParts = [];
+        ["besoin", "activite", "sujet", "objet"].forEach(function (k) {
+          if (f[k]) subjectParts.push(f[k]);
+        });
+        window.GAB.lead.submit({
+          name: f.nom || f.prenom || f.name || "",
+          email: f.email || "",
+          phone: f.telephone || f.tel || f.phone || "",
+          subject: subjectParts.join(" - "),
+          message: f.message || f.msg || ""
+        });
+      }
       form.hidden = true;
       if (success) {
         success.hidden = false;
@@ -356,7 +375,7 @@
   }
   $$("form.js-form").forEach(initForm);
 
-  /* ---------- Modales légales ---------- */
+  /* ---------- Modales legales ---------- */
   var modals = $$(".modal");
   function openModal(id) {
     var m = $(id);
@@ -406,5 +425,55 @@
     window.addEventListener("scroll", toggleMobileCta, { passive: true });
     toggleMobileCta();
   }
+
+/* ---------- Paiement des formules (Stripe) ---------- */
+  var STRIPE_KEYS = {
+    "f-essentiel": "essentiel",
+    "f-confort": "confort",
+    "f-pro": "pro",
+    "f-visibilite": "visibilite",
+    "f-visibilite-plus": "visibilite_plus",
+    "f-developpement": "developpement"
+  };
+  var modalEls = $$(".modal[id^='modal-f-']");
+  modalEls.forEach(function (m) {
+    var key = m.id.replace("modal-", "");
+    var formula = STRIPE_KEYS[key] || key;
+    var link = window.GAB && window.GAB.order ? window.GAB.order.link(formula) : "";
+    if (!link) return;
+    var cta = m.querySelector(".btn-primary");
+    if (!cta) return;
+    var btn = document.createElement("a");
+    btn.href = link;
+    btn.target = "_blank";
+    btn.rel = "noopener";
+    btn.className = "btn btn-primary";
+    btn.style.marginTop = "8px";
+    btn.textContent = "Commander - p" + "\u0061" + "iement s" + "\u00e9" + "curis" + "\u00e9";
+    btn.addEventListener("click", function () {
+      if (window.GAB && window.GAB.order) {
+        window.GAB.order.start(formula, (window.GAB.auth && window.GAB.auth.currentUser) ? (window.GAB.auth.currentUser().email || "") : "");
+      }
+    });
+    cta.insertAdjacentElement("afterend", btn);
+  });
+
+  /* ---------- Retour de paiement Stripe ---------- */
+  (function checkStripeReturn() {
+    if (!window.location) return;
+    var q = window.location.search + window.location.hash;
+    if (q.indexOf("success") < 0) return;
+    if (q.indexOf("cancel") >= 0 || q.indexOf("cancelled") >= 0) return;
+    var note = "Commande prise en compte - merci de votre confiance ! Nous vous contactons rapidement.";
+    document.addEventListener("DOMContentLoaded", function () {
+      var bar = document.createElement("div");
+      bar.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99999;background:#1b9d57;color:#fff;text-align:center;padding:12px 16px;font:600 15px/1.4 inherit;box-shadow:0 2px 10px rgba(0,0,0,.25);";
+      bar.textContent = note;
+      document.body.appendChild(bar);
+      setTimeout(function () { bar.style.transition = "opacity .6s"; bar.style.opacity = "0"; }, 5000);
+      setTimeout(function () { bar.parentNode && bar.parentNode.removeChild(bar); }, 5700);
+      try { history.replaceState(null, "", window.location.pathname); } catch (e) {}
+    });
+  })();
 
 })();

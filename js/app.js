@@ -23,14 +23,18 @@
      Les visiteurs sans ce code créent un compte client. */
   var ADMIN_CODE = "GEST-2026";
 
-  /* ---------- Stockage ---------- */
+  /* ---------- Stockage ----------
+     Route vers le cloud Supabase (GAB.data) quand il est actif,
+     sinon repli sur localStorage (comportement historique). */
   function load(key, def) {
+    if (window.GAB && window.GAB.data) return window.GAB.data.load(key, def);
     try {
       var raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : def;
     } catch (e) { return def; }
   }
   function save(key, val) {
+    if (window.GAB && window.GAB.data) return window.GAB.data.save(key, val);
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
   }
 
@@ -164,6 +168,23 @@
   watchModalClose(modalRegister);
 
   function registerUser(name, login, email, pass, code) {
+    if (window.GAB && window.GAB.auth && window.GAB.auth.available() && window.GAB.ready) {
+      window.GAB.auth.register({ name: name, login: login, email: email, pass: pass, code: code })
+        .then(function (res) {
+          if (res && res.pending) {
+            showErr(authErrorRegister, "Compte créé : vérifiez votre boîte e-mail et confirmez votre adresse avant de vous connecter.");
+            return;
+          }
+          closeModals();
+          refreshAuthUI();
+          if (window.GAB.data) window.GAB.data.refresh().then(function () { openPanel(); });
+          else openPanel();
+        })
+        .catch(function (err) {
+          showErr(authErrorRegister, (err && err.message) || "Inscription impossible.");
+        });
+      return false;
+    }
     var users = getUsers();
     name = (name || "").trim();
     login = (login || "").trim();
@@ -186,6 +207,19 @@
   }
 
   function loginUser(login, pass) {
+    if (window.GAB && window.GAB.auth && window.GAB.auth.available() && window.GAB.ready) {
+      window.GAB.auth.login(login, pass)
+        .then(function () {
+          closeModals();
+          refreshAuthUI();
+          if (window.GAB.data) window.GAB.data.refresh().then(function () { openPanel(); });
+          else openPanel();
+        })
+        .catch(function (err) {
+          showErr(authErrorLogin, (err && err.message) || "Connexion impossible.");
+        });
+      return false;
+    }
     login = (login || "").trim();
     var users = getUsers();
     for (var i = 0; i < users.length; i++) {
@@ -204,6 +238,13 @@
   }
 
   function logout() {
+    if (window.GAB && window.GAB.auth && window.GAB.auth.available() && window.GAB.ready) {
+      window.GAB.auth.logout().then(function () {
+        closePanel();
+        refreshAuthUI();
+      });
+      return;
+    }
     localStorage.removeItem(LS_SESSION);
     closePanel();
     refreshAuthUI();

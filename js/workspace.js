@@ -52,9 +52,11 @@ window.GestWorkspace = (function () {
     return "id" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
   }
   function load(key, def) {
+    if (window.GAB && window.GAB.data) return window.GAB.data.load(key, def);
     try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : def; } catch (e) { return def; }
   }
   function save(key, val) {
+    if (window.GAB && window.GAB.data) return window.GAB.data.save(key, val);
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
   }
   function get(key) { return load(key, []); }
