@@ -24,8 +24,11 @@ vrais formulaires de contact et vrais paiements — le tout gratuitement.
    → Le premier compte qui s'inscrit avec ce code devient **administrateur**.
    Le code reste stocké haché côté serveur : il n'est jamais envoyé au navigateur.
 4. Récupère tes clés publiques : **Settings → API → Project URL** et **anon key**.
-5. (Optionnel) **Auth → Providers → Email** : laisse "Confirm email" activée pour
-   la double vérification, ou désactive-la pour une connexion immédiate.
+5. **Auth → Providers → Email** : sur ce projet, "Confirm email" est **désactivée**
+   (`mailer_autoconfirm = true`) → le compte est actif immédiatement après
+   l'inscription. **Important** : si tu la réactives un jour, il faut aussi
+   configurer un fournisseur SMTP réel (Auth → SMTP), sinon les e-mails de
+   confirmation ne partent pas et l'inscription semble bloquée.
 
 ## 2. Configuration du site
 
@@ -68,7 +71,8 @@ Le plus simple : connecter le dépôt GitHub.
 
 - Inscription : bouton "Connexion" → "Créer un compte". Avec le code admin →
   rôle administrateur. Sans code → rôle client (tableau de bord limité).
-  (Si la confirmation e-mail est active, vérifie ta boîte mail.)
+  (Sur ce projet, la confirmation e-mail est désactivée : le compte est
+  utilisable immédiatement, sans lien de confirmation.)
 - Données : les clients/factures/devis/contrats et les modules de l'espace de
   travail sont maintenant sauvegardés par compte dans Postgres.
 - Vous pouvez consulter les lignes dans **Supabase → Table Editor**.
