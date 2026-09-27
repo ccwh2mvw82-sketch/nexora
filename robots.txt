@@ -1,12 +1,10 @@
 User-agent: *
 Allow: /
 
-# Fichiers de test et documents de travail : aucun interest pour l'indexation
+# Fichiers de test et documents de travail : aucun interet pour l'indexation
 Disallow: /qa
 Disallow: /qa*.html
 Disallow: /seo-tout-savoir.html
-Disallow: /css/
-Disallow: /js/
 Disallow: /supabase/
 
 Sitemap: https://ccwh2mvw82-sketch.github.io/nexora/sitemap.xml
