@@ -1,5 +1,9 @@
 # Autre projet (inclus le dossier)
 pepite/
+lou-petit-coeur/
 srv-err.log
 srv-out.log
 qa*.html
+
+# Document SEO de travail : ne doit jamais etre publie sur le site
+seo-tout-savoir.html
