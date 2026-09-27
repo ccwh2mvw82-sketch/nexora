@@ -922,5 +922,10 @@
     }
   });
 
+  if (window.GAB && window.GAB.listen) {
+    window.GAB.listen("auth-change", function () { refreshAuthUI(); });
+    window.GAB.listen("init", function () { refreshAuthUI(); });
+  }
+
   refreshAuthUI();
 })();

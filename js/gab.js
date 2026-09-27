@@ -129,7 +129,7 @@
         });
       }
       localStorage.setItem("ga_users", JSON.stringify(users));
-      localStorage.setItem("ga_session", id);
+      localStorage.setItem("ga_session", JSON.stringify(id))
       try { localStorage.setItem(LS_MODE, "supabase"); } catch (e) {}
     } catch (e) {}
   }
@@ -290,7 +290,11 @@
   var dataCache = {};
 
   function localGet(key, def) {
-    try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : def; } catch (e) { return def; }
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return def;
+      try { return JSON.parse(raw); } catch (e) { return raw; }
+    } catch (e) { return def; }
   }
   function localSet(key, val) {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
