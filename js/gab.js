@@ -354,7 +354,28 @@
   /* ------------------------------------------------------------
      LEADS
      ------------------------------------------------------------ */
+  function notifyAdmin(fields) {
+    if (!conf || !conf.url) return;
+    var base = String(conf.url).replace(/\/+$/, "");
+    try {
+      fetch(base + "/functions/v1/send-notification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": conf.anonKey || "",
+          "Authorization": "Bearer " + (conf.anonKey || "")
+        },
+        body: JSON.stringify({
+          name: fields.name || "", email: fields.email || "", phone: fields.phone || "",
+          subject: fields.subject || "", message: fields.message || "",
+          page: fields.page || "", formula: fields.formula || ""
+        })
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   function runLead(fields) {
+    notifyAdmin(fields);
     if (!supabase) return Promise.resolve({ local: true });
     return supabase.rpc("insert_lead", {
       p_name: fields.name || "", p_email: fields.email || "", p_phone: fields.phone || "",

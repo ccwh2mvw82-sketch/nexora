@@ -56,7 +56,28 @@ vrais formulaires de contact et vrais paiements — le tout gratuitement.
 > Chaque "Commander" enregistre aussi la commande dans ta base si le visiteur
 > est connecté. Aucune donnée de carte ne passe par ton site.
 
-## 4. Netlify — adresse publique (HTTPS + domaine)
+## 4. E-mails des demandes (Resend)
+
+Chaque demande du site (formulaires contact) arrive dans la table `leads`
+**et** est aussi envoyée par e-mail à `gestaffaires45@gmail.com`.
+
+1. Va sur https://resend.com → **Sign up** avec l'adresse de réception
+   (`gestaffaires45@gmail.com`), puis valide le code reçu par e-mail.
+   > Important : sur l'offre gratuite, un e-mail ne peut partir que vers
+   > l'adresse du compte. Le compte doit donc être créé **avec l'adresse
+   > de réception**.
+2. **API Keys → Create API Key** → permission **Sending access** → copie la clé.
+3. Dans Supabase : **Settings → Edge Functions → Secrets** → ajoute
+   la variable `RESEND_API_KEY` (coller la clé `re_...`).
+4. Le site appelle la fonction `send-notification` (déployée dans Supabase)
+   à chaque demande : elle envoie l'e-mail au destinataire codé en dur dans
+   la fonction (`js/... send-notification/index.ts`, constante `TO`).
+   Pour changer le destinataire, édite cette constante et redéploie la fonction.
+5. L'expéditeur affiché est `GestAffaires <onboarding@resend.dev>` (domaine de
+   test gratuit). Pour un expéditeur professionnel, vérifie un domaine
+   (Resend → **Domains**) puis change la constante `FROM` de la fonction.
+
+## 4 bis. Netlify — adresse publique (HTTPS + domaine)
 
 Le plus simple : connecter le dépôt GitHub.
 
