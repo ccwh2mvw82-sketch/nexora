@@ -1,6 +1,7 @@
 /* ============================================================
-   Application mobile (téléphone ≤ 720 px) : sphère 3D + menus.
-   Le site ordinateur (> 720 px) n'est pas affecté.
+   Application mobile (téléphone ≤ 720 px) : app simple avec
+   des boutons en bas d'écran (Accueil / Formules / Services /
+   Contact). Le site ordinateur (> 720 px) n'est pas affecté.
    ============================================================ */
 (function () {
   "use strict";
@@ -8,180 +9,136 @@
   var $ = function (sel, ctx) { return (ctx || document).querySelector(sel); };
   var $$ = function (sel, ctx) { return Array.prototype.slice.call((ctx || document).querySelectorAll(sel)); };
   var MOB = window.matchMedia("(max-width: 720px)");
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-  var POLES = [
-    { key: "pole-temps", label: "Vous manquez de temps", ico: "⏱" },
-    { key: "pole-visib", label: "On ne vous trouve pas", ico: "🌐" },
-    { key: "pole-marches", label: "Vous visez de nouveaux marchés", ico: "🏆" },
-    { key: "surmesure", label: "Solution sur mesure", ico: "✨" }
-  ];
   var shell = $("#mob-shell");
   if (!shell) return;
-  var ring = $("#mob-ring");
-  var globe = $(".mob-globe");
-  var orbEls = [];
-  var current = 0;
-  var rx = 0;
-  var ry = 0;
-  var dragging = false;
-  var dragX = 0;
-  var acc = 0;
-  var moved = 0;
-  var blockClick = false;
-  var R = 140;
-  var STEP = 90;  /* ecart angulaire entre les poles */
-  var TRIG = 60;  /* deltas px pour declencher un pas */
-  var SLOTS = [
-    { az: 0, alt: 0 },
-    { az: 90, alt: 0 },
-    { az: 180, alt: 0 },
-    { az: 270, alt: 0 }
-  ];
-  function seg(v) { return v * Math.PI / 180; }
-  /* ---------- Sphere 3D : rotation par pas (le tour suivant est selectionne) ---------- */
-  POLES.forEach(function (m, i) {
-    var orb = document.createElement("button");
-    orb.type = "button";
-    orb.className = "mob-orb" + (i === current ? " active" : "");
-    orb.setAttribute("aria-label", m.label);
-    orb.textContent = m.ico;
-    orb.style.transform = "rotateY(" + SLOTS[i].az + "deg) rotateX(" + SLOTS[i].alt + "deg) translateZ(" + R + "px)";
-    orb.addEventListener("click", function () {
-      if (blockClick) { blockClick = false; return; }
-      openScreen(m.key);
-    });
-    ring.appendChild(orb);
-    orbEls.push(orb);
-  });
-  function refreshOrbs() {
-    orbEls.forEach(function (orb, i) {
-      orb.classList.toggle("active", i === current);
-    });
-    $("#mob-open-ico").textContent = POLES[current].ico;
-    $("#mob-open-label").textContent = POLES[current].label;
-  }
-  function animateRing() {
-    if (!ring) return;
-    var dur = (reduceMotion.matches) ? "none" : "transform .55s cubic-bezier(.3,1.4,.4,1)";
-    ring.style.transition = dur;
-    ring.style.transform = "rotateX(" + rx + "deg) rotateY(" + ry + "deg)";
-    if (globe) {
-      globe.style.transition = dur;
-      globe.style.transform = "rotateY(" + (-ry) + "deg)";
-    }
-  }
-  function step(dir) {
-    current = (current + dir + POLES.length) % POLES.length;
-    ry = -current * STEP;
-    refreshOrbs();
-    animateRing();
-  }
-  function render() {
-    ry = -current * STEP;
-    refreshOrbs();
-    animateRing();
-  }
-  $("#mob-open").addEventListener("click", function () {
-    if (blockClick) { blockClick = false; return; }
-    openScreen(POLES[current].key);
-  });
-  /* Glisser : chaque deplacement declenche directement le pole suivant (direct) */
-  window.addEventListener("pointerdown", function (e) {
-    if (!MOB.matches || !isHomeActive()) return;
-    dragging = true;
-    blockClick = false;
-    dragX = e.clientX;
-    acc = 0;
-    moved = 0;
-  });
-  window.addEventListener("pointermove", function (e) {
-    if (!dragging || !MOB.matches || !isHomeActive()) return;
-    var dx = e.clientX - dragX;
-    dragX = e.clientX;
-    moved += Math.abs(dx);
-    acc += dx;
-    while (Math.abs(acc) >= TRIG) {
-      step(acc >= 0 ? 1 : -1);
-      acc -= TRIG * (acc >= 0 ? 1 : -1);
-    }
-  });
-  function endDrag() {
-    if (!dragging) return;
-    dragging = false;
-    if (moved > 10) blockClick = true;
-  }
-  window.addEventListener("pointerup", endDrag);
-  window.addEventListener("pointercancel", endDrag);
-  /* Molette / pad tactile : un pas par cran (vertical ou horizontal) */
-  var wheelAcc = 0;
-  var TRIGW = 120;
-  window.addEventListener("wheel", function (e) {
-    if (!MOB.matches || !isHomeActive()) return;
-    e.preventDefault();
-    wheelAcc += (e.deltaY + e.deltaX);
-    while (Math.abs(wheelAcc) >= TRIGW) {
-      step(wheelAcc >= 0 ? 1 : -1);
-      wheelAcc -= TRIGW * (wheelAcc >= 0 ? 1 : -1);
-    }
-}, { passive: false });
 
-  var screenHome = $("#mob-screen-home");
-  function isHomeActive() {
-    return screenHome && !screenHome.hasAttribute("hidden");
-  }
-
-  /* ---------- Navigation entre écrans ---------- */
   var screens = $$(".mob-screen");
   var backBtn = $("#mob-back");
   var burger = $("#mob-burger");
   var menuPanel = $("#mob-menu");
 
+  /* ---------- Navigation entre écrans ---------- */
   function setScreen(view) {
+    var exists = false;
     screens.forEach(function (s) {
-      s.hidden = (s.getAttribute("data-mob-view") !== view);
-      s.classList.toggle("active", s.getAttribute("data-mob-view") === view);
+      if (s.getAttribute("data-mob-view") === view) exists = true;
     });
-    backBtn.hidden = (view === "home");
-    burger.setAttribute("aria-expanded", "false");
-    menuPanel.hidden = true;
-    if (view !== "home" && MOB.matches) {
-      var first = $("#mob-screen-" + view);
-      if (first) first.scrollTop = 0;
+    if (!exists) view = "home";
+    screens.forEach(function (s) {
+      var active = (s.getAttribute("data-mob-view") === view);
+      s.hidden = !active;
+      s.classList.toggle("active", active);
+    });
+    if (backBtn) backBtn.hidden = (view === "home");
+    if (burger) burger.setAttribute("aria-expanded", "false");
+    if (menuPanel) menuPanel.hidden = true;
+    markTab(view);
+    if (MOB.matches) {
+      var sc = $("#mob-screen-" + view);
+      if (sc) sc.scrollTop = 0;
     }
   }
 
   function openScreen(view) {
     if (!view) return;
-    if (view === "home") {
-      render();
-    } else if (view === "formules") {
-      resetCarousel();
-    }
     setScreen(view);
   }
 
-  /* Boutons d'action présents dans les écrans (hors menu et hors sections elles-mêmes) */
-  $$("#mob-shell [data-mob-view]").forEach(function (el) {
-    if (menuPanel && menuPanel.contains(el)) return;
-    if (el.classList && el.classList.contains("mob-screen")) return;
-    el.addEventListener("click", function (e) {
-      e.preventDefault();
-      openScreen(el.getAttribute("data-mob-view"));
-    });
+  /* ---------- Barre d'onglets en bas ---------- */
+  var TABS = [
+    { key: "home", label: "Accueil", ico: "🏠", view: "home" },
+    { key: "formules", label: "Formules", ico: "💼", view: "formules" },
+    { key: "services", label: "Services", ico: "🛠️", view: "offres" },
+    { key: "contact", label: "Contact", ico: "📩", view: "contact" }
+  ];
+  var tabsBar = document.createElement("nav");
+  tabsBar.className = "mob-tabs";
+  tabsBar.setAttribute("aria-label", "Navigation principale");
+  var tabs = {};
+  TABS.forEach(function (t) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "mob-tab";
+    b.setAttribute("data-mob-view", t.view);
+    b.appendChild(document.createElement("span"));
+    b.lastChild.className = "mob-tab-ico";
+    b.lastChild.textContent = t.ico;
+    b.appendChild(document.createElement("span"));
+    b.lastChild.className = "mob-tab-label";
+    b.lastChild.textContent = t.label;
+    tabsBar.appendChild(b);
+    tabs[t.key] = b;
   });
+  shell.appendChild(tabsBar);
 
-  if (menuPanel) {
-    menuPanel.addEventListener("click", function (e) {
-      var t = e.target && e.target.closest ? e.target.closest("[data-mob-view]") : null;
-      if (t) { e.preventDefault(); openScreen(t.getAttribute("data-mob-view")); }
-    });
-  } else {
-    document.addEventListener("click", function (e) {
-      var t = e.target && e.target.closest ? e.target.closest("[data-mob-view]") : null;
-      if (t) { e.preventDefault(); openScreen(t.getAttribute("data-mob-view")); return; }
+  function markTab(view) {
+    var activeKey = "home";
+    if (view === "formules") activeKey = "formules";
+    else if (view === "contact") activeKey = "contact";
+    else if (view !== "home") activeKey = "services";
+    TABS.forEach(function (t) {
+      tabs[t.key].classList.toggle("is-active", t.key === activeKey);
     });
   }
+
+  /* ---------- Écran « Nos services » (liste complète) ---------- */
+  var SERVICES = [
+    { view: "pole-temps", ico: "⏱", label: "Vous manquez de temps", sub: "Secrétariat, devis, factures, impayés" },
+    { view: "pole-visib", ico: "🌐", label: "On ne vous trouve pas", sub: "Site, Google, réseaux sociaux" },
+    { view: "pole-marches", ico: "🏆", label: "Vous visez de nouveaux marchés", sub: "Accompagnement aux appels d'offres" },
+    { view: "teleph", ico: "📞", label: "Secrétariat téléphonique", sub: "Vos appels, notre organisation" },
+    { view: "builder", ico: "🧾", label: "Devis, factures et relances", sub: "Gestion administrative courante" },
+    { view: "site", ico: "💻", label: "Création de site Internet", sub: "Un site professionnel à votre image" },
+    { view: "appels", ico: "🎯", label: "Appels d'offres", sub: "Dossiers complets, de la veille au dépôt" },
+    { view: "surmesure", ico: "✨", label: "Solution sur mesure", sub: "Un besoin spécifique ? Parlons-en" }
+  ];
+  var offresScreen = document.createElement("section");
+  offresScreen.className = "mob-screen";
+  offresScreen.id = "mob-screen-offres";
+  offresScreen.setAttribute("data-mob-view", "offres");
+  var offresTitle = document.createElement("div");
+  offresTitle.className = "mob-screen-title";
+  offresTitle.innerHTML = "<span>Nos services</span><em>Tout ce que GestAffaires peut faire pour vous.</em>";
+  offresScreen.appendChild(offresTitle);
+  var list = document.createElement("div");
+  list.className = "mob-polesub";
+  SERVICES.forEach(function (s) {
+    var a = document.createElement("a");
+    a.setAttribute("href", "#");
+    a.setAttribute("data-mob-view", s.view);
+    var span = document.createElement("span");
+    span.textContent = s.ico;
+    var strong = document.createElement("strong");
+    strong.textContent = s.label;
+    var em = document.createElement("em");
+    em.textContent = s.sub;
+    a.appendChild(span);
+    a.appendChild(strong);
+    a.appendChild(em);
+    list.appendChild(a);
+  });
+  offresScreen.appendChild(list);
+  var offresCta = document.createElement("button");
+  offresCta.type = "button";
+  offresCta.className = "btn btn-primary btn-block";
+  offresCta.setAttribute("data-mob-view", "contact");
+  offresCta.textContent = "Besoin d'un conseil ? Contactez-nous →";
+  offresScreen.appendChild(offresCta);
+  var mobMain = $(".mob-main", shell);
+  if (mobMain) mobMain.appendChild(offresScreen);
+  screens = $$(".mob-screen");
+
+  /* ---------- Clics sur tous les éléments data-mob-view ---------- */
+  document.addEventListener("click", function (e) {
+    if (!MOB.matches) return;
+    var t = e.target && e.target.closest ? e.target.closest("[data-mob-view]") : null;
+    if (t) {
+      e.preventDefault();
+      e.stopPropagation();
+      openScreen(t.getAttribute("data-mob-view"));
+    }
+  });
 
   if (backBtn) {
     backBtn.addEventListener("click", function () { openScreen("home"); });
@@ -194,56 +151,10 @@
       burger.setAttribute("aria-expanded", String(open));
     });
     document.addEventListener("click", function (e) {
-      if (!menuPanel.hidden && !menuPanel.contains(e.target) && !burger.contains(e.target)) {
+      if (menuPanel && !menuPanel.hidden && !menuPanel.contains(e.target) && !burger.contains(e.target)) {
         menuPanel.hidden = true;
         burger.setAttribute("aria-expanded", "false");
       }
-    });
-  }
-
-  /* ---------- Carrousel des formules ---------- */
-  var FORMULA_ORDER = ["essentiel", "confort", "visibilite", "visibilite-plus", "pro", "developpement"];
-  var DEFAULTS = { numero: 2, name: "Visibilité" };
-  var cards = $$("#mob-cards .mob-card");
-
-  function resetCarousel() {
-    var i = DEFAULTS.numero;
-    cards.forEach(function (c, idx) { c.classList.toggle("active", idx === i); });
-    $$(".mob-dot", $("#mob-dots")).forEach(function (d, idx) { d.classList.toggle("on", idx === i); });
-    applyArrows(i);
-  }
-
-  function applyArrows(i) {
-    $("#mob-prev").disabled = (i === 0);
-    $("#mob-next").disabled = (i === cards.length - 1);
-  }
-
-  function buildDots() {
-    var dots = $("#mob-dots");
-    dots.innerHTML = "";
-    cards.forEach(function (c, i) {
-      var d = document.createElement("span");
-      d.className = "mob-dot" + (i === DEFAULTS.numero ? " on" : "");
-      d.addEventListener("click", function () { goto( i); });
-      dots.appendChild(d);
-    });
-  }
-
-  function goto(i) {
-    i = Math.max(0, Math.min(cards.length - 1, i));
-    cards.forEach(function (c, idx) { c.classList.toggle("active", idx === i); });
-    $$(".mob-dot", $("#mob-dots")).forEach(function (d, idx) { d.classList.toggle("on", idx === i); });
-    applyArrows(i);
-  }
-
-  if ($("#mob-prev")) {
-    $("#mob-prev").addEventListener("click", function () {
-      var i = cards.indexOf(document.querySelector("#mob-cards .mob-card.active"));
-      goto(i - 1);
-    });
-    $("#mob-next").addEventListener("click", function () {
-      var i = cards.indexOf(document.querySelector("#mob-cards .mob-card.active"));
-      goto(i + 1);
     });
   }
 
@@ -310,18 +221,63 @@
     mobBuilderUpdate();
   }
 
+  /* ---------- Le héros de la page, repris tel quel dans l'accueil de l'app ---------- */
+  var VIEW_BY_ANCHOR = {
+    contact: "contact",
+    diagnostic: "contact",
+    rdv: "contact",
+    services: "formules",
+    formules: "formules",
+    solution: "surmesure",
+    surmesure: "surmesure",
+    secretariat: "teleph",
+    telephonie: "teleph",
+    "creation-site": "site",
+    site: "site",
+    appels: "appels"
+  };
+
+  function mountHero() {
+    var home = $("#mob-screen-home");
+    var src = $("section.hero");
+    if (!home || !src) return;
+    var clone = src.cloneNode(true);
+
+    /* Les dégradés SVG doivent rester uniques dans la page */
+    $$("[id^='grad']", clone).forEach(function (n) {
+      var old = n.getAttribute("id");
+      var nn = "mob-" + old;
+      n.setAttribute("id", nn);
+      $$("[fill='url(#" + old + ")']", clone).forEach(function (u) {
+        u.setAttribute("fill", "url(#" + nn + ")");
+      });
+    });
+    /* Aucun identifiant en double */
+    clone.removeAttribute("id");
+    $$("[id]", clone).forEach(function (n) { n.removeAttribute("id"); });
+
+    /* Les boutons du héros ouvrent les écrans de l'app */
+    $$("a", clone).forEach(function (a) {
+      var href = (a.getAttribute("href") || "").toLowerCase();
+      var anchor = href.indexOf("#") > -1 ? href.split("#")[1] : "";
+      a.setAttribute("href", "#");
+      if (VIEW_BY_ANCHOR[anchor]) a.setAttribute("data-mob-view", VIEW_BY_ANCHOR[anchor]);
+    });
+
+    /* L'accueil garde seulement ses grandes cartes de services */
+    $$(".mob-home-sub, .mob-home-title, .mob-home-intro", home).forEach(function (n) { n.remove(); });
+
+    clone.classList.add("mob-hero");
+    home.insertBefore(clone, home.firstChild);
+  }
+
   /* ---------- Initialisation ---------- */
+  mountHero();
   setScreen("home");
-  buildDots();
-  resetCarousel();
-  refreshOrbs();
-  render();
 
   if (MOB.addEventListener) {
     MOB.addEventListener("change", function () {
-      var active = $("#mob-screen-" + (MOB.matches ? "home" : "home"));
       setScreen("home");
-      render();
     });
   }
 

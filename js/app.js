@@ -253,18 +253,19 @@
   /* ---------- Tête de l'en-tête ---------- */
   function refreshAuthUI() {
     var u = currentUser();
-    var avatar = $("#auth-trigger");
-    var label = $("[data-auth-label]", avatar);
-    if (!avatar || !label) return;
-    if (u) {
-      label.textContent = u.name || (u.role === "admin" ? "Espace admin" : "Mon espace");
-      avatar.classList.add("is-admin");
-      avatar.setAttribute("aria-label", "Ouvrir mon espace");
-    } else {
-      label.textContent = "Connexion";
-      avatar.classList.remove("is-admin");
-      avatar.setAttribute("aria-label", "Connexion");
-    }
+    $$("[data-auth-label]").forEach(function (label) {
+      var avatar = label.closest("[data-auth-trigger]") || label.parentElement;
+      if (!avatar) return;
+      if (u) {
+        label.textContent = u.name || (u.role === "admin" ? "Espace admin" : "Mon espace");
+        avatar.classList.add("is-admin");
+        avatar.setAttribute("aria-label", "Ouvrir mon espace");
+      } else {
+        label.textContent = "Connexion";
+        avatar.classList.remove("is-admin");
+        avatar.setAttribute("aria-label", "Connexion");
+      }
+    });
   }
 
   /* ============================================================
@@ -867,13 +868,12 @@
   /* ============================================================
      BINDINGS
      ============================================================ */
-  var authTrigger = $("#auth-trigger");
-  if (authTrigger) {
-    authTrigger.addEventListener("click", function (e) {
+  $$("[data-auth-trigger]").forEach(function (trigger) {
+    trigger.addEventListener("click", function (e) {
       e.preventDefault();
       if (currentUser()) { openPanel(); } else { openModal(modalLogin); }
     });
-  }
+  });
 
   var formLogin = $("#form-login");
   if (formLogin) {
@@ -917,7 +917,7 @@
        ni le bouton qui ouvre le panneau (sinon ouverture + fermeture). */
     var target = e.target;
     if (panel && !panel.hidden && target && document.contains(target) && !panel.contains(target)) {
-      if (authTrigger && (target === authTrigger || (target.closest && target.closest("#auth-trigger")))) return;
+      if (target.closest && target.closest("[data-auth-trigger]")) return;
       closePanel();
     }
   });

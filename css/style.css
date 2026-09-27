@@ -3504,3 +3504,270 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   font-size: 14px;
   font-weight: 600;
 }
+
+/* ============================================================
+   APPLICATION MOBILE v2 — app simple avec onglets en bas.
+   Remplace la boule 3D et le site PC rapetissé (survole le bloc
+   mobile précédent). Le site ordinateur (> 720 px) n'est pas affecté.
+   ============================================================ */
+@media (max-width: 720px) {
+  #mob-shell .mob-top {
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+  }
+  #mob-shell .mob-main {
+    padding-bottom: 0;
+  }
+
+  /* La boule 3D n'est plus proposée */
+  #mob-sphere, .mob-open, .mob-hint { display: none !important; }
+
+  /* Accueil : texte lisible, services en grandes cartes */
+  #mob-shell .mob-home {
+    text-align: left;
+    align-items: flex-start;
+  }
+  #mob-shell .mob-home-sub { font-size: 14.5px; }
+  #mob-shell .mob-home-title {
+    font-size: 28px;
+    margin: 4px 0 12px;
+    line-height: 1.15;
+  }
+  #mob-shell .mob-home-intro {
+    max-width: 100%;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  #mob-shell .mob-home-services {
+    max-width: 100%;
+    margin: 16px auto 4px;
+  }
+  #mob-shell .mob-home-services > strong { text-align: left; }
+  #mob-shell .mob-home-services a {
+    gap: 12px;
+    padding: 15px 16px;
+    font-size: 15.5px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    touch-action: manipulation;
+  }
+  #mob-shell .mob-home-services a span { font-size: 21px; }
+  #mob-shell .mob-home-services a:active { background: var(--teal, #0cb5a6); color: #fff; }
+
+  /* La rangée de puces du haut fait doublon avec les onglets */
+  #mob-shell .mob-nav { display: none !important; }
+
+  /* Formules : toutes les cartes empilées, plus de carrousel */
+  #mob-shell .mob-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #mob-shell .mob-card { display: flex !important; }
+  #mob-shell .mob-card.active {
+    box-shadow: 0 0 0 2px var(--teal, #0cb5a6), 0 14px 30px rgba(0, 0, 0, 0.3);
+  }
+  #mob-shell .mob-carousel-nav { display: none !important; }
+
+  /* Lecture générale plus confortable */
+  #mob-shell .mob-p { font-size: 15px; }
+  #mob-shell .mob-screen-title span { font-size: 25px; }
+  #mob-shell .mob-screen-title em { font-size: 14px; }
+  #mob-shell .mob-menu { top: 70px; }
+  #mob-shell .mob-polesub a {
+    gap: 12px;
+    padding: 15px 16px;
+    font-size: 15.5px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+  /* On garde de la place en bas de chaque écran pour que le dernier
+     bouton ("Nos formules") ne soit jamais caché par la barre d'onglets */
+  #mob-shell .mob-screen {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Aucun bloc ne doit être aplati : sinon le texte se chevauche
+     et le bas de la page devient impossible à atteindre au doigt */
+  #mob-shell .mob-screen > * { flex: 0 0 auto; }
+  /* Le menu ☰ reste dans l'écran, même sur les petits téléphones */
+  #mob-shell .mob-menu {
+    max-height: calc(100% - 170px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Barre d'onglets en bas */
+  #mob-shell .mob-tabs {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 8;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background: rgba(6, 18, 31, 0.94);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  #mob-shell .mob-tab {
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.56);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 7px 2px 5px;
+    border-radius: 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mob-shell .mob-tab-ico { font-size: 21px; line-height: 1; }
+  #mob-shell .mob-tab-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  #mob-shell .mob-tab.is-active {
+    color: #fff;
+    background: rgba(12, 181, 166, 0.22);
+  }
+
+  /* ---------- En-tête mobile : même aspect que l'en-tête ordinateur,
+     à l'échelle du téléphone ---------- */
+  #mob-shell .mob-top {
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: 0 4px 18px rgba(6, 19, 31, 0.14);
+    padding: 9px 12px;
+    padding-top: calc(9px + env(safe-area-inset-top, 0px));
+    gap: 8px;
+  }
+  #mob-shell .mob-brand {
+    gap: 9px;
+    text-decoration: none;
+    min-width: 0;
+  }
+  #mob-shell .mob-brand .brand-mark { height: 36px; width: auto; }
+  #mob-shell .mob-brand .brand-text {
+    color: var(--ink);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+  }
+  #mob-shell .mob-brand .brand-sub {
+    color: var(--muted);
+    font-size: 6px;
+    letter-spacing: 0.16em;
+    margin-top: 2px;
+  }
+  #mob-shell .mob-auth {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  #mob-shell .mob-auth svg { width: 16px; height: 16px; }
+  #mob-shell .mob-auth:hover { border-color: var(--teal); color: var(--teal-dark); background: var(--teal-soft); }
+  #mob-shell .mob-auth.is-admin { border-color: var(--teal); background: var(--teal); color: #fff; }
+  #mob-shell .mob-burger,
+  #mob-shell .mob-back {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.04);
+    color: var(--ink);
+    font-size: 18px;
+  }
+  #mob-shell .mob-menu { top: 62px; }
+
+  /* ---------- Le héros de la page, dans l'accueil de l'app ---------- */
+  #mob-shell .mob-hero {
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    padding: 24px 0 28px;
+  }
+  #mob-shell .mob-hero .container { padding: 0 18px; }
+  /* Un bouton au texte long ne doit pas imposer une largeur minimale,
+     sinon tout le héros déborde sur les petits téléphones */
+  #mob-shell .mob-hero,
+  #mob-shell .mob-hero * { min-width: 0; }
+  #mob-shell .btn { white-space: normal; }
+  #mob-shell .mob-hero .hero-inner { display: block; }
+  #mob-shell .mob-hero .eyebrow { font-size: 11.5px; }
+  #mob-shell .mob-hero h1 { font-size: 27px; line-height: 1.18; margin-bottom: 16px; }
+  #mob-shell .mob-hero .hero-slogan { font-size: 14px; margin-bottom: 12px; }
+  #mob-shell .mob-hero .hero-lead { font-size: 15px; margin-bottom: 22px; }
+  #mob-shell .mob-hero .hero-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  #mob-shell .mob-hero .hero-actions .btn { width: 100%; }
+  #mob-shell .mob-hero .hero-trust { gap: 8px 16px; font-size: 13px; }
+  /* le dessin reste visible, avec ses 3 étiquettes sous l'image */
+  #mob-shell .mob-hero .hero-visual { display: block; max-width: 420px; margin: 24px auto 0; }
+  #mob-shell .mob-hero .visual-frame {
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    border-radius: 18px;
+  }
+  #mob-shell .mob-hero .floating-card {
+    position: static;
+    display: flex;
+    animation: none;
+    margin-top: 10px;
+    white-space: normal;
+    align-items: flex-start;
+  }
+  #mob-shell .mob-hero .floating-card svg { width: 22px; height: 22px; }
+  /* les 3 avantages (Gagnez du temps, Soyez visible, Développez votre activité) */
+  #mob-shell .mob-hero .adv-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 26px;
+  }
+  #mob-shell .mob-hero .adv-card { padding: 20px 18px; }
+  #mob-shell .mob-hero .adv-ico {
+    width: 46px;
+    height: 46px;
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+  #mob-shell .mob-hero .adv-card h3 { font-size: 17px; }
+  #mob-shell .mob-hero .adv-card p { font-size: 14px; }
+  /* l'accès rapide du héros fait doublon avec l'onglet Services */
+  #mob-shell .mob-hero .quick-nav { display: none !important; }
+
+  /* Très petits téléphones : on garde le logo et le nom, le slogan passe en dessous */
+  @media (max-width: 380px) {
+    #mob-shell .mob-brand .brand-sub { display: none; }
+    #mob-shell .mob-brand .brand-text { font-size: 14px; }
+    #mob-shell .mob-auth { padding: 6px 9px; font-size: 11.5px; }
+    #mob-shell .mob-burger,
+    #mob-shell .mob-back { width: 36px; height: 36px; }
+    #mob-shell .mob-hero h1 { font-size: 24px; }
+    #mob-shell .mob-hero .adv-card h3 { font-size: 16px; }
+    #mob-shell .mob-hero .eyebrow { font-size: 11px; }
+  }
+}
