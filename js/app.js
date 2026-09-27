@@ -257,7 +257,7 @@
     var label = $("[data-auth-label]", avatar);
     if (!avatar || !label) return;
     if (u) {
-      label.textContent = u.role === "admin" ? "Espace admin" : "Mon espace";
+      label.textContent = u.name || (u.role === "admin" ? "Espace admin" : "Mon espace");
       avatar.classList.add("is-admin");
       avatar.setAttribute("aria-label", "Ouvrir mon espace");
     } else {

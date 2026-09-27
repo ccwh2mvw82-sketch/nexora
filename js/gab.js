@@ -179,7 +179,9 @@
     try { pending = localStorage.getItem(LS_PENDING) || null; } catch (e) {}
     var p;
     if (pending) {
-      p = supabase.rpc("claim_admin", { p_code: pending }).catch(function () { return { data: false }; });
+      p = supabase.rpc("claim_admin", { p_code: pending }).then(function (r) {
+        return { data: !!(r && r.data) };
+      }).catch(function () { return { data: false }; });
     } else {
       p = Promise.resolve({ data: false });
     }
@@ -295,11 +297,11 @@
   }
   function cloudUpsert(key, val) {
     if (!isCloud()) return Promise.resolve();
-    return supabase.rpc("upsert_app_data", { p_key: key, p_payload: val }).catch(function () {});
+    return supabase.rpc("upsert_app_data", { p_key: key, p_payload: val }).then(function () {}).catch(function () {});
   }
   function cloudDelete(key) {
     if (!isCloud()) return Promise.resolve();
-    return supabase.rpc("delete_app_data", { p_key: key }).catch(function () {});
+    return supabase.rpc("delete_app_data", { p_key: key }).then(function () {}).catch(function () {});
   }
 
   var data = {
