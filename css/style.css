@@ -3706,6 +3706,14 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     padding: 24px 0 28px;
   }
   #mob-shell .mob-hero .container { padding: 0 18px; }
+  /* Le héros copié dans l'app ne dépend pas du défilement de la page :
+     tout doit être visible, sinon un grand vide apparaît sous le visuel. */
+  #mob-shell .mob-hero .reveal,
+  #mob-shell .mob-hero .reveal.inview {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
   /* Un bouton au texte long ne doit pas imposer une largeur minimale,
      sinon tout le héros déborde sur les petits téléphones */
   #mob-shell .mob-hero,

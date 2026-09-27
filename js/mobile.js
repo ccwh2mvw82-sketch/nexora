@@ -129,10 +129,14 @@
   if (mobMain) mobMain.appendChild(offresScreen);
   screens = $$(".mob-screen");
 
-  /* ---------- Clics sur tous les éléments data-mob-view ---------- */
+  /* ---------- Clics sur tous les éléments data-mob-view ----------
+     Seuls les liens et boutons sont des déclencheurs : les écrans
+     (section[data-mob-view]) ne le sont pas, sinon preventDefault()
+     annulerait les cases à cocher, l'envoi du formulaire et les liens
+     téléphone / WhatsApp à l'intérieur de chaque écran. */
   document.addEventListener("click", function (e) {
     if (!MOB.matches) return;
-    var t = e.target && e.target.closest ? e.target.closest("[data-mob-view]") : null;
+    var t = e.target && e.target.closest ? e.target.closest("a[data-mob-view], button[data-mob-view]") : null;
     if (t) {
       e.preventDefault();
       e.stopPropagation();
@@ -262,6 +266,14 @@
       var anchor = href.indexOf("#") > -1 ? href.split("#")[1] : "";
       a.setAttribute("href", "#");
       if (VIEW_BY_ANCHOR[anchor]) a.setAttribute("data-mob-view", VIEW_BY_ANCHOR[anchor]);
+    });
+
+    /* Les cartes du héros copié ne doivent pas rester masquées par
+       l'animation d'apparition (opacity: 0) : sans cela elles laissent
+       un grand vide vide en bas du héros. */
+    $$(".reveal", clone).forEach(function (n) {
+      n.classList.remove("reveal");
+      n.classList.add("inview");
     });
 
     /* L'accueil garde seulement ses grandes cartes de services */
