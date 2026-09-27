@@ -2613,13 +2613,19 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
   border-radius: 16px;
   background: var(--white);
 }
+/* Le <legend> s'inscrit normalement dans la bordure d'un <fieldset> : le
+   titre se retrouvait à cheval sur le coin arrondi de la carte, coupé et
+   collé aux premières cases à cocher. On le force à occuper sa propre ligne. */
 .bgroup-card legend {
+  float: left;
+  width: 100%;
   font-size: 14.5px;
   font-weight: 700;
-  padding: 0 8px;
-  margin-left: -8px;
-  margin-bottom: 6px;
+  line-height: 1.3;
+  padding: 0;
+  margin: 0 0 8px;
 }
+
 .bitem {
   display: flex;
   align-items: center;
@@ -3147,9 +3153,19 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 16px;
+    padding: 14px 16px 8px;
   }
-  .mob-builder .bgroup-card legend { font-size: 14px; }
+  /* Le <legend> s'inscrit normalement dans la bordure d'un <fieldset> : le
+     titre se retrouvait à cheval sur le coin arrondi, coupé et collé aux
+     premières cases à cocher. On le force à occuper sa propre ligne. */
+  .mob-builder .bgroup-card legend {
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 10px;
+    font-size: 14px;
+    line-height: 1.3;
+  }
 
   .mob-bresult {
     background: #ffffff;
