@@ -170,48 +170,25 @@
   var mobNote = $("#mob-bnote");
 
   function mobBuilderUpdate() {
-    var totalH = 0, scope = null;
-    mobBoxes.forEach(function (cb) {
-      if (!cb.checked) return;
-      var p = GA.PRESTATIONS[cb.getAttribute("data-b")];
-      if (!p) return;
-      totalH += p.h;
-      if (p.g === "acq") scope = "acq";
-      else if (p.g === "visib" && scope !== "acq") scope = "visib";
-      else if (p.g === "admin" && !scope) scope = "admin";
-    });
-
     if (!mobTime || !mobPrice || !mobNote) return;
-
-    if (!totalH) {
+    var keys = [], i, cb;
+    for (i = 0; i < mobBoxes.length; i++) {
+      cb = mobBoxes[i];
+      if (cb.checked) keys.push(cb.getAttribute("data-b"));
+    }
+    if (typeof GA.recommend !== "function") {
       mobTime.textContent = "≈ 0 h / mois";
       mobPrice.textContent = "—";
       mobNote.textContent = "Cochez une ou plusieurs prestations : on estime le temps nécessaire et la formule la plus adaptée.";
       return;
     }
-
-    mobTime.textContent = "≈ " + totalH + " h / mois";
-
-    if (totalH < 8) {
-      mobPrice.textContent = "Sur devis";
-      mobNote.textContent = "Besoin ponctuel : chaque prestation est facturée à l'unité, sans engagement.";
-      return;
-    }
-
-    var pool = GA.POOLS[scope || "admin"];
-    var tier = null;
-    for (var i = 0; i < pool.length; i++) {
-      if (pool[i].h >= totalH) { tier = pool[i]; break; }
-    }
-    var note;
-    if (!tier) {
-      tier = pool[pool.length - 1];
-      note = "Formule la plus proche : " + tier.n + " (" + tier.h + " h incluses) — au-delà : 35 € / h supplémentaires.";
-    } else {
-      note = "Formule adaptée : " + tier.n + " (" + tier.h + " h incluses).";
-    }
-    mobPrice.textContent = GA.formatPrice(tier.p) + " / mois";
-    mobNote.textContent = note;
+    var r = GA.recommend(keys);
+    mobTime.textContent = r.time;
+    mobPrice.textContent = r.markup ? GA.formatPrice(r.price) + " / mois HT" : r.price;
+    var note = document.createElement("div");
+    note.innerHTML = r.note;
+    mobNote.textContent = "";
+    while (note.firstChild) mobNote.appendChild(note.firstChild);
   }
 
   if (mobBoxes.length) {

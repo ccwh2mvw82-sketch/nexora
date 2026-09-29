@@ -223,56 +223,137 @@
   });
 
   /* ---------- Composez votre formule ---------- */
+  var EXTRA_HOUR = 89;
+
   var PRESTATIONS = {
     devis:      { h: 2, g: "admin" },
     factures:   { h: 3, g: "admin" },
     relances:   { h: 2, g: "admin" },
-    impayes:    { h: 3, g: "admin" },
-    appels:     { h: 3, g: "admin" },
     suivi:      { h: 2, g: "admin" },
     classement: { h: 2, g: "admin" },
     tableaux:   { h: 2, g: "admin" },
+    impayes:    { h: 3, g: "admin" },
     compta:     { h: 4, g: "admin" },
+    secre:      { h: 4, g: "secre" },
+
     gbp:        { h: 2, g: "visib" },
     seo:        { h: 3, g: "visib" },
     presence:   { h: 2, g: "visib" },
     avis:       { h: 1, g: "visib" },
     res1:       { h: 5, g: "visib" },
-    res2:       { h: 4, g: "visib" },
     visuels:    { h: 3, g: "visib" },
     contenus:   { h: 3, g: "visib" },
-    ads:        { h: 7, g: "acq" },
-    adsopt:     { h: 3, g: "acq" },
-    site:       { h: 5, g: "acq" },
-    wa:         { h: 2, g: "acq" },
-    strat:      { h: 2, g: "acq" },
-    secre:      { h: 4, g: "acq" }
+    res2:       { h: 4, g: "visib" },
+
+    offresveille:  { h: 2, g: "marches" },
+    offresanalyse: { h: 3, g: "marches" },
+    appels:        { h: 7, g: "marches" },
+
+    strat:      { h: 2, g: "projet" },
+    wa:         { h: 2, g: "projet" },
+    adsopt:     { h: 3, g: "projet" },
+    site:       { h: 5, g: "projet" },
+    ads:        { h: 7, g: "projet" }
   };
+
   var POOLS = {
     admin: [
-      { h: 10, p: 350, n: "Essentiel" },
-      { h: 20, p: 600, n: "Confort" },
-      { h: 40, p: 1000, n: "Pro" }
+      { h: 7,  p: 599,  n: "Fondations" },
+      { h: 11, p: 899,  n: "Essentiel" },
+      { h: 16, p: 1399, n: "Confort" },
+      { h: 24, p: 1899, n: "Pro" }
     ],
     visib: [
-      { h: 15, p: 690, n: "Visibilité" },
-      { h: 20, p: 850, n: "Visibilité Plus" }
+      { h: 8,  p: 790,  n: "Notoriété" },
+      { h: 16, p: 1399, n: "Acquisition" },
+      { h: 23, p: 1899, n: "Acquisition Plus" }
     ],
-    acq: [
-      { h: 15, p: 690, n: "Visibilité" },
-      { h: 20, p: 850, n: "Visibilité Plus" },
-      { h: 25, p: 1290, n: "Développement" }
-    ]
+    secre: [
+      { h: 4, p: 356, n: "Secrétariat téléphonique" }
+    ],
+    marches: [],
+    projet: []
   };
 
   function formatPrice(n) {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
   }
 
+  function recommend(keys) {
+    var totalH = 0, seen = {}, list = [], i, k, p;
+    keys = keys || [];
+    for (i = 0; i < keys.length; i++) {
+      k = keys[i];
+      p = PRESTATIONS[k];
+      if (!p) continue;
+      totalH += p.h;
+      seen[p.g] = true;
+      list.push(k);
+    }
+
+    if (!totalH) {
+      return {
+        time: "≈ 0 h / mois",
+        price: "—",
+        markup: false,
+        note: "Cochez une ou plusieurs prestations : nous estimons le temps nécessaire et la formule la plus adaptée."
+      };
+    }
+
+    var scope = "admin";
+    if (seen.projet || seen.marches) scope = seen.projet ? "projet" : "marches";
+    else if (seen.visib) scope = "visib";
+    else if (seen.secre) scope = list.length === 1 ? "secre" : "admin";
+
+    var time = "≈ " + totalH + " h / mois";
+    var pool = POOLS[scope] || [];
+
+    if (!pool.length) {
+      return {
+        time: time,
+        price: "Sur devis",
+        markup: false,
+        note: scope === "marches"
+          ? "Appels d'offres facturés à la mission : <strong>290 €</strong> l'analyse et la réponse, <strong>450 €</strong> le dossier complet, ou <strong>890 € / mois</strong> en illimité."
+          : "Prestation ponctuelle : <strong>site vitrine 990 €</strong>, <strong>WhatsApp Business et stratégie 89 €/h</strong>. <strong>Google Ads</strong> sur devis, budget publicitaire non inclus."
+      };
+    }
+
+    var tier = null;
+    for (i = 0; i < pool.length; i++) {
+      if (pool[i].h >= totalH) { tier = pool[i]; break; }
+    }
+
+    if (tier) {
+      return {
+        time: time,
+        price: tier.p,
+        markup: true,
+        note: "Formule adaptée : <strong>" + tier.n + "</strong> · " + tier.h + " h incluses · " +
+              formatPrice(Math.round(tier.p * 0.9)) + " en engagement 6 mois, " +
+              formatPrice(Math.round(tier.p * 0.8)) + " en engagement 12 mois."
+      };
+    }
+
+    var last = pool[pool.length - 1];
+    var over = totalH - last.h;
+    var extra = over * EXTRA_HOUR;
+    return {
+      time: time,
+      price: last.p + extra,
+      markup: true,
+      note: "Formule <strong>" + last.n + "</strong> (" + last.h + " h incluses) + " + over +
+            " h supplémentaires à " + formatPrice(EXTRA_HOUR) + " = " + formatPrice(extra) +
+            " · sans engagement, " + formatPrice(last.p + extra) + "."
+    };
+  }
+
   window.GA = {
     PRESTATIONS: PRESTATIONS,
     POOLS: POOLS,
-    formatPrice: formatPrice
+    EXTRA_HOUR: EXTRA_HOUR,
+    formatPrice: formatPrice,
+    recommend: recommend
   };
 
   var builderTime = $("#bresult-time");
@@ -281,49 +362,18 @@
   var builderBoxes = Array.prototype.slice.call(document.querySelectorAll(".bitem input[data-b]"));
 
   function builderUpdate() {
-    var totalH = 0;
-    var scope = null;
-    builderBoxes.forEach(function (cb) {
-      if (!cb.checked) return;
-      var p = PRESTATIONS[cb.getAttribute("data-b")];
-      if (!p) return;
-      totalH += p.h;
-      if (p.g === "acq") scope = "acq";
-      else if (p.g === "visib" && scope !== "acq") scope = "visib";
-      else if (p.g === "admin" && !scope) scope = "admin";
-    });
-
     if (!builderTime || !builderPrice || !builderNote) return;
-
-    if (!totalH) {
-      builderTime.textContent = "≈ 0 h / mois";
-      builderPrice.textContent = "—";
-      builderNote.textContent = "Cochez une ou plusieurs prestations : nous calculons le temps nécessaire et la formule la plus adaptée.";
-      return;
+    var keys = [], i, cb;
+    for (i = 0; i < builderBoxes.length; i++) {
+      cb = builderBoxes[i];
+      if (cb.checked) keys.push(cb.getAttribute("data-b"));
     }
-
-    builderTime.textContent = "≈ " + totalH + " h / mois";
-
-    if (totalH < 8) {
-      builderPrice.textContent = "Sur devis";
-      builderNote.textContent = "Besoin ponctuel : chaque prestation est facturée à l'unité, sans engagement.";
-      return;
-    }
-
-    var pool = POOLS[scope || "admin"];
-    var tier = null;
-    for (var i = 0; i < pool.length; i++) {
-      if (pool[i].h >= totalH) { tier = pool[i]; break; }
-    }
-    var note;
-    if (!tier) {
-      tier = pool[pool.length - 1];
-      note = "Formule la plus proche : <strong>" + tier.n + "</strong> (" + tier.h + " h incluses) — au-delà : 35 € / h supplémentaires.";
-    } else {
-      note = "Formule adaptée : <strong>" + tier.n + "</strong> (" + tier.h + " h incluses).";
-    }
-    builderPrice.innerHTML = "<span id='builderPriceNum'>" + formatPrice(tier.p) + "</span><small> / mois</small>";
-    builderNote.innerHTML = note;
+    var r = recommend(keys);
+    builderTime.textContent = r.time;
+    builderPrice.innerHTML = r.markup
+      ? "<span id='builderPriceNum'>" + formatPrice(r.price) + "</span><small> / mois HT</small>"
+      : r.price;
+    builderNote.innerHTML = r.note;
   }
 
   if (builderBoxes.length) {
