@@ -2105,13 +2105,17 @@ html.js .reveal.inview {
   .work-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (min-width: 1201px) and (max-width: 1225px) {
-  /* En-tête desktop étroit : resserrer sans passer en menu hamburger */
+@media (min-width: 1201px) and (max-width: 1280px) {
+  /* En-tête desktop étroit : resserrer sans passer en menu hamburger.
+     Les 8 liens + CTA + compte débordent entre 1221 et 1270 px :
+     5 liens passent sur deux lignes (hauteur 62 au lieu de 36), ce qui
+     décale la rangée et fait apparaître « À propos » désaligné. */
   .header-inner { gap: 10px; }
   .main-nav { gap: 10px; }
-  .nav-link { padding: 9px 6px; }
-  .nav-cta { padding: 10px 12px; }
-  .auth-avatar { padding: 8px 10px; }
+  .nav-list { gap: 0; }
+  .nav-link { padding: 9px 5px; white-space: nowrap; }
+  .nav-cta { padding: 10px 10px; font-size: 12.5px; }
+  .auth-avatar { padding: 8px 9px; }
   .auth-avatar.is-admin [data-auth-label] { display: inline; }
 }
 
