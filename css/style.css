@@ -245,7 +245,12 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   gap: 2px;
+  flex-wrap: nowrap;
 }
+/* Chaque lien reste sur une seule ligne : sans cela les libellés longs
+   (« Solution sur mesure ») passent sur deux lignes et décalent la rangée
+   dès que la place manque sur l'accueil, qui a 8 liens contre 6 sur
+   les pages pôles. */
 .nav-link {
   position: relative;
   color: var(--text);
@@ -253,6 +258,7 @@ h1, h2, h3, h4 {
   font-size: 13.5px;
   padding: 9px 9px;
   border-radius: 8px;
+  white-space: nowrap;
   transition: color 0.2s ease, background 0.2s ease;
 }
 .nav-link:hover { color: var(--teal-dark); background: var(--teal-soft); }
@@ -2105,18 +2111,23 @@ html.js .reveal.inview {
   .work-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (min-width: 1201px) and (max-width: 1280px) {
-  /* En-tête desktop étroit : resserrer sans passer en menu hamburger.
-     Les 8 liens + CTA + compte débordent entre 1221 et 1270 px :
-     5 liens passent sur deux lignes (hauteur 62 au lieu de 36), ce qui
-     décale la rangée et fait apparaître « À propos » désaligné. */
-  .header-inner { gap: 10px; }
+/* L'accueil porte 8 liens, les pages pôles 6 : il faut donc resserrer
+   l'en-tête sur toute la plage desktop, sinon les libellés débordent et
+   passent sur deux lignes (mesuré de 1310 à 1440 px avant ce correctif). */
+@media (min-width: 1201px) and (max-width: 1440px) {
+  .header-inner { gap: 12px; }
   .main-nav { gap: 10px; }
   .nav-list { gap: 0; }
-  .nav-link { padding: 9px 5px; white-space: nowrap; }
+  .nav-link { padding: 9px 5px; }
   .nav-cta { padding: 10px 10px; font-size: 12.5px; }
   .auth-avatar { padding: 8px 9px; }
   .auth-avatar.is-admin [data-auth-label] { display: inline; }
+}
+
+@media (min-width: 1201px) and (max-width: 1340px) {
+  /* Place vraiment insuffisante : on resserre encore un cran. */
+  .nav-link { padding: 9px 4px; font-size: 13px; }
+  .nav-cta { padding: 10px 8px; font-size: 12px; }
 }
 
 @media (max-width: 1200px) {
