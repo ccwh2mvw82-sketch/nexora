@@ -317,9 +317,9 @@
          <select id="s-appels" name="appels"><option value="">Sélectionnez…</option><option value="10">Moins de 10</option><option value="10-30">De 10 à 30</option><option value="30-60">De 30 à 60</option><option value="60">Plus de 60</option><option value="ne">Je ne sais pas</option></select></div>
        </div>
        <div class="form-field">
-        <label>
-         Services recherchés</label>
-        <div class="form-checks">
+        <span class="form-group-label" id="s-services-label">
+         Services recherchés</span>
+        <div class="form-checks" role="group" aria-labelledby="s-services-label">
          <label class="check-item">
           <input type="checkbox" name="services" value="Gestion administrative">Gestion administrative</label>
          <label class="check-item">
@@ -616,7 +616,7 @@
        Votre avis pourra bientôt apparaître ici</p>
       <p class="tp-sub">
        Nous publierons les retours de nos clients dans cette section, avec leur accord. Aucun avis ne sera jamais inventé.</p>
-      <a href="#" class="btn btn-outline" rel="noopener" aria-label="Laisser un avis Google (page à venir)">Laisser un avis Google (à venir)</a></div>
+      <a href="#" class="btn btn-outline" data-social="google-reviews" target="_blank" rel="noopener">Laisser un avis Google</a></div>
     </div>
    </section>
    <!-- ============ FAQ ============ -->
@@ -755,11 +755,10 @@
          ✔ Proposition personnalisée</li>
        </ul>
        <div class="contact-coords">
-        <a href="tel:+33612345678">📞 06 12 34 56 78</a><a href="mailto:gestaffaires45@gmail.com">✉️ gestaffaires45@gmail.com</a><a href="https://wa.me/33612345678" target="_blank" rel="noopener" class="coords-wa">💬 Nous contacter sur WhatsApp</a></div>
+        <a href="tel:REPLACE">📞 06 12 34 56 78</a><a href="mailto:REPLACE">✉️ gestaffaires45@gmail.com</a><a href="https://wa.me/REPLACE" target="_blank" rel="noopener" class="coords-wa">💬 Nous contacter sur WhatsApp</a></div>
        <p class="rdv-note">
         📅 Prise de rendez-vous : le calendrier en ligne est en préparation. En attendant, écrivez-nous et nous vous proposons un créneau.</p>
-       <p class="coords-hint">
-        Coordonnées provisoires — à remplacer par vos vraies coordonnées avant publication.</p>
+       <p class="coords-hint" data-site-if="address" hidden>Adresse : <span data-site="address" data-site-content="text"></span></p>
       </div>
       <form class="contact-form js-form" id="contact-form" data-success="form-success" novalidate>
        <div class="form-row">
@@ -860,12 +859,12 @@
      <h4 class="footer-social-title">
       Réseaux</h4>
      <ul class="footer-social">
+      <li data-site-if="linkedin" hidden>
+       <a href="#" data-social="linkedin" aria-disabled="true" rel="noopener">LinkedIn</a></li>
       <li>
-       <a href="#" rel="noopener" aria-label="LinkedIn (à venir)">LinkedIn</a></li>
-      <li>
-       <a href="https://www.instagram.com/gestaffaires" target="_blank" rel="noopener" aria-label="Instagram GestAffaires">Instagram</a></li>
-      <li>
-       <a href="#" rel="noopener" aria-label="Facebook (à venir)">Facebook</a></li>
+       <a href="#" data-social="instagram" target="_blank" rel="noopener">Instagram</a></li>
+      <li data-site-if="facebook" hidden>
+       <a href="#" data-social="facebook" aria-disabled="true" rel="noopener">Facebook</a></li>
      </ul>
     </nav>
     <div class="footer-col">
@@ -873,14 +872,13 @@
       Contact</h4>
      <ul class="footer-contact">
       <li>
-       <a href="tel:+33612345678">06 12 34 56 78</a></li>
+       <a href="tel:REPLACE" data-site="phoneDisplay" data-site-content="text">06 12 34 56 78</a></li>
       <li>
-       <a href="mailto:gestaffaires45@gmail.com">gestaffaires45@gmail.com</a></li>
+       <a href="mailto:REPLACE" data-site="email" data-site-content="text">gestaffaires45@gmail.com</a></li>
       <li>
-       <a href="https://wa.me/33612345678" target="_blank" rel="noopener">WhatsApp</a></li>
+       <a href="https://wa.me/REPLACE" target="_blank" rel="noopener">WhatsApp</a></li>
      </ul>
-     <p class="coords-hint footer-hint">
-      Coordonnées provisoires — à remplacer avant publication.</p>
+     <p class="coords-hint" data-site-if="address" hidden>Adresse : <span data-site="address" data-site-content="text"></span></p>
     </div>
    </div>
    <div class="footer-bottom">
@@ -1113,13 +1111,19 @@
     <p>
      Éditeur : GestAffaires – Gestion &amp; Digital</p>
     <p>
-     Contact : 06 12 34 56 78 – gestaffaires45@gmail.com</p>
+     Contact : <a href="tel:REPLACE" data-site="phoneDisplay" data-site-content="text">06 12 34 56 78</a> – <a href="mailto:REPLACE" data-site="email" data-site-content="text">gestaffaires45@gmail.com</a></p>
     <p>
-     Hébergement : à compléter avant mise en ligne.</p>
+     Hébergement : <span data-site="host" data-site-content="text"></span></p>
     <p>
-     Directeur de la publication : à compléter.</p>
-    <p class="modal-placeholder">
-     (Informations à compléter avec les données réelles de l'entreprise avant publication.)</p>
+     Directeur de la publication : <span data-site="director" data-site-content="text"></span></p>
+    <p data-site-if="legalForm">
+     Forme juridique : <span data-site="legalForm" data-site-content="text"></span></p>
+    <p data-site-if="siret">
+     SIRET : <span data-site="siret" data-site-content="text"></span></p>
+    <p data-site-if="rcs">
+     RCS : <span data-site="rcs" data-site-content="text"></span></p>
+    <p data-site-if="address">
+     Adresse : <span data-site="address" data-site-content="text"></span></p>
    </div>
   </div>
   <!-- Modal politique de confidentialité -->
@@ -1136,9 +1140,9 @@
     <p>
      Elles ne sont jamais transmises à des tiers et ne font l'objet d'aucun démarchage non sollicité.</p>
     <p>
-     Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour l'exercer :<a href="mailto:gestaffaires45@gmail.com">gestaffaires45@gmail.com</a>.</p>
+     Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Pour l'exercer :<a href="mailto:REPLACE" data-site="email" data-site-content="text">gestaffaires45@gmail.com</a>.</p>
     <p class="modal-placeholder">
-     (Politique à compléter par le responsable des données de l'entreprise avant publication.)</p>
+     Responsable du traitement des données : <span data-site="company" data-site-content="text"></span> (<a href="mailto:REPLACE" data-site="email" data-site-content="text">gestaffaires45@gmail.com</a>).</p>
    </div>
   </div>
   <!-- Modal connexion -->
@@ -1236,12 +1240,12 @@
   <div class="print-sheet" id="print-sheet" aria-hidden="true">
   </div>
   <!-- Bouton WhatsApp flottant -->
-  <a href="https://wa.me/33612345678" class="wa-float" target="_blank" rel="noopener" aria-label="Discuter sur WhatsApp">
+  <a href="https://wa.me/REPLACE" class="wa-float" target="_blank" rel="noopener" aria-label="Discuter sur WhatsApp">
 <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3C9 3 3.4 8.6 3.4 15.6c0 2.2.6 4.4 1.7 6.3L3 29l7.3-1.9c1.8 1 3.8 1.5 5.8 1.5h.1c7 0 12.6-5.6 12.6-12.6C28.8 8.6 23.2 3 16 3Zm0 23h-.1c-1.9 0-3.7-.5-5.3-1.4l-.4-.2-4.4 1.2 1.2-4.3-.3-.4a10.3 10.3 0 0 1-1.6-5.5C5.1 8.6 10 3.7 16 3.7c5.9 0 10.7 4.6 10.7 10.4S22 26 16 26Zm5.8-7.8c-.3-.2-1.8-.9-2.1-1s-.5-.2-.7.1-.8 1-.9 1.2-.3.2-.6.1a8.4 8.4 0 0 1-3.2-2c-1.2-1-2-2.3-2.3-2.7-.2-.4 0-.6.2-.8l.6-.7c.2-.2.2-.4.3-.6s0-.5 0-.7-.7-1.7-.9-2.3c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.1 3.1 1.3 3.3c.2.2 2.2 3.4 5.4 4.7.8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.1-.3-.2-.6-.4Z"/></svg>
 
   </a>  <!-- Barre d'action mobile -->
   <nav class="action-bar" id="action-bar" aria-label="Actions rapides">
-   <a href="tel:+33612345678" class="ab-action"><span class="ab-ico">📞</span><span class="ab-label">Appeler</span></a><a href="https://wa.me/33612345678" target="_blank" rel="noopener" class="ab-action"><span class="ab-ico">💬</span><span class="ab-label">WhatsApp</span></a><a href="#contact" class="ab-action ab-primary"><span class="ab-ico">📅</span><span class="ab-label">RDV</span></a></nav>
+   <a href="tel:REPLACE" class="ab-action"><span class="ab-ico">📞</span><span class="ab-label">Appeler</span></a><a href="https://wa.me/REPLACE" target="_blank" rel="noopener" class="ab-action"><span class="ab-ico">💬</span><span class="ab-label">WhatsApp</span></a><a href="#contact" class="ab-action ab-primary"><span class="ab-ico">📅</span><span class="ab-label">RDV</span></a></nav>
   <!-- ============ APPLICATION MOBILE (téléphone ≤ 720 px) ============ -->
   <div id="mob-shell" aria-hidden="true">
    <header class="mob-top">
@@ -1257,7 +1261,7 @@
     <a href="#" data-mob-view="home">Accueil</a><a href="#" data-mob-view="pole-temps">Pôle temps</a><a href="#" data-mob-view="pole-visib">Pôle visibilité</a><a href="#" data-mob-view="pole-marches">Pôle marchés</a><a href="#" data-mob-view="surmesure">Solution sur mesure</a><a href="#" data-mob-view="contact">Contact</a></nav>
    <nav class="mob-menu" id="mob-menu" aria-label="Menu" hidden>
     <a href="#" data-mob-view="home">Accueil</a><a href="#" data-mob-view="formules">Nos formules</a><a href="#" data-mob-view="builder">Créer ma formule</a><a href="#" data-mob-view="site">Création de site Internet</a><a href="#" data-mob-view="teleph">Secrétariat</a><a href="#" data-mob-view="surmesure">Solution sur mesure</a><a href="#" data-mob-view="contact">Contact &amp; diagnostic</a><a href="#" data-mob-view="appels">Appels d'offres</a>    <div class="mob-menu-cta">
-     <a href="tel:+33612345678">📞 06 12 34 56 78</a><a href="https://wa.me/33612345678" target="_blank" rel="noopener">💬 WhatsApp</a></div>
+     <a href="tel:REPLACE">📞 06 12 34 56 78</a><a href="https://wa.me/REPLACE" target="_blank" rel="noopener">💬 WhatsApp</a></div>
    </nav>
    <main class="mob-main">
     <!-- Accueil : sphère 3D -->
@@ -1620,7 +1624,7 @@
      <div class="mob-screen-title">
       <span>Contact &amp; diagnostic</span><em>Réponse sous 24 h ouvrées · sans engagement</em></div>
      <div class="mob-coords">
-      <a href="tel:+33612345678">📞 06 12 34 56 78</a><a href="mailto:gestaffaires45@gmail.com">✉️ gestaffaires45@gmail.com</a><a href="https://wa.me/33612345678" target="_blank" rel="noopener">💬 WhatsApp</a></div>
+      <a href="tel:REPLACE">📞 06 12 34 56 78</a><a href="mailto:REPLACE">✉️ gestaffaires45@gmail.com</a><a href="https://wa.me/REPLACE" target="_blank" rel="noopener">💬 WhatsApp</a></div>
      <form class="js-form mob-form" data-success="mob-success" novalidate>
       <div class="form-field">
        <label for="mob-nom">
@@ -1667,7 +1671,8 @@
 
 <script>    document.documentElement.classList.remove('no-js');    document.documentElement.classList.add('js');  </script>
 
-<script src="js/config.js?v=1"></script>
+<script src="js/site-info.js?v=1"></script>
+ <script src="js/config.js?v=1"></script>
 
 <script src="js/gab.js?v=4"></script>
 

@@ -2,7 +2,8 @@
    GestAffaires – Espace de travail (ADMIN uniquement)
    Vrai mini-logiciel de travail par client :
    range, automatise, suit et exporte (Excel/CSV/PDF).
-   Réservé à l'administrateur (rôle admin, code GEST-2026).
+   Réservé à l'administrateur (rôle admin). Le code d'inscription n'est
+   jamais stocké ici : le serveur le valide (RPC check_admin_code).
    Modules apportés par workspace-g.js et workspace-c.js,
    enregistrés via GestWorkspace.register().
    ============================================================ */
@@ -390,7 +391,7 @@ window.GestWorkspace = (function () {
     var main = adminMain();
     if (!main) return;
     if (!isAdmin()) {
-      main.innerHTML = "<div class='admin-container'><div class='admin-card'><p><b>Espace réservé à l'administrateur.</b><br>Compte connecté : membre. Connectez-vous avec un compte admin (code GEST-2026).</p></div></div>";
+      main.innerHTML = "<div class='admin-container'><div class='admin-card'><p><b>Espace réservé à l'administrateur.</b><br>Compte connecté : membre. Connectez-vous avec un compte admin pour accéder à cet espace.</p></div></div>";
       return;
     }
     var mod = active ? modules.filter(function (m) { return m.id === active; })[0] : null;

@@ -21,8 +21,9 @@ window.GA_CONFIG = {
     visibilite_plus: "",
     developpement: ""
   },
-  /* Code d'inscription admin (démo uniquement ; en prod responsable).
-     En production : insérez ce code hashé dans la table admin_keys
-     via le SQL Editor de Supabase (voir supabase/schema.sql). */
-  adminCode: "GEST-2026"
+  /* Aucun code admin ici : ce fichier peut être versionné, donc il ne
+     doit contenir aucun secret. Pour un code admin en développement,
+     créez js/config.local.js (non versionné) — voir config.local.example.js.
+     En production, le serveur valide le code saisi par l'utilisateur
+     via la RPC check_admin_code : aucun secret n'est nécessaire ici. */
 };

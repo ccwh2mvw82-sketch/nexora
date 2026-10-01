@@ -7,3 +7,11 @@ qa*.html
 
 # Document SEO de travail : ne doit jamais etre publie sur le site
 seo-tout-savoir.html
+
+# Configuration locale : contient les secrets du developpateur (code admin).
+# Doit JAMAIS etre versionne. Copier js/config.local.example.js pour l'obtenir.
+js/config.local.js
+
+# Secrets : config.js ne doit contenir que des valeurs publiques
+# (URL + cle anon Supabase, liens Stripe). Toute cle service_role ou
+# code admin doit vivre dans js/config.local.js (ignore ci-dessus).

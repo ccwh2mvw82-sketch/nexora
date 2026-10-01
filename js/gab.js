@@ -18,7 +18,7 @@
 
   var conf = (window.GA_CONFIG && window.GA_CONFIG.supabase) || null;
   var stripeLinks = (window.GA_CONFIG && window.GA_CONFIG.stripe) || null;
-  var adminCode = (window.GA_CONFIG && window.GA_CONFIG.adminCode) || "GEST-2026";
+  var adminCode = (window.GA_CONFIG && window.GA_CONFIG.adminCode) || "";
   var supabase = null;
   var session = null;
   var ready = false;

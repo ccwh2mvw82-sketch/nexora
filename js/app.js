@@ -19,9 +19,14 @@
   var LS_CONTRATS = "ga_contrats";
   var LS_SEQ = "ga_seq";
 
-  /* Code secret requis à l'inscription pour obtenir le rôle admin.
-     Les visiteurs sans ce code créent un compte client. */
-  var ADMIN_CODE = "GEST-2026";
+  /* Code admin pour le MODE LOCAL (hors cloud, sans Supabase).
+     Il n'est jamais codé en dur ici : il est lu depuis la configuration
+     locale non versionnée (js/config.local.js). En mode cloud, ce code
+     n'est pas utilisé : le serveur valide lui-même le code saisi via
+     la RPC check_admin_code (voir supabase/schema.sql).
+     Sans configuration locale, l'inscription locale reste possible
+     mais attribue toujours le rôle "client". */
+  var ADMIN_CODE = ((window.GA_CONFIG && window.GA_CONFIG.adminCode) || "").trim();
 
   /* ---------- Stockage ----------
      Route vers le cloud Supabase (GAB.data) quand il est actif,
@@ -196,7 +201,7 @@
       if (email && users[i].email && users[i].email.toLowerCase() === email.toLowerCase()) { showErr(authErrorRegister, "Cet e-mail est déjà utilisé."); return false; }
     }
     if (code && code !== ADMIN_CODE) { showErr(authErrorRegister, "Le code d'inscription est invalide."); return false; }
-    var role = code === ADMIN_CODE ? "admin" : "client";
+    var role = (code && ADMIN_CODE && code === ADMIN_CODE) ? "admin" : "client";
     users.push({ id: uid(), name: name, login: login, email: email, pass: hashPass(pass), role: role, created: new Date().toISOString() });
     setUsers(users);
     save(LS_SESSION, users[users.length - 1].id);

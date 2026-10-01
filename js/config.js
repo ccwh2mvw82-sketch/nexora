@@ -1,7 +1,14 @@
 /* ============================================================
-   GestAffaires – Configuration (Supabase + Stripe)
-   Copiez ce fichier vers js/config.js puis remplissez vos clés.
-   NE COMMITEZ JAMAIS js/config.js avec des clés réelles.
+   GestAffaires – Configuration publique (Supabase + Stripe)
+
+   Ce fichier est VERSIONNÉ et donc lisible par tout le monde.
+   Il ne doit contenir QUE des valeurs publiques par conception :
+     - l'URL du projet Supabase et la clé "anon" : publiées par nature,
+       la sécurité repose sur les policies RLS (voir supabase/schema.sql) ;
+     - les liens de paiement Stripe : le client doit pouvoir les lire.
+
+   NE PLACEZ AUCUN SECRET ICI (clé service_role, code admin en clair).
+   Pour un code admin, createz js/config.local.js (non versionné).
    ============================================================ */
 window.GA_CONFIG = {
   supabase: {
@@ -20,9 +27,9 @@ window.GA_CONFIG = {
     visibilite: "https://buy.stripe.com/bJebJ12Ar6Wp7CA6NicIE04",
     visibilite_plus: "https://buy.stripe.com/3cI14n5MD4OhbSQc7CcIE06",
     developpement: "https://buy.stripe.com/7sY8wP0sj0y19KIefKcIE02"
-  },
-  /* Code d'inscription admin (démo uniquement ; en prod responsable).
-     En production : insérez ce code hashé dans la table admin_keys
-     via le SQL Editor de Supabase (voir supabase/schema.sql). */
-  adminCode: "GEST-2026"
+  }
+  /* Aucun code admin ici : le secret ne doit jamais être versionné.
+     Le serveur valide le code que l'utilisateur saisit lui-même
+     (RPC check_admin_code / claim_admin), donc aucun secret n'est
+     nécessaire dans le navigateur pour un usage normal. */
 };

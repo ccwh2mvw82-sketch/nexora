@@ -280,10 +280,40 @@
   mountHero();
   setScreen("home");
 
+  function onViewportChange() {
+    setScreen("home");
+    syncShellA11y();
+  }
   if (MOB.addEventListener) {
-    MOB.addEventListener("change", function () {
-      setScreen("home");
+    MOB.addEventListener("change", onViewportChange);
+  } else if (MOB.addListener) {
+    MOB.addListener(onViewportChange);
+  }
+
+  /* ---------- Accessibilité de la coquille mobile ----------
+     #mob-shell porte aria-hidden="true" dans le HTML : c'est correct sur
+     ordinateur (l'application mobile est masquee par le CSS), mais faux
+     sur telephone, ou tout le contenu devient visible tout en restant
+     annonce comme invisible aux lecteurs d'ecran, et devient focusable
+     au clavier. On bascule donc l'attribut selon la largeur reelle. */
+  function syncShellA11y() {
+    if (!shell) return;
+    var mobile = MOB.matches;
+    shell.setAttribute("aria-hidden", mobile ? "false" : "true");
+    /* Sur ordinateur, on neutralise aussi le focus : sans cela, le
+       contenu masque reste atteignable avec la touche Tab. */
+    $$('a, button, input, select, textarea', shell).forEach(function (el) {
+      if (mobile) {
+        if (el.hasAttribute("data-mob-tabindex")) {
+          el.setAttribute("tabindex", el.getAttribute("data-mob-tabindex"));
+          el.removeAttribute("data-mob-tabindex");
+        }
+      } else if (!el.hasAttribute("data-mob-tabindex")) {
+        el.setAttribute("data-mob-tabindex", el.getAttribute("tabindex") || "");
+        el.setAttribute("tabindex", "-1");
+      }
     });
   }
+  syncShellA11y();
 
 })();

@@ -12,6 +12,63 @@
 
   var header = $(".site-header");
   var navToggle = $("#nav-toggle");
+
+  /* ---------- Informations société (source unique : js/site-info.js) ----------
+     Le HTML contient deja un texte de repli dans chaque marqueur, ce qui
+     garantit un affichage correct meme si le script est bloque ou
+     desactive, et donne un contenu lisible aux moteurs de recherche. */
+  var SITE = window.GA_SITE || null;
+  function isReal(val) { return !!val && val !== "TODO"; }
+
+  function applySiteInfo() {
+    if (!SITE) return;
+    /* Reseaux : un profil sans URL est masque, plutot que de laisser un
+       href="#" inerte qui laisse croire a un lien fonctionnel. */
+    var nets = {
+      "linkedin": SITE.linkedin,
+      "facebook": SITE.facebook,
+      "instagram": SITE.instagram,
+      "google-reviews": SITE.googleReviews
+    };
+    $$("[data-social]").forEach(function (a) {
+      var url = nets[a.getAttribute("data-social")];
+      var item = a.closest ? a.closest("li") : null;
+      if (isReal(url)) {
+        a.href = url;
+        a.removeAttribute("aria-disabled");
+        a.removeAttribute("data-no-link");
+        a.hidden = false;
+        if (item) item.hidden = false;
+      } else {
+        a.setAttribute("aria-disabled", "true");
+        a.hidden = true;
+        if (item) item.hidden = true;
+      }
+    });
+    /* Liens de contact : on remplace le marqueur "REPLACE" par la valeur
+       reelle, sur TOUS les liens de la page (footer, bouton flottant,
+       coquille mobile), qu'ils portent ou non un marqueur data-site. */
+    $$('a[href="tel:REPLACE"]').forEach(function (a) { a.href = "tel:+" + SITE.phoneDigits; });
+    $$('a[href*="wa.me/REPLACE"]').forEach(function (a) { a.href = "https://wa.me/" + SITE.phoneDigits; });
+    $$('a[href="mailto:REPLACE"]').forEach(function (a) { a.href = "mailto:" + SITE.email; });
+
+    /* Textes : seules les valeurs reelles remplacent le repli du HTML. */
+    $$("[data-site]").forEach(function (el) {
+      var key = el.getAttribute("data-site");
+      var val = SITE[key];
+      if (!isReal(val)) return;
+      if (el.getAttribute("data-site-content") === "text") {
+        el.textContent = val;
+      }
+    });
+    /* Blocs entiers (adresse, lignes de mentions) : affiches seulement
+       si la valeur est renseignee, pour ne jamais publier "TODO". */
+    $$("[data-site-if]").forEach(function (el) {
+      var val = SITE[el.getAttribute("data-site-if")];
+      el.hidden = !isReal(val);
+    });
+  }
+  applySiteInfo();
   var mainNav = $("#main-nav");
 
   /* ---------- Header : ombre au scroll ---------- */
@@ -466,66 +523,248 @@
   applyCommit();
 
   /* ---------- Formulaires ---------- */
+  /* Libelles lisibles des valeurs de <select>, pour que le message
+     enregistre dans Supabase soit exploitable tel quel par l'administrateur. */
+  var FIELD_LABELS = {
+    besoin: "Besoin principal",
+    activite: "Activité",
+    sujet: "Sujet",
+    objet: "Objet",
+    entreprise: "Entreprise",
+    factures: "Factures par mois",
+    appels: "Appels reçus par mois",
+    heures: "Heures par mois",
+    formule: "Formule souhaitée",
+    formule_id: "Formule",
+    formule_nom: "Formule",
+    services: "Services recherchés"
+  };
+
+  function labelForSelect(el) {
+    /* Un <select> non renseigne porte l'option vide "Selectionnez..." :
+       il ne faut pas enregistrer ce libelle comme une reponse. */
+    if (!el.value) return "";
+    if (!el.options || !el.selectedIndex) return (el.value || "").trim();
+    var sel = el.options[el.selectedIndex];
+    return (sel && sel.textContent ? sel.textContent : el.value || "").trim();
+  }
+
+  function collectFields(form) {
+    var fields = {};
+    var lists = {};
+    $$("input[name], select[name], textarea[name]", form).forEach(function (el) {
+      var name = el.name;
+      if (!name) return;
+      if (el.type === "checkbox" || el.type === "radio") {
+        if (!el.checked) return;
+        (lists[name] = lists[name] || []).push(el.value);
+        return;
+      }
+      var value = (el.tagName === "SELECT") ? labelForSelect(el) : (el.value || "");
+      value = value.trim();
+      if (!value) return;
+      /* Ne pas ecraser une valeur deja presente : certain formulaires
+         declarent deux champs pour la meme information. */
+      if (!fields.hasOwnProperty(name)) fields[name] = value;
+    });
+    Object.keys(lists).forEach(function (name) {
+      fields[name] = lists[name].join(", ");
+    });
+    return fields;
+  }
+
+  /* Construit le sujet : les champs a plat, dans un ordre lisible. */
+  function buildSubject(f) {
+    var parts = [];
+    ["besoin", "activite", "sujet", "objet"].forEach(function (k) {
+      if (f[k]) parts.push(f[k]);
+    });
+    if (!parts.length && f.services) parts.push(f.services);
+    return parts.join(" - ");
+  }
+
+  /* Conserve dans le message TOUT ce qui n'a pas de colonne dediee,
+     pour qu'aucune information saisie ne soit perdue. */
+  function buildMessage(f, raw) {
+    var lines = [];
+    var text = (raw || "").trim();
+    if (text) lines.push(text);
+    var extra = [];
+    ["entreprise", "factures", "heures", "appels", "formule", "formule_id", "formule_nom"].forEach(function (k) {
+      if (f[k]) extra.push((FIELD_LABELS[k] || k) + " : " + f[k]);
+    });
+    if (f.services) extra.push(FIELD_LABELS.services + " : " + f.services);
+    if (extra.length) lines.push("", "--- Informations complémentaires ---", extra.join("\n"));
+    return lines.join("\n");
+  }
+
+  function setFormBusy(form, busy) {
+    var btn = form.querySelector('button[type="submit"]');
+    if (!btn) return;
+    if (busy) {
+      btn.setAttribute("data-label", btn.textContent);
+      btn.disabled = true;
+      btn.textContent = "Envoi en cours...";
+    } else {
+      btn.disabled = false;
+      if (btn.getAttribute("data-label")) btn.textContent = btn.getAttribute("data-label");
+    }
+  }
+
+  function showFormError(form, message) {
+    var box = form.querySelector(".form-error");
+    if (!box) {
+      box = document.createElement("p");
+      box.className = "form-error";
+      box.setAttribute("role", "alert");
+      var legal = form.querySelector(".form-legal");
+      if (legal) form.insertBefore(box, legal);
+      else form.appendChild(box);
+    }
+    box.textContent = message;
+    box.hidden = false;
+    box.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+
+  function clearFormError(form) {
+    var box = form.querySelector(".form-error");
+    if (box) box.hidden = true;
+  }
+
   function initForm(form) {
     var successId = form.getAttribute("data-success");
     var success = successId ? document.getElementById(successId) : null;
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+      clearFormError(form);
       if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
-      /* Capture réelle du lead : envoi vers Supabase quand configuré,
-         sinon aucune perte de données (les champs restent accessibles). */
-      if (window.GAB && window.GAB.lead) {
-        var f = {};
-        $$('input[name], select[name], textarea[name]', form).forEach(function (el) {
-          if (el.name && !f.hasOwnProperty(el.name) && el.type !== "checkbox") f[el.name] = el.value;
-        });
-        var subjectParts = [];
-        ["besoin", "activite", "sujet", "objet"].forEach(function (k) {
-          if (f[k]) subjectParts.push(f[k]);
-        });
-        window.GAB.lead.submit({
-          name: f.nom || f.prenom || f.name || "",
-          email: f.email || "",
-          phone: f.telephone || f.tel || f.phone || "",
-          subject: subjectParts.join(" - "),
-          message: f.message || f.msg || ""
-        });
+      var f = collectFields(form);
+      var payload = {
+        name: f.nom || f.prenom || f.name || "",
+        email: f.email || "",
+        phone: f.telephone || f.tel || f.phone || "",
+        subject: buildSubject(f),
+        message: buildMessage(f, f.message || f.msg || ""),
+        page: f.page || document.title || "",
+        formula: f.formule_id || f.formule || f.formule_nom || ""
+      };
+      function fail(msg) {
+        setFormBusy(form, false);
+        showFormError(form, msg);
       }
-      form.hidden = true;
-      if (success) {
-        success.hidden = false;
-        success.scrollIntoView({ block: "center", behavior: "smooth" });
+      function done() {
+        form.hidden = true;
+        if (success) {
+          success.hidden = false;
+          success.scrollIntoView({ block: "center", behavior: "smooth" });
+        }
       }
+      if (!(window.GAB && window.GAB.lead)) {
+        /* Aucun backend configure : on ne pretend pas avoir enregistre. */
+        fail("L'envoi n'est pas disponible pour le moment. Veuillez réessayer plus tard.");
+        return;
+      }
+      setFormBusy(form, true);
+      var p;
+      try {
+        p = window.GAB.lead.submit(payload);
+      } catch (err) {
+        fail("L'envoi a échoué. Veuillez réessayer dans un instant.");
+        return;
+      }
+      Promise.resolve(p).then(function (res) {
+        /* On ne confirme que si l'insertion a reussi. */
+        if (res && res.error) {
+          fail("Votre message n'a pas pu être enregistré. Veuillez réessayer dans un instant.");
+          return;
+        }
+        done();
+      })["catch"](function () {
+        fail("Votre message n'a pas pu être enregistré. Veuillez réessayer dans un instant.");
+      });
     });
   }
   $$("form.js-form").forEach(initForm);
 
   /* ---------- Modales legales ---------- */
   var modals = $$(".modal");
-  function openModal(id) {
+  var modalOpener = null;
+  var currentModal = null;
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function focusablesIn(m) {
+    return $$(FOCUSABLE, m).filter(function (el) {
+      if (el.hasAttribute("hidden")) return false;
+      return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+    });
+  }
+
+  /* Piège de focus : sans lui, la touche Tab finit par sortir de la modale
+     et par tabuler dans la page derrière, ce qui casse la lecture au
+     clavier comme avec un lecteur d'écran. */
+  function trapFocus(e, m) {
+    /* Échap ferme toujours la modale : sans issue, le piège de focus
+       deviendrait un piège de clavier. */
+    if (e.key === "Escape") {
+      closeModal(m);
+      return;
+    }
+    if (e.key !== "Tab") return;
+    var list = focusablesIn(m);
+    if (!list.length) { e.preventDefault(); return; }
+    var first = list[0];
+    var last = list[list.length - 1];
+    var active = document.activeElement;
+    if (e.shiftKey && (active === first || !m.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !m.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  function openModal(id, opener) {
     var m = $(id);
     if (!m) return;
+    /* On mémorise le point de retour explicitement quand on le connaît.
+       Se fier à document.activeElement est fragile : refermer une modale
+       renvoie le focus sur <body>, ce qui écraserait le point de retour. */
+    if (opener) {
+      modalOpener = opener;
+    } else if (!currentModal) {
+      modalOpener = document.activeElement;
+    }
+    currentModal = m;
     m.hidden = false;
     document.body.style.overflow = "hidden";
     var closeBtn = $(".modal-close", m);
     if (closeBtn) closeBtn.focus();
+    m.addEventListener("keydown", function (e) { trapFocus(e, m); });
   }
   function closeModal(m) {
     m.hidden = true;
     document.body.style.overflow = "";
+    if (currentModal === m) currentModal = null;
+    /* Rendre le focus au lien qui a ouvert la modale. */
+    if (modalOpener && document.contains(modalOpener) && typeof modalOpener.focus === "function") {
+      modalOpener.focus();
+    }
+    modalOpener = null;
   }
   function closeAllModals() {
     modals.forEach(function (m) { m.hidden = true; });
     document.body.style.overflow = "";
+    currentModal = null;
   }
   $$("[data-modal]").forEach(function (link) {
     link.addEventListener("click", function (e) {
       e.preventDefault();
       closeAllModals();
-      openModal("#modal-" + link.getAttribute("data-modal"));
+      openModal("#modal-" + link.getAttribute("data-modal"), link);
     });
   });
   modals.forEach(function (m) {
