@@ -223,7 +223,7 @@
   });
 
   /* ---------- Composez votre formule ---------- */
-  var EXTRA_HOUR = 89;
+  var EXTRA_HOUR = 109;
 
   var PRESTATIONS = {
     devis:      { h: 2, g: "admin" },
@@ -258,15 +258,15 @@
 
   var POOLS = {
     admin: [
-      { h: 7,  p: 599,  n: "Fondations" },
-      { h: 11, p: 899,  n: "Essentiel" },
-      { h: 16, p: 1399, n: "Confort" },
-      { h: 24, p: 1899, n: "Pro" }
+      { h: 7,  p: 799,  n: "Fondations" },
+      { h: 11, p: 1099, n: "Essentiel" },
+      { h: 16, p: 1599, n: "Confort" },
+      { h: 24, p: 2099, n: "Pro" }
     ],
     visib: [
-      { h: 8,  p: 790,  n: "Notoriété" },
-      { h: 16, p: 1399, n: "Acquisition" },
-      { h: 23, p: 1899, n: "Acquisition Plus" }
+      { h: 8,  p: 990,  n: "Notoriété" },
+      { h: 16, p: 1599, n: "Acquisition" },
+      { h: 23, p: 2099, n: "Acquisition Plus" }
     ],
     secre: [
       { h: 4, p: 356, n: "Secrétariat téléphonique" }
@@ -277,6 +277,65 @@
 
   function formatPrice(n) {
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " €";
+  }
+
+  /* ---------- Choix de l'engagement ---------- */
+  var COMMIT_MODES = {
+    none: { f: 1, label: "Sans engagement" },
+    "6":   { f: 0.9, label: "Engagement 6 mois" },
+    "12":  { f: 0.8, label: "Engagement 12 mois" }
+  };
+  var commitMode = "none";
+
+  function commitPrice(p) {
+    var f = COMMIT_MODES[commitMode].f;
+    return f === 1 ? p : Math.round(p * f);
+  }
+
+  function commitWord() {
+    if (commitMode === "none") return "sans engagement";
+    return "en engagement " + commitMode + " mois";
+  }
+
+  function commitSaving(base) {
+    var diff = base - commitPrice(base);
+    if (!diff) return "Prix plein, sans engagement : vous restez libre de partir à tout moment.";
+    return formatPrice(diff) + " de moins par mois";
+  }
+
+  function applyCommit() {
+    var m = COMMIT_MODES[commitMode];
+    var i, n, base;
+    var prices = document.querySelectorAll("[data-base]");
+    for (i = 0; i < prices.length; i++) {
+      base = parseInt(prices[i].getAttribute("data-base"), 10);
+      if (base > 0) prices[i].textContent = formatPrice(commitPrice(base));
+    }
+    var notes = document.querySelectorAll("[data-note-base]");
+    for (i = 0; i < notes.length; i++) {
+      base = parseInt(notes[i].getAttribute("data-note-base"), 10);
+      if (base > 0) {
+        notes[i].textContent = "HT · " + commitSaving(base) + (m.f === 1 ? "" : " · engagement " + commitMode + " mois");
+      }
+    }
+    var btns = document.querySelectorAll("[data-commit-btn]");
+    for (i = 0; i < btns.length; i++) {
+      var on = btns[i].getAttribute("data-commit-btn") === commitMode;
+      btns[i].classList.toggle("is-active", on);
+      btns[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    var readout = document.querySelectorAll(".cs-readout");
+    for (i = 0; i < readout.length; i++) readout[i].textContent = m.label;
+    document.documentElement.setAttribute("data-commit", commitMode);
+    builderUpdate();
+  }
+
+  function setCommit(mode) {
+    commitMode = COMMIT_MODES[mode] ? mode : "none";
+    applyCommit();
+    try {
+      document.dispatchEvent(new CustomEvent("ga:commit", { detail: { mode: commitMode } }));
+    } catch (e) { /* CustomEvent indisponible : la page fonctionne quand meme */ }
   }
 
   function recommend(keys) {
@@ -315,7 +374,7 @@
         markup: false,
         note: scope === "marches"
           ? "Appels d'offres facturés à la mission : <strong>290 €</strong> l'analyse et la réponse, <strong>450 €</strong> le dossier complet, ou <strong>890 € / mois</strong> en illimité."
-          : "Prestation ponctuelle : <strong>site vitrine 990 €</strong>, <strong>WhatsApp Business et stratégie 89 €/h</strong>. <strong>Google Ads</strong> sur devis, budget publicitaire non inclus."
+          : "Prestation ponctuelle : <strong>site vitrine 990 €</strong>, <strong>WhatsApp Business et stratégie 109 €/h</strong>. <strong>Google Ads</strong> sur devis, budget publicitaire non inclus."
       };
     }
 
@@ -353,7 +412,10 @@
     POOLS: POOLS,
     EXTRA_HOUR: EXTRA_HOUR,
     formatPrice: formatPrice,
-    recommend: recommend
+    recommend: recommend,
+    setCommit: setCommit,
+    commitPrice: commitPrice,
+    commitWord: commitWord
   };
 
   var builderTime = $("#bresult-time");
@@ -370,10 +432,15 @@
     }
     var r = recommend(keys);
     builderTime.textContent = r.time;
-    builderPrice.innerHTML = r.markup
-      ? "<span id='builderPriceNum'>" + formatPrice(r.price) + "</span><small> / mois HT</small>"
-      : r.price;
-    builderNote.innerHTML = r.note;
+    if (r.markup) {
+      builderPrice.innerHTML = "<span id='builderPriceNum'>" + formatPrice(commitPrice(r.price)) +
+        "</span><small> / mois HT</small>";
+      builderNote.innerHTML = r.note + "<br><span class='bresult-commit'>" + COMMIT_MODES[commitMode].label +
+        " · " + commitSaving(r.price) + ".</span>";
+    } else {
+      builderPrice.innerHTML = r.price;
+      builderNote.innerHTML = r.note;
+    }
   }
 
   if (builderBoxes.length) {
@@ -386,6 +453,17 @@
     });
     builderUpdate();
   }
+
+  /* ---------- Boutons d'engagement ---------- */
+  var commitBtns = document.querySelectorAll("[data-commit-btn]");
+  for (var ci = 0; ci < commitBtns.length; ci++) {
+    (function (btn) {
+      btn.addEventListener("click", function () {
+        setCommit(btn.getAttribute("data-commit-btn"));
+      });
+    })(commitBtns[ci]);
+  }
+  applyCommit();
 
   /* ---------- Formulaires ---------- */
   function initForm(form) {

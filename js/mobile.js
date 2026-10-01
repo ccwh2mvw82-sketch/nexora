@@ -184,12 +184,28 @@
     }
     var r = GA.recommend(keys);
     mobTime.textContent = r.time;
-    mobPrice.textContent = r.markup ? GA.formatPrice(r.price) + " / mois HT" : r.price;
-    var note = document.createElement("div");
-    note.innerHTML = r.note;
+    if (r.markup) {
+      var shown = (typeof GA.commitPrice === "function") ? GA.commitPrice(r.price) : r.price;
+      mobPrice.textContent = GA.formatPrice(shown) + " / mois HT";
+      var extra = document.createElement("span");
+      extra.className = "mob-bresult-commit";
+      extra.textContent = (typeof GA.commitWord === "function" ? GA.commitWord() : "sans engagement");
+      var wrap = document.createElement("div");
+      wrap.innerHTML = r.note;
+      while (wrap.firstChild) mobNote.appendChild(wrap.firstChild);
+      mobNote.appendChild(extra);
+      return;
+    }
+    mobPrice.textContent = r.price;
+    var note2 = document.createElement("div");
+    note2.innerHTML = r.note;
     mobNote.textContent = "";
-    while (note.firstChild) mobNote.appendChild(note.firstChild);
+    while (note2.firstChild) mobNote.appendChild(note2.firstChild);
   }
+
+  document.addEventListener("ga:commit", function () {
+    if (mobBoxes && mobBoxes.length) { mobBuilderUpdate(); }
+  });
 
   if (mobBoxes.length) {
     mobBoxes.forEach(function (cb) {

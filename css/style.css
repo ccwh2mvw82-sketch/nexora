@@ -3795,3 +3795,110 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     #mob-shell .mob-hero .eyebrow { font-size: 11px; }
   }
 }
+
+/* ============================================================
+   CHOIX DE L'ENGAGEMENT (sans engagement / 6 mois / 12 mois)
+   ============================================================ */
+.commit-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 24px;
+  padding: 6px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.cs-label {
+  padding: 0 12px 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cs-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+  background: transparent;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.cs-btn em {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal-dark);
+}
+.cs-btn:hover { background: rgba(12, 181, 166, .12); }
+.cs-btn.is-active {
+  background: var(--navy-900);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+.cs-btn.is-active em { color: var(--teal); }
+.cs-btn:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+.cs-readout {
+  padding: 0 14px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.cs-readout:empty { display: none; }
+
+.mob-bresult-commit {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal-dark);
+}
+.bresult-commit {
+  color: var(--teal-dark);
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .commit-switch {
+    width: 100%;
+    border-radius: var(--radius);
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+  }
+  .cs-label {
+    width: 100%;
+    padding: 0 0 2px;
+    text-align: center;
+  }
+  .cs-btn {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: 10px 6px;
+    font-size: 13px;
+  }
+  .cs-btn em { font-size: 11px; }
+  .cs-readout {
+    width: 100%;
+    padding: 2px 0 0;
+    text-align: center;
+  }
+}
