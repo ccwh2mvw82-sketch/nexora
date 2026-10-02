@@ -28,13 +28,16 @@ select code, used, created_at
  order by created_at desc;
 
 -- ============================================================
---  NOUVEAU CODE ADMIN :  GA-743280-0C26B613
---  (conservez ce code : c'est le seul moyen de créer votre compte admin)
+--  ATTENTION : LE CODE ADMIN EN CLAIR N'EST PAS DANS CE FICHIER.
+--  Ce dépôt est public : tout ce qu'il contient est lisible par tous,
+--  le code lui-même n'a donc rien à y faire. Il vous a été transmis
+--  séparément : conservez-le dans un gestionnaire de mots de passe.
+--  Seul son empreinte SHA-256 est stockée en base.
 --
 --  MODE D'EMPLOI
 --  1. Ouvrez le site, cliquez sur l'icône compte en haut à droite.
 --  2. Onglet « Créer un compte ».
---  3. Renseignez vos identifiants, puis collez le code admin ci-dessus
+--  3. Renseignez vos identifiants, puis collez le code admin reçu
 --     dans le champ « Code d'inscription admin ».
 --  4. Votre compte est créé avec le rôle administrateur.
 --
