@@ -220,7 +220,25 @@
       var validate = Promise.resolve({ data: true });
       if (code !== "") {
         validate = supabase.rpc("check_admin_code", { p_code: code }).then(function (r) {
-          if (!(r && r.data)) throw { message: "Le code d'inscription est invalide." };
+          /* supabase.rpc() ne rejette jamais en cas d'erreur SQL : il
+             resout avec { data: null, error: {...} }. Sans ce test, une
+             panne de configuration etait affichee comme "code invalide",
+             ce qui envoyait l'utilisateur verifier son code alors que
+             le probleme etait ailleurs. */
+          if (r && r.error) {
+            throw {
+              message: "Verification du code impossible (" +
+                ((r.error.message || "erreur serveur").replace(/^.*?\]/s, "").trim()) +
+                "). Reessayez dans un instant, ou verifiez que la fonction check_admin_code existe en base."
+            };
+          }
+          if (!(r && r.data)) {
+            throw {
+              message: "Le code d'inscription est invalide. Deux causes possibles : " +
+                "le code n'a pas ete enregistre en base, ou un compte administrateur " +
+                "existe deja (le code n'est alors plus accepte)."
+            };
+          }
           return r;
         });
       }
