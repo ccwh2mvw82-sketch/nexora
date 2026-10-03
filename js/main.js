@@ -185,27 +185,67 @@
     }
   }
 
+  /* Défilement vers une ancre sur ordinateur.
+   La position est calculée pour dégager l'en-tête fixe, sinon la
+   section visée arrive collée sous le bandeau et son titre reste
+   invisible. */
+function scrollToAnchor(id) {
+    var target = document.getElementById(id);
+    if (!target) return false;
+    var headerH = header ? header.offsetHeight : 0;
+    var top = target.getBoundingClientRect().top +
+              (window.pageYOffset || document.documentElement.scrollTop) - headerH - 14;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    return true;
+  }
+
   function handleHashNav(hash) {
     var id = hash.replace(/^#/, "");
-    var pageName = PAGE_MAP[id] || "home";
-    var anchor = (id === "formules") ? "formules" : null;
-    switchPage(pageName, anchor);
+    /* Sur téléphone, une ancre ne désigne pas une position de défilement
+       mais l'écran de l'application à afficher. Sur ordinateur, le contenu
+       est un long texte : il faut défiler, sinon le clic n'a aucun effet
+       visible alors que l'ancre existe. */
+    if (mqMobile.matches) {
+      var pageName = PAGE_MAP[id] || "home";
+      var anchor = (id === "formules") ? "formules" : null;
+      switchPage(pageName, anchor);
+    } else if (!scrollToAnchor(id)) {
+      /* Ancre inconnue : on revient au haut plutôt que de laisser le
+         visiteur sur place en croyant que le lien est cassé. */
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, "", hash);
+    }
+    markActiveNav(hash);
+  }
+
+  /* Sur ordinateur, une ancre est un simple lien : le navigateur gère le
+     défilement, et le CSS fournit déjà scroll-behavior: smooth ainsi
+     que scroll-padding-top pour dégager l'en-tête fixe. Intercepter le
+     clic ici annulait ce comportement et ne scrollingait pas : les
+     liens du menu (#solution, #a-propos, #faq, #contact) ne
+     produisaient alors aucun effet visible. */
+  function markActiveNav(href) {
     $$(".nav-link").forEach(function (link) {
-      link.classList.toggle("active", link.getAttribute("href") === hash);
+      link.classList.toggle("active", link.getAttribute("href") === href);
     });
   }
 
   document.addEventListener("click", function (e) {
-    if (mqMobile.matches) return;
     var link = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
     if (!link) return;
     link.blur && link.blur();
     if (link.hasAttribute("data-modal")) return;
     var href = link.getAttribute("href");
     if (!href || href === "#") return;
-    e.preventDefault();
     closeMenu();
-    handleHashNav(href);
+    if (mqMobile.matches) {
+      e.preventDefault();
+      handleHashNav(href);
+    } else {
+      markActiveNav(href);
+    }
   });
 
   if (mqMobile.addEventListener) {
@@ -259,24 +299,31 @@
     revealEls.forEach(function (el) { el.classList.add("inview"); });
   }
 
-  /* ---------- FAQ accordéon ---------- */
-  $$(".faq-item").forEach(function (item) {
-    var btn = $(".faq-q", item);
+  /* ---------- FAQ accordéon ----------
+     Délégation d'événement plutôt qu'un écouteur par question : la
+     FAQ est dupliquée dans l'écran FAQ de l'application mobile, et
+     une liste dupliquée après coup n'aurait sinon aucun gestionnaire
+     (les questions resteraient inertes). */
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest(".faq-q") : null;
+    if (!btn) return;
+    var item = btn.closest ? btn.closest(".faq-item") : null;
+    if (!item) return;
     var answer = $(".faq-a", item);
-    if (!btn || !answer) return;
-    btn.addEventListener("click", function () {
-      var isOpen = item.classList.contains("open");
-      $$(".faq-item.open").forEach(function (other) {
-        other.classList.remove("open");
-        $(".faq-q", other).setAttribute("aria-expanded", "false");
-        $(".faq-a", other).style.maxHeight = null;
-      });
-      if (!isOpen) {
-        item.classList.add("open");
-        btn.setAttribute("aria-expanded", "true");
-        answer.style.maxHeight = answer.scrollHeight + "px";
-      }
+    if (!answer) return;
+    var isOpen = item.classList.contains("open");
+    $$(".faq-item.open").forEach(function (other) {
+      other.classList.remove("open");
+      var ob = $(".faq-q", other);
+      var oa = $(".faq-a", other);
+      if (ob) ob.setAttribute("aria-expanded", "false");
+      if (oa) oa.style.maxHeight = null;
     });
+    if (!isOpen) {
+      item.classList.add("open");
+      btn.setAttribute("aria-expanded", "true");
+      answer.style.maxHeight = answer.scrollHeight + "px";
+    }
   });
 
   /* ---------- Composez votre formule ---------- */

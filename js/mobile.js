@@ -127,6 +127,43 @@
   offresScreen.appendChild(offresCta);
   var mobMain = $(".mob-main", shell);
   if (mobMain) mobMain.appendChild(offresScreen);
+
+  /* ---------- Écran FAQ ----------
+     La FAQ du site (#faq) est reprise telle quelle plutôt que
+     réécrite : une seule source de contenu, donc jamais de question
+     sans réponse ou de réponse périmée. Les questions dupliquées
+     répondent grâce à la délégation d'événement de main.js. */
+  var faqSource = document.getElementById("faq");
+  if (faqSource) {
+    var faqScreen = document.createElement("section");
+    faqScreen.className = "mob-screen";
+    faqScreen.id = "mob-screen-faq";
+    faqScreen.setAttribute("data-mob-view", "faq");
+    var faqTitle = document.createElement("div");
+    faqTitle.className = "mob-screen-title";
+    faqTitle.innerHTML = "<span>Questions fr\u00e9quentes</span><em>Les r\u00e9ponses aux questions qu'on nous pose le plus.</em>";
+    faqScreen.appendChild(faqTitle);
+    var faqList = document.createElement("div");
+    faqList.className = "faq-list";
+    var faqItems = $$(".faq-item", faqSource);
+    if (faqItems.length) {
+      faqItems.forEach(function (src) { faqList.appendChild(src.cloneNode(true)); });
+    } else {
+      var vide = document.createElement("p");
+      vide.className = "mob-note";
+      vide.textContent = "Aucune question frequent r\u00e9ponse pour le moment.";
+      faqList.appendChild(vide);
+    }
+    faqScreen.appendChild(faqList);
+    var faqCta = document.createElement("button");
+    faqCta.type = "button";
+    faqCta.className = "btn btn-primary btn-block";
+    faqCta.setAttribute("data-mob-view", "contact");
+    faqCta.textContent = "Une autre question ? \u00c9crivez-nous \u2192";
+    faqScreen.appendChild(faqCta);
+    if (mobMain) mobMain.appendChild(faqScreen);
+  }
+
   screens = $$(".mob-screen");
 
   /* ---------- Clics sur tous les éléments data-mob-view ----------
@@ -276,12 +313,43 @@
     home.insertBefore(clone, home.firstChild);
   }
 
+  /* ---------- Ouverture par ancre (ex: index.html#faq) ----------
+     Sur ordinateur, l'ancre fait défiler la page. Sur téléphone, le
+     contenu vit dans l'application : sans ce routage, arriving sur
+     index.html#faq affichait l'accueil et la FAQ restait invisible,
+     les liens "FAQ" des pages poles semblaient donc ne mener nulle
+     part. */
+  var ANCHOR_VIEWS = {
+    "faq": "faq",
+    "contact": "contact",
+    "formules": "formules",
+    "tarifs": "formules",
+    "services": "offres",
+    "pole-temps": "pole-temps",
+    "pole-visibilite": "pole-visib",
+    "pole-marches": "pole-marches",
+    "accueil": "home"
+  };
+
+  function openFromHash() {
+    if (!MOB.matches) return;
+    var id = (location.hash || "").replace(/^#/, "");
+    if (!id) return;
+    var view = ANCHOR_VIEWS[id];
+    if (!view) return;
+    if (!screens.some(function (s) { return s.getAttribute("data-mob-view") === view; })) return;
+    setScreen(view);
+  }
+
+  window.addEventListener("hashchange", openFromHash);
+
   /* ---------- Initialisation ---------- */
   mountHero();
   setScreen("home");
+  openFromHash();
 
   function onViewportChange() {
-    setScreen("home");
+    openFromHash();
     syncShellA11y();
   }
   if (MOB.addEventListener) {
