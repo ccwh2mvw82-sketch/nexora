@@ -3,6 +3,19 @@
    Design premium : bleu marine foncé / blanc / turquoise / violet
    ============================================================ */
 
+/* Police auto-hébergée : le fichier couvre les cinq graisses
+   (400 à 800) en un seul fichier variable, sous-ensemble latin,
+   ce qui suffit aux caractères français.
+   "swap" affiche le texte tout de suite avec une police de
+   remplacement au lieu d'un pantalla blanc le temps du chargement. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("../assets/fonts/inter-latin-var.woff2") format("woff2");
+}
+
 :root {
   --navy-950: #06111f;
   --navy-900: #0B1B33;
