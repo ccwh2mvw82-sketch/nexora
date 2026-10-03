@@ -250,6 +250,18 @@
         });
       }).then(function (res) {
         var user = (res && res.data && res.data.user) || null;
+        var rerr = (res && res.error) || null;
+        /* Supabase masque volontairement l'existence d'un compte : si
+           l'adresse est deja enregistree, signUp repond { user: null }
+           SANS detailing l'erreur. Sans ce test, le site affichait
+           "verifiez votre boite e-mail" alors qu'aucun e-mail n'a
+           jamais ete envoye, et l'utilisateur restait bloque. */
+        if (rerr) {
+          if (/already|registered|existe|already been/i.test(rerr.message || "")) {
+            throw { message: "Un compte existe deja avec cet e-mail. Connectez-vous plutot que de creer un compte." };
+          }
+          throw normalizedAuthError(rerr);
+        }
         if (!user) {
           if (code !== "") {
             try { localStorage.setItem(LS_PENDING, code); } catch (e) {}
