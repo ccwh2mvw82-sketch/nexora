@@ -427,7 +427,7 @@ h1, h2, h3, h4 {
   border-radius: 14px;
   margin-bottom: 18px;
 }
-.adv-card h3 { color: var(--white); font-size: 19px; margin-bottom: 8px; }
+.adv-card h2 { color: var(--white); font-size: 19px; margin-bottom: 8px; }
 .adv-card p { color: rgba(255, 255, 255, 0.72); font-size: 15px; }
 
 /* ============================================================
@@ -3819,7 +3819,7 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     font-size: 22px;
     margin-bottom: 12px;
   }
-  #mob-shell .mob-hero .adv-card h3 { font-size: 17px; }
+  #mob-shell .mob-hero .adv-card h2 { font-size: 17px; }
   #mob-shell .mob-hero .adv-card p { font-size: 14px; }
   /* l'accès rapide du héros fait doublon avec l'onglet Services */
   #mob-shell .mob-hero .quick-nav { display: none !important; }
@@ -3832,7 +3832,7 @@ main.pf > section[data-page]:not([style*="display"]) { animation: pfade 0.35s ea
     #mob-shell .mob-burger,
     #mob-shell .mob-back { width: 36px; height: 36px; }
     #mob-shell .mob-hero h1 { font-size: 24px; }
-    #mob-shell .mob-hero .adv-card h3 { font-size: 16px; }
+    #mob-shell .mob-hero .adv-card h2 { font-size: 16px; }
     #mob-shell .mob-hero .eyebrow { font-size: 11px; }
   }
 }
