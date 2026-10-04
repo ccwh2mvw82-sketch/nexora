@@ -28,6 +28,7 @@ $targets = @(
     "pole-temps.html",
     "pole-visibilite.html",
     "pole-marches.html",
+    "mentions-legales.html",
     "404.html",
     "robots.txt",
     "sitemap.xml"
