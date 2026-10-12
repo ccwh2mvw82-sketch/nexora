@@ -30,6 +30,8 @@ window.GA_SITE = {
   phoneDisplay: "06 12 34 56 78",      // tel: 06 12 34 56 78
   phoneDigits: "33612345678",         // sans « + », pour les liens tel: et WhatsApp
   email: "gestaffaires45@gmail.com",
+  whatsapp: "33612345678",            // numero WhatsApp Business (sans « + »). "" = utilise phoneDigits.
+                                      // Pour desactiver le bouton WhatsApp, laisser "" ET vider phoneDigits.
 
   /* ---------- Identité ---------- */
   company: "GestAffaires – Gestion & Digital",

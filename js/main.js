@@ -49,7 +49,8 @@
        reelle, sur TOUS les liens de la page (footer, bouton flottant,
        coquille mobile), qu'ils portent ou non un marqueur data-site. */
     $$('a[href="tel:REPLACE"]').forEach(function (a) { a.href = "tel:+" + SITE.phoneDigits; });
-    $$('a[href*="wa.me/REPLACE"]').forEach(function (a) { a.href = "https://wa.me/" + SITE.phoneDigits; });
+    var waNum = (SITE.whatsapp && SITE.whatsapp !== "TODO") ? SITE.whatsapp : SITE.phoneDigits;
+    $$('a[href*="wa.me/REPLACE"]').forEach(function (a) { a.href = "https://wa.me/" + waNum; });
     $$('a[href="mailto:REPLACE"]').forEach(function (a) { a.href = "mailto:" + SITE.email; });
 
     /* Textes : seules les valeurs reelles remplacent le repli du HTML. */
@@ -864,9 +865,14 @@ function scrollToAnchor(id) {
     btn.className = "btn btn-primary";
     btn.style.marginTop = "8px";
     btn.textContent = "Commander - p" + "\u0061" + "iement s" + "\u00e9" + "curis" + "\u00e9";
-    btn.addEventListener("click", function () {
+    btn.addEventListener("click", function (e) {
+      var fallback = link;
       if (window.GAB && window.GAB.order) {
-        window.GAB.order.start(formula, (window.GAB.auth && window.GAB.auth.currentUser) ? (window.GAB.auth.currentUser().email || "") : "");
+        e.preventDefault();
+        var cb = function (url) { window.location.href = url || fallback; };
+        window.GAB.order.start(formula, (window.GAB.auth && window.GAB.auth.currentUser) ? (window.GAB.auth.currentUser().email || "") : "")
+          .then(function (res) { cb(res && res.url ? res.url : fallback); })
+          .catch(function () { cb(fallback); });
       }
     });
     cta.insertAdjacentElement("afterend", btn);
@@ -878,7 +884,7 @@ function scrollToAnchor(id) {
     var q = window.location.search + window.location.hash;
     if (q.indexOf("success") < 0) return;
     if (q.indexOf("cancel") >= 0 || q.indexOf("cancelled") >= 0) return;
-    var note = "Commande prise en compte - merci de votre confiance ! Nous vous contactons rapidement.";
+    var note = "Vous revenez de l'écran de paiement. Nous vérifions la transaction et vous confirmons votre commande par e-mail.";
     document.addEventListener("DOMContentLoaded", function () {
       var bar = document.createElement("div");
       bar.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99999;background:#1b9d57;color:#fff;text-align:center;padding:12px 16px;font:600 15px/1.4 inherit;box-shadow:0 2px 10px rgba(0,0,0,.25);";

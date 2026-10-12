@@ -1,3 +1,7 @@
+# Ce fichier n'est lu QUE si le site est hébergé sur Netlify.
+# Le site est actuellement sur GitHub Pages, qui ignore ces en-têtes HTTP.
+# Sur GitHub Pages, la politique "referrer" est assurée par la balise
+# <meta name="referrer"> présente dans chaque page HTML.
 [build]
   publish = "."
 

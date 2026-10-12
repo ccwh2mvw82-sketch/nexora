@@ -79,6 +79,11 @@
       supabase = window.supabase.createClient(conf.url, conf.anonKey, {
         auth: { persistSession: true, autoRefreshToken: true }
       });
+      /* Lien "mot de passe oublie" : Supabase emet PASSWORD_RECOVERY quand
+         l'utilisateur revient avec le jeton de recuperation dans l'URL. */
+      supabase.auth.onAuthStateChange(function (event) {
+        if (event === "PASSWORD_RECOVERY") emit("password-recovery", null);
+      });
       return supabase.auth.getSession();
     }).then(function (res) {
       session = (res && res.data && res.data.session) || null;
@@ -138,6 +143,16 @@
       localStorage.removeItem("ga_session");
       localStorage.setItem(LS_MODE, "local");
     } catch (e) {}
+  }
+
+  /* Efface du navigateur les donnees metier (clients, factures...) et le
+     miroir d'utilisateurs quand on quitte un compte cloud. Sur un poste
+     partage, l'utilisateur suivant ne peut ainsi pas relire les donnees
+     du precedent depuis le cache localStorage. */
+  function purgeCloudCache() {
+    try { BIZ_KEYS.forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
+    try { localStorage.removeItem("ga_users"); } catch (e) {}
+    dataCache = {};
   }
 
   function normalizedAuthError(err) {
@@ -304,10 +319,31 @@
       }
       return go(v);
     },
+    resetPassword: function (email) {
+      if (!supabase) return Promise.reject({ message: "Réinitialisation indisponible (mode local)." });
+      var redirect = window.location.origin + window.location.pathname;
+      return supabase.auth.resetPasswordForEmail(String(email || "").trim(), { redirectTo: redirect })
+        .then(function (res) {
+          if (res && res.error) throw normalizedAuthError(res.error);
+          return true;
+        });
+    },
+    updatePassword: function (newPass) {
+      if (!supabase) return Promise.reject({ message: "Réinitialisation indisponible (mode local)." });
+      if (!newPass || String(newPass).length < 6) {
+        return Promise.reject({ message: "Le mot de passe doit contenir au moins 6 caractères." });
+      }
+      return supabase.auth.updateUser({ password: newPass })
+        .then(function (res) {
+          if (res && res.error) throw normalizedAuthError(res.error);
+          return true;
+        });
+    },
     logout: function () {
       if (!supabase) return Promise.resolve();
       return supabase.auth.signOut().then(function () {
         session = null;
+        purgeCloudCache();
         clearLocalSession();
         emit("auth-change", null);
       });
@@ -436,6 +472,31 @@
   /* ------------------------------------------------------------
      ORDERS (Stripe)
      ------------------------------------------------------------ */
+  /* Cree une Checkout Session cote serveur (Edge Function stripe-checkout)
+     afin que le webhook puisse associer le paiement a la commande sans
+     ambiguite. Si la fonction n'est pas disponible (ou Stripe non
+     configure), retourne "" : le site bascule sur le Payment Link. */
+  function serverCheckout(formula, customer, orderId) {
+    if (!conf || !conf.url) return Promise.resolve("");
+    var base = String(conf.url).replace(/\/+$/, "");
+    var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 4000) : null;
+    return fetch(base + "/functions/v1/stripe-checkout", {
+      method: "POST",
+      signal: ctrl ? ctrl.signal : undefined,
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": conf.anonKey || "",
+        "Authorization": "Bearer " + (conf.anonKey || "")
+      },
+      body: JSON.stringify({ formula: formula, customer: customer || "", order_id: orderId || null })
+    }).then(function (res) {
+      if (!res.ok) return "";
+      return res.json().then(function (j) { return (j && j.url) || ""; });
+    }).catch(function () { return ""; })
+      .then(function (u) { if (timer) clearTimeout(timer); return u; });
+  }
+
   var order = {
     link: function (formula) {
       if (!stripeLinks) return "";
@@ -444,12 +505,18 @@
     start: function (formula, customer) {
       var url = order.link(formula);
       if (!url) return Promise.resolve({ url: "" });
+      var p = Promise.resolve(null);
       if (isCloud()) {
-        supabase.rpc("create_order", {
+        p = supabase.rpc("create_order", {
           p_formula: formula, p_customer: customer || "", p_amount: formulaAmount(formula)
-        }).catch(function () {});
+        }).then(function (r) { return (r && r.data) || null; }).catch(function () { return null; });
       }
-      return Promise.resolve({ url: url, go: function () { location.href = url; } });
+      return p.then(function (oid) {
+        return serverCheckout(formula, customer, oid).then(function (serverUrl) {
+          var finalUrl = serverUrl || url;
+          return { url: finalUrl, orderId: oid, go: function () { location.href = finalUrl; } };
+        });
+      });
     }
   };
   function formulaAmount(key) {

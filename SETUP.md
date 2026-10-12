@@ -1,11 +1,32 @@
-# Mise en place du site "réel" (Supabase + Netlify + Stripe)
+# Mise en place du site "réel" (Supabase + GitHub Pages + Stripe)
 
 Le site reste 100 % fonctionnel sans rien faire : en mode local (localStorage).
 Ce guide active le mode **cloud** : vrais comptes, vraie base de données,
 vrais formulaires de contact et vrais paiements — le tout gratuitement.
 
-> Trois comptes gratuits sont nécessaires (Supabase, Netlify, Stripe).
+> Trois services gratuits suffisent (Supabase, GitHub Pages, Stripe).
 > Temps total : ~30 minutes, une seule fois.
+
+---
+
+## 0. À finaliser (une seule fois)
+
+Tout se règle dans `js/site-info.js`, sauf le téléphone qui doit aussi être mis
+à jour dans le bloc JSON-LD de `index.html` :
+
+| Champ | Où | Obligatoire |
+|---|---|---|
+| Téléphone | `js/site-info.js` (`phoneDisplay`, `phoneDigits`) + JSON-LD `index.html` | recommandé |
+| WhatsApp | `js/site-info.js` (`whatsapp`, sinon réutilise `phoneDigits`) | recommandé |
+| Numéro SIRET | `js/site-info.js` (`siret`) | **oui** |
+| Forme juridique | `js/site-info.js` (`legalForm`) | **oui** |
+| Adresse du siège | `js/site-info.js` (`address`) | **oui** |
+| RCS | `js/site-info.js` (`rcs`) | **oui** |
+| Directeur de publication | `js/site-info.js` (`director`) | **oui** |
+
+Contrôle automatique : lancer `qa-legal.ps1` — plus aucun champ ne doit rester
+« MANQUE ». Le téléphone du JSON-LD de `index.html` doit rester identique à
+`phoneDigits` (contrôlé par `qa-jsonld.ps1`).
 
 ---
 
@@ -49,7 +70,7 @@ vrais formulaires de contact et vrais paiements — le tout gratuitement.
    (`stripe.essentiel`, `stripe.confort`, `stripe.pro`, `stripe.visibilite`,
    `stripe.visibilite_plus`, `stripe.developpement`).
 4. (Retour client) Dans le Payment Link, section **After payment → Redirect to**,
-   mets ton adresse du site + `?success=paiement` (ex. `https://<nom>.netlify.app/?success=paiement`)
+   mets ton adresse du site + `?success=paiement` (ex. `https://gestaffaires.fr/?success=paiement`)
    : le visiteur reviendra sur ton site avec une confirmation affichée en haut de page.
 
 > Le Payment Link gère lui-même carte, SCA, e-mail de reçu et facture.
@@ -77,16 +98,56 @@ Chaque demande du site (formulaires contact) arrive dans la table `leads`
    test gratuit). Pour un expéditeur professionnel, vérifie un domaine
    (Resend → **Domains**) puis change la constante `FROM` de la fonction.
 
-## 4 bis. Netlify — adresse publique (HTTPS + domaine)
+## 4 bis. GitHub Pages — adresse publique (HTTPS + domaine)
 
-Le plus simple : connecter le dépôt GitHub.
+1. Le dépôt est déjà publié via **GitHub Pages** (Settings → Pages → branche
+   `main`, dossier `/`). Le fichier `CNAME` contient `gestaffaires.fr`.
+2. Côté registrar / DNS du domaine, fais pointer vers GitHub Pages :
+   - `A` pour `gestaffaires.fr` → `185.199.108.153`, `185.199.109.153`,
+     `185.199.110.153`, `185.199.111.153`
+   - `CNAME` pour `www` → `<compte>.github.io`
+3. Dans **Settings → Pages**, coche **Enforce HTTPS** (certificat automatique).
+   Tant que ce n'est pas coché, `http://gestaffaires.fr` répond sans rediriger
+   vers HTTPS.
 
-1. Va sur https://app.netlify.com → **Add new site → Import an existing project**
-   → choisis ce dépôt GitHub → **Deploy site**.
-2. Quelques secondes plus tard tu obtiens un domaine `https://<nom>.netlify.app`.
-   (Les règles des en-têtes de sécurité sont dans `netlify.toml`, déjà incluses.)
-3. (Optionnel, ~3 €/mois) **Domain management → Add custom domain** pour
-   acheter/personnaliser un vrai nom de domaine (ex. `gestaffaires.fr`).
+> Limite de GitHub Pages : impossible d'ajouter des **en-têtes HTTP
+> personnalisés** (CSP, X-Frame-Options...). La politique « referrer » est
+> assurée par la balise `<meta name="referrer">` de chaque page. Le fichier
+> `netlify.toml` n'est lu que si le site est un jour hébergé sur Netlify.
+
+## 4 ter. Paiement vérifié + e-mails automatiques (fonctions Supabase)
+
+Le bouton « Commander » fonctionne déjà avec les **Payment Links** Stripe. Pour
+que la commande soit automatiquement marquée « payée » en base **et** qu'un
+e-mail parte à chaque paiement, déploie les 3 fonctions Edge (une seule fois) :
+
+1. Installe la CLI : `npm i -g supabase`, puis `supabase login` et
+   `supabase link --project-ref <ref-du-projet>`.
+2. Déploie les fonctions :
+   ```
+   supabase functions deploy stripe-checkout
+   supabase functions deploy stripe-webhook --no-verify-jwt
+   supabase functions deploy send-notification --no-verify-jwt
+   ```
+3. Renseigne les secrets (**Settings → Edge Functions → Secrets**) :
+   - `STRIPE_SECRET_KEY` (clé secrète `sk_...`)
+   - `STRIPE_WEBHOOK_SECRET` (voir étape 4)
+   - `RESEND_API_KEY`
+   - `ADMIN_EMAIL`, `FROM_EMAIL`, `SITE_URL`
+   - `STRIPE_PRICE_...` (un ID de prix `price_...` par formule ; s'ils sont
+     absents, le site retombe automatiquement sur les Payment Links)
+4. Dans Stripe → **Developers → Webhooks → Add endpoint** :
+   URL `https://<projet>.supabase.co/functions/v1/stripe-webhook`, événement
+   `checkout.session.completed`. Copie le **Signing secret** (`whsec_...`) dans
+   `STRIPE_WEBHOOK_SECRET`.
+5. Base de données : si le projet Supabase existe déjà, exécute une fois dans le
+   SQL Editor les fichiers `supabase/migration-securite.sql` puis
+   `supabase/migration-stripe.sql`. Un projet neuf n'a besoin que de
+   `supabase/schema.sql`.
+
+> Sans ces étapes, le site reste 100 % utilisable : paiement par Payment Link et
+> retour de confirmation via `?success=paiement`. Seuls le marquage « payé » en
+> base et l'e-mail automatique nécessitent les fonctions.
 
 ## 5. Vérifications
 
@@ -107,8 +168,9 @@ Le plus simple : connecter le dépôt GitHub.
 | Compte admin | Code validé côté serveur (table `admin_keys`, hash sha256) |
 | Formulaires contact | Envoyés dans `leads`, lisibles par l'admin uniquement |
 | Paiement | Stripe Payment Links (aucune donnée bancaire sur ton serveur) |
-| HTTPS | Fourni par Netlify (certificat auto) |
-| En-têtes HTTP | nosniff / X-Frame-Options / Referrer dans netlify.toml |
+| Vérification paiement | Webhook Stripe → RPC `complete_order` (service_role uniquement) |
+| HTTPS | Fourni par GitHub Pages (certificat auto, à activer) |
+| En-têtes HTTP | GitHub Pages ne les permet pas ; « referrer » via balise `<meta>` |
 
 ## Rappels
 

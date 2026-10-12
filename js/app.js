@@ -177,7 +177,7 @@
       window.GAB.auth.register({ name: name, login: login, email: email, pass: pass, code: code })
         .then(function (res) {
           if (res && res.pending) {
-            showErr(authErrorRegister, "Compte créé : vérifiez votre boîte e-mail et confirmez votre adresse avant de vous connecter.");
+            showErr(authErrorRegister, "Compte enregistré. Si un e-mail de confirmation vous a été envoyé, validez-le (pensez aux spams) puis connectez-vous. Sinon, connectez-vous directement avec vos identifiants.");
             return;
           }
           closeModals();
@@ -910,6 +910,111 @@
   if (switchRegister) switchRegister.addEventListener("click", function (e) { e.preventDefault(); openModal(modalRegister); });
   var switchLogin = $("#switch-login");
   if (switchLogin) switchLogin.addEventListener("click", function (e) { e.preventDefault(); openModal(modalLogin); });
+
+  /* ---------- Mot de passe oublié (interface injectée dans la modale) ---------- */
+  (function setupReset() {
+    if (!modalLogin || modalLogin.querySelector("#form-reset")) return;
+    var panel = $(".modal-panel", modalLogin) || modalLogin;
+    var switchP = $(".auth-switch", modalLogin);
+    var linkP = document.createElement("p");
+    linkP.className = "auth-switch";
+    linkP.innerHTML = '<a href="#" id="switch-reset">Mot de passe oublié ?</a>';
+    if (switchP && switchP.parentNode) switchP.parentNode.insertBefore(linkP, switchP.nextSibling);
+    else panel.appendChild(linkP);
+
+    var form = document.createElement("form");
+    form.className = "auth-form";
+    form.id = "form-reset";
+    form.hidden = true;
+    form.setAttribute("novalidate", "");
+    form.innerHTML =
+      '<div class="form-field"><label for="reset-email">Votre e-mail</label>' +
+      '<input id="reset-email" name="email" type="email" autocomplete="email" required></div>' +
+      '<p class="auth-error" id="reset-error" hidden></p>' +
+      '<p class="auth-note" id="reset-msg" hidden></p>' +
+      '<button type="submit" class="btn btn-primary btn-block">Envoyer le lien de réinitialisation</button>';
+    panel.appendChild(form);
+
+    var resetErr = $("#reset-error");
+    var resetMsg = $("#reset-msg");
+
+    function showReset(show) {
+      if (formLogin) formLogin.hidden = show;
+      form.hidden = !show;
+      if (switchP) switchP.hidden = show;
+      linkP.hidden = show;
+      showErr(resetErr, null);
+      if (resetMsg) resetMsg.hidden = true;
+      var title = $("#login-title");
+      if (title) title.textContent = show ? "Mot de passe oublié" : "Connexion";
+    }
+
+    var switchReset = $("#switch-reset");
+    if (switchReset) switchReset.addEventListener("click", function (e) { e.preventDefault(); showReset(true); });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      showErr(resetErr, null);
+      var email = $("#reset-email").value.trim();
+      if (!email) { showErr(resetErr, "Indiquez votre adresse e-mail."); return; }
+      if (!(window.GAB && window.GAB.auth && window.GAB.auth.resetPassword)) {
+        showErr(resetErr, "Réinitialisation indisponible pour le moment."); return;
+      }
+      window.GAB.auth.resetPassword(email).then(function () {
+        if (resetMsg) {
+          resetMsg.textContent = "Si un compte existe pour " + email + ", un e-mail de réinitialisation vient d'être envoyé (pensez aux spams).";
+          resetMsg.hidden = false;
+        }
+      }).catch(function (err) {
+        showErr(resetErr, (err && err.message) || "Envoi impossible.");
+      });
+    });
+    new MutationObserver(function () {
+      if (modalLogin.hidden) showReset(false);
+    }).observe(modalLogin, { attributes: true, attributeFilter: ["hidden"] });
+  })();
+
+  /* ---------- Définition d'un nouveau mot de passe (retour du lien e-mail) ---------- */
+  (function setupRecovery() {
+    if (!window.GAB || !window.GAB.listen) return;
+    window.GAB.listen("password-recovery", function () {
+      if (document.getElementById("modal-recovery")) return;
+      var m = document.createElement("div");
+      m.className = "modal";
+      m.id = "modal-recovery";
+      m.setAttribute("role", "dialog");
+      m.setAttribute("aria-modal", "true");
+      m.innerHTML =
+        '<div class="modal-backdrop" data-close></div>' +
+        '<div class="modal-panel">' +
+        '<h3>Nouveau mot de passe</h3>' +
+        '<p class="modal-sub">Choisissez un nouveau mot de passe pour votre compte.</p>' +
+        '<form class="auth-form" id="form-recovery" novalidate>' +
+        '<div class="form-field"><label for="recovery-pass">Nouveau mot de passe (6 caractères minimum)</label>' +
+        '<input id="recovery-pass" type="password" autocomplete="new-password" required></div>' +
+        '<p class="auth-error" id="recovery-error" hidden></p>' +
+        '<button type="submit" class="btn btn-primary btn-block">Enregistrer</button>' +
+        '</form></div>';
+      document.body.appendChild(m);
+      m.hidden = false;
+      document.body.classList.add("no-scroll");
+      m.querySelector("[data-close]").addEventListener("click", function () { m.hidden = true; document.body.classList.remove("no-scroll"); });
+      m.querySelector("#form-recovery").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var pass = document.getElementById("recovery-pass").value;
+        var errEl = document.getElementById("recovery-error");
+        window.GAB.auth.updatePassword(pass).then(function () {
+          errEl.className = "auth-note";
+          errEl.hidden = false;
+          errEl.textContent = "Mot de passe mis à jour. Vous pouvez fermer cette fenêtre.";
+          try { history.replaceState(null, "", window.location.pathname); } catch (er) {}
+        }).catch(function (err) {
+          errEl.className = "auth-error";
+          errEl.hidden = false;
+          errEl.textContent = (err && err.message) || "Mise à jour impossible.";
+        });
+      });
+    });
+  })();
 
   var btnLogout = $("#admin-logout");
   if (btnLogout) btnLogout.addEventListener("click", logout);
