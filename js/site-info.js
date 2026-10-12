@@ -41,8 +41,8 @@ window.GA_SITE = {
   siret: "TODO",                      // numero SIRET (14 chiffres)
   rcs: "TODO",                        // ville et numero RCS
   director: "TODO",                   // directeur de publication
-  host: "TODO",                       // hebergeur du site (nom + adresse)
-  hostUrl: "",                        // lien vers la page de l'hebergeur
+  host: "GitHub, Inc. — 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis — Tél. +1 415 735 4488",
+  hostUrl: "https://github.com",         // lien vers la page de l'hebergeur
 
   /* ---------- Reseaux ---------- */
   instagram: "https://www.instagram.com/gestaffaires",
