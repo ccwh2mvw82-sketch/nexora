@@ -173,17 +173,46 @@ create table if not exists public.orders (
   formula     text not null default '',
   amount      numeric(10,2) not null default 0,
   status      text not null default 'pending' check (status in ('pending', 'paid', 'cancelled')),
+  stripe_session text not null default '',
   created_at  timestamptz not null default now()
 );
+
+create index if not exists orders_customer_lower_idx on public.orders (lower(customer));
+create index if not exists orders_owner_status_idx on public.orders (owner_id, status);
 
 create or replace function public.create_order(
   p_formula text, p_customer text, p_amount numeric
 )
-returns void
+returns uuid
 language plpgsql security definer set search_path = public as $$
+declare v_id uuid;
 begin
   insert into public.orders (owner_id, customer, formula, amount, status)
-  values (auth.uid(), coalesce(p_customer, ''), p_formula, p_amount, 'pending');
+  values (auth.uid(), coalesce(p_customer, ''), p_formula, p_amount, 'pending')
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+-- Marque une commande payee. RESERVEE AU SERVEUR : cette RPC est appelee
+-- uniquement par l'Edge Function stripe-webhook (compte service_role, JWT
+-- role='service_role') APRES verification de la signature Stripe.
+-- Toute tentative d'appel public (anon / authenticated) est refuse.
+create or replace function public.complete_order(
+  p_order_id uuid,
+  p_stripe_session text default null
+)
+returns boolean
+language plpgsql security definer set search_path = public as $$
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Appel refuse : reserve au serveur';
+  end if;
+  update public.orders
+     set status = 'paid',
+         stripe_session = coalesce(p_stripe_session, stripe_session)
+   where id = p_order_id and status = 'pending';
+  return found;
 end;
 $$;
 
@@ -196,14 +225,37 @@ alter table public.admin_keys     enable row level security;
 alter table public.leads          enable row level security;
 alter table public.orders         enable row level security;
 
--- profils : l'utilisateur lit son profil ; l'admin lit la liste
+-- profils : l'utilisateur lit son profil ; l'admin lit la liste.
+-- On passe par get_my_role() (SECURITY DEFINER) plutot que par un
+-- sous-SELECT sur public.profiles : une policy de profiles qui interroge
+-- profiles provoque "infinite recursion detected in policy".
 drop policy if exists "profiles_select_own" on public.profiles;
 create policy "profiles_select_own" on public.profiles
-  for select using (id = auth.uid() or (select role from public.profiles where id = auth.uid()) = 'admin');
+  for select using (id = auth.uid() or public.get_my_role() = 'admin');
 
 drop policy if exists "profiles_update_own" on public.profiles;
 create policy "profiles_update_own" on public.profiles
   for update using (id = auth.uid()) with check (id = auth.uid());
+
+-- Empeche l'escalade de privileges : un client ne peut PAS changer son
+-- propre role via un simple UPDATE (name/login restent modifiables).
+create or replace function public.prevent_role_escalation()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.role is distinct from old.role then
+    if public.get_my_role() is distinct from 'admin' then
+      new.role := old.role;
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_prevent_escalation on public.profiles;
+create trigger profiles_prevent_escalation
+  before update on public.profiles
+  for each row execute procedure public.prevent_role_escalation();
 
 -- app_data : uniquement ses propres lignes
 drop policy if exists "app_data_select" on public.app_data;
@@ -230,9 +282,9 @@ create policy "admin_keys_none" on public.admin_keys
 -- leads : insertion via RPC uniquement, lecture admin
 drop policy if exists "leads_admin_read" on public.leads;
 create policy "leads_admin_read" on public.leads
-  for select using ((select role from public.profiles where id = auth.uid()) = 'admin');
+  for select using (public.get_my_role() = 'admin');
 
 -- orders : l'admin lit tout, le compte connecte sa propre commande
 drop policy if exists "orders_admin_read" on public.orders;
 create policy "orders_admin_read" on public.orders
-  for select using (owner_id = auth.uid() or (select role from public.profiles where id = auth.uid()) = 'admin');
+  for select using (owner_id = auth.uid() or public.get_my_role() = 'admin');
