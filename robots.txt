@@ -7,4 +7,4 @@ Disallow: /qa*.html
 Disallow: /seo-tout-savoir.html
 Disallow: /supabase/
 
-Sitemap: https://ccwh2mvw82-sketch.github.io/nexora/sitemap.xml
+Sitemap: https://gestaffaires.fr/sitemap.xml
