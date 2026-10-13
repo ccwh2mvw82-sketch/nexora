@@ -16,7 +16,7 @@ Tout se règle dans `js/site-info.js`, sauf le téléphone qui doit aussi être 
 
 | Champ | Où | Obligatoire |
 |---|---|---|
-| Téléphone | `js/site-info.js` (`phoneDisplay`, `phoneDigits`) + JSON-LD `index.html` | recommandé |
+| Téléphone | `js/site-info.js` (`phoneDisplay`, `phoneDigits`) | recommandé |
 | WhatsApp | `js/site-info.js` (`whatsapp`, sinon réutilise `phoneDigits`) | recommandé |
 | Numéro SIRET | `js/site-info.js` (`siret`) | **oui** |
 | Forme juridique | `js/site-info.js` (`legalForm`) | **oui** |
@@ -24,9 +24,11 @@ Tout se règle dans `js/site-info.js`, sauf le téléphone qui doit aussi être 
 | RCS | `js/site-info.js` (`rcs`) | **oui** |
 | Directeur de publication | `js/site-info.js` (`director`) | **oui** |
 
-Contrôle automatique : lancer `qa-legal.ps1` — plus aucun champ ne doit rester
-« MANQUE ». Le téléphone du JSON-LD de `index.html` doit rester identique à
-`phoneDigits` (contrôlé par `qa-jsonld.ps1`).
+Contrôle automatique : lancer `qa-legal.ps1` — plus aucun champ **obligatoire**
+ne doit rester « MANQUE ». Le téléphone est **facultatif** : laissé vide, il est
+automatiquement **masqué** (liens `tel:`/WhatsApp cachés, aucun faux numéro
+publié). Le JSON-LD de `index.html` n'a plus besoin d'être édité à la main :
+`qa-jsonld.ps1` vérifie sa cohérence avec `js/site-info.js`.
 
 ---
 
@@ -39,12 +41,15 @@ Contrôle automatique : lancer `qa-legal.ps1` — plus aucun champ ne doit reste
 3. Dans le même SQL Editor, lance cette requête **une seule fois** pour activer
    ton code d'administrateur (remplace `MOT_DE_PASSE_ADMIN` par un code secret) :
    ```sql
-   insert into admin_keys (code)
-   select encode(sha256('MOT_DE_PASSE_ADMIN'), 'hex');
+   insert into admin_keys (code, used)
+   values (encode(sha256('MOT_DE_PASSE_ADMIN'::bytea), 'hex'), false)
+   on conflict (code) do update set used = false;
    ```
    → Le premier compte qui s'inscrit avec ce code devient **administrateur**.
    Le code reste stocké haché côté serveur : il n'est jamais envoyé au navigateur.
-4. Récupère tes clés publiques : **Settings → API → Project URL** et **anon key**.
+4. Récupère tes clés publiques : **Settings → API → Project URL** et la clé
+   **publishable** (`sb_publishable_…` ; les anciens projets l'appellent
+   « anon key »).
 5. **Auth → Providers → Email** : sur ce projet, "Confirm email" est **désactivée**
    (`mailer_autoconfirm = true`) → le compte est actif immédiatement après
    l'inscription. **Important** : si tu la réactives un jour, il faut aussi
@@ -91,12 +96,13 @@ Chaque demande du site (formulaires contact) arrive dans la table `leads`
 3. Dans Supabase : **Settings → Edge Functions → Secrets** → ajoute
    la variable `RESEND_API_KEY` (coller la clé `re_...`).
 4. Le site appelle la fonction `send-notification` (déployée dans Supabase)
-   à chaque demande : elle envoie l'e-mail au destinataire codé en dur dans
-   la fonction (`js/... send-notification/index.ts`, constante `TO`).
-   Pour changer le destinataire, édite cette constante et redéploie la fonction.
-5. L'expéditeur affiché est `GestAffaires <onboarding@resend.dev>` (domaine de
-   test gratuit). Pour un expéditeur professionnel, vérifie un domaine
-   (Resend → **Domains**) puis change la constante `FROM` de la fonction.
+   à chaque demande. Le destinataire admin vient du secret `ADMIN_EMAIL` et
+   l'expéditeur du secret `FROM_EMAIL` (voir §4 ter) : aucune valeur n'est
+   codée en dur dans le code.
+5. Tant que `RESEND_API_KEY` n'est pas fournie, la fonction répond sans erreur
+   (`{admin:false, client:false}`) et le message reste bien stocké dans la
+   table `leads`. Pour un expéditeur professionnel, vérifie un domaine dans
+   Resend (Resend → **Domains**) puis mets `FROM_EMAIL` sur ce domaine.
 
 ## 4 bis. GitHub Pages — adresse publique (HTTPS + domaine)
 
@@ -121,9 +127,16 @@ Le bouton « Commander » fonctionne déjà avec les **Payment Links** Stripe. P
 que la commande soit automatiquement marquée « payée » en base **et** qu'un
 e-mail parte à chaque paiement, déploie les 3 fonctions Edge (une seule fois) :
 
-1. Installe la CLI : `npm i -g supabase`, puis `supabase login` et
-   `supabase link --project-ref <ref-du-projet>`.
-2. Déploie les fonctions :
+1. **Sans CLI (le plus simple, via le dashboard)** : **Edge Functions →
+   Create a new function**, donne-lui le nom exact (`stripe-checkout`,
+   `stripe-webhook`, `send-notification`), colle le contenu du fichier
+   `supabase/functions/<nom>/index.ts` correspondant, puis **Deploy**.
+   Pour `stripe-webhook` et `send-notification`, décoche **Verify JWT**
+   (équivalent de `--no-verify-jwt`). Les secrets se posent dans
+   **Project Settings → Edge Functions → Secrets** (ou Edge Functions →
+   Manage secrets).
+2. **Avec la CLI** : installe-la (`npm i -g supabase`), puis `supabase login`
+   et `supabase link --project-ref <ref-du-projet>`, et déploie :
    ```
    supabase functions deploy stripe-checkout
    supabase functions deploy stripe-webhook --no-verify-jwt

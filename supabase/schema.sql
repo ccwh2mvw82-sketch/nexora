@@ -239,12 +239,17 @@ create policy "profiles_update_own" on public.profiles
 
 -- Empeche l'escalade de privileges : un client ne peut PAS changer son
 -- propre role via un simple UPDATE (name/login restent modifiables).
+-- SECURITY INVOKER (pas DEFINER) : ainsi current_user vaut 'authenticated'
+-- pour un appel client, mais reste 'postgres'/'service_role' pour les
+-- fonctions internes (claim_admin) et le serveur. Sans cela, le trigger
+-- annulerait aussi la promotion du tout premier admin par claim_admin.
 create or replace function public.prevent_role_escalation()
 returns trigger
-language plpgsql security definer set search_path = public as $$
+language plpgsql security invoker set search_path = public as $$
 begin
-  if new.role is distinct from old.role then
-    if public.get_my_role() is distinct from 'admin' then
+  if current_user in ('authenticated', 'anon') then
+    if new.role is distinct from old.role
+       and public.get_my_role() is distinct from 'admin' then
       new.role := old.role;
     end if;
   end if;
