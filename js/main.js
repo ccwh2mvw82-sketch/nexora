@@ -378,6 +378,7 @@ function scrollToAnchor(id) {
 
   var POOLS = {
     admin: [
+      { h: 4,  p: 349,  n: "TPE" },
       { h: 7,  p: 799,  n: "Fondations" },
       { h: 11, p: 1099, n: "Essentiel" },
       { h: 16, p: 1599, n: "Confort" },
@@ -858,6 +859,7 @@ function scrollToAnchor(id) {
 
 /* ---------- Paiement des formules (Stripe) ---------- */
   var STRIPE_KEYS = {
+    "f-tpe": "tpe",
     "f-essentiel": "essentiel",
     "f-confort": "confort",
     "f-pro": "pro",
