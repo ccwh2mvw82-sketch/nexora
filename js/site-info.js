@@ -26,12 +26,14 @@
    obligation legale en France).
    ============================================================ */
 window.GA_SITE = {
-  /* ---------- Contact ---------- */
-  phoneDisplay: "06 12 34 56 78",      // tel: 06 12 34 56 78
-  phoneDigits: "33612345678",         // sans « + », pour les liens tel: et WhatsApp
+  /* ---------- Contact ----------
+     Laisser phoneDisplay / phoneDigits / whatsapp VIDES tant que le vrai
+     numero n'est pas connu : les liens tel:/WhatsApp et le numero affiche
+     sont alors automatiquement masques (aucun faux numero publie). */
+  phoneDisplay: "",                   // ex. "06 12 34 56 78"
+  phoneDigits: "",                    // ex. "33612345678" (sans « + »)
   email: "gestaffaires45@gmail.com",
-  whatsapp: "33612345678",            // numero WhatsApp Business (sans « + »). "" = utilise phoneDigits.
-                                      // Pour desactiver le bouton WhatsApp, laisser "" ET vider phoneDigits.
+  whatsapp: "",                       // numero WhatsApp Business (sans « + »). "" = utilise phoneDigits.
 
   /* ---------- Identité ---------- */
   company: "GestAffaires – Gestion & Digital",

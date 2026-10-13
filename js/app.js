@@ -779,7 +779,7 @@
       (c && c.email ? esc(c.email) : "") + (c && c.phone ? "<br>" + esc(c.phone) : "") + "</p></div>";
   }
   function sheetCompany() {
-    return "<div class='ps-block'><h3>Émetteur</h3><p><b>GestAffaires – Gestion &amp; Digital</b>\nContact : 06 12 34 56 78\ngestaffaires45@gmail.com</p></div>";
+    return "<div class='ps-block'><h3>Émetteur</h3><p><b>GestAffaires – Gestion &amp; Digital</b>\nContact : " + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + "\ngestaffaires45@gmail.com</p></div>";
   }
   function docTable(lines) {
     var rows = lines.map(function (l) {
@@ -796,7 +796,7 @@
   }
   function sheetFoot() {
     return '<div class="ps-sig"><div>Le prestataire / L\'administrateur</div><div>Le client</div></div>' +
-      '<div class="ps-foot"><b>GestAffaires – Gestion &amp; Digital</b> · 06 12 34 56 78 · gestaffaires45@gmail.com</div>';
+      '<div class="ps-foot"><b>GestAffaires – Gestion &amp; Digital</b> · ' + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + ' · gestaffaires45@gmail.com</div>';
   }
 
   function printHTML(htmlAction) {

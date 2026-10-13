@@ -12,9 +12,10 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 $info = Get-Content (Join-Path $Root "js\site-info.js") -Raw
-if ($info -match 'phoneDigits:\s*"([^"]+)"') { $phoneDigits = $Matches[1] } else { Write-Host "ERREUR : phoneDigits introuvable dans js/site-info.js"; exit 1 }
+if ($info -match 'phoneDigits:\s*"([^"]*)"') { $phoneDigits = $Matches[1] } else { Write-Host "ERREUR : phoneDigits introuvable dans js/site-info.js"; exit 1 }
 if ($info -match 'email:\s*"([^"]+)"') { $email = $Matches[1] } else { Write-Host "ERREUR : email introuvable dans js/site-info.js"; exit 1 }
 
+$phoneConfigured = ($phoneDigits -ne "")
 $expectedTel = "+" + $phoneDigits
 $pages = @("index.html", "pole-temps.html", "pole-visibilite.html", "pole-marches.html")
 $ko = 0
@@ -28,7 +29,14 @@ foreach ($p in $pages) {
   $raw = $blocks[0].Groups[1].Value
   # le telephone n'apparait que dans certaines pages
   $m = [regex]::Match($raw, '"telephone"\s*:\s*"([^"]+)"')
-  if ($m.Success) {
+  if (-not $phoneConfigured) {
+    if ($m.Success) {
+      Write-Host "  KO  $p : telephone en JSON-LD ($($m.Groups[1].Value)) alors qu'aucun numero n'est configure"
+      $ko++
+    } else {
+      Write-Host "  --  $p : pas de telephone en JSON-LD (aucun numero configure : attendu)"
+    }
+  } elseif ($m.Success) {
     if ($m.Groups[1].Value -eq $expectedTel) {
       Write-Host "  OK  $p : telephone = $($m.Groups[1].Value)"
     } else {

@@ -13,9 +13,9 @@
 window.GA_CONFIG = {
   supabase: {
     /* 1. https://supabase.com -> Dashboard -> votre projet
-          -> Settings > API : copiez la Project URL et l'anon key. */
-    url: "https://ddetftmqyklkbdmnmzgg.supabase.co",
-    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkZXRmdG1xeWtsa2JkbW5temdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNjU1NzAsImV4cCI6MjEwNTg0MTU3MH0.yv5z4f8Cnbu3F7E2_aaUDAttPkqA7CQRf4QFSaepN-4"
+          -> Settings > API : copiez la Project URL et la cle publishable. */
+    url: "https://nmmciynglpqdgaivyqhv.supabase.co",
+    anonKey: "sb_publishable_1Pgt0GQ_ZeChyfNWea3mzg__EnDOQDq"
   },
   /* 2. Stripe : créez un Payment Link par formule
        (Dashboard -> Payment Links -> "+" -> produit/prix),

@@ -47,11 +47,26 @@
     });
     /* Liens de contact : on remplace le marqueur "REPLACE" par la valeur
        reelle, sur TOUS les liens de la page (footer, bouton flottant,
-       coquille mobile), qu'ils portent ou non un marqueur data-site. */
-    $$('a[href="tel:REPLACE"]').forEach(function (a) { a.href = "tel:+" + SITE.phoneDigits; });
-    var waNum = (SITE.whatsapp && SITE.whatsapp !== "TODO") ? SITE.whatsapp : SITE.phoneDigits;
-    $$('a[href*="wa.me/REPLACE"]').forEach(function (a) { a.href = "https://wa.me/" + waNum; });
-    $$('a[href="mailto:REPLACE"]').forEach(function (a) { a.href = "mailto:" + SITE.email; });
+       coquille mobile), qu'ils portent ou non un marqueur data-site.
+       Si aucun numero n'est configure, on MASQUE le lien (et le numero
+       qu'il contient) au lieu de publier un numero fictif. */
+    function hideLink(a) {
+      a.hidden = true;
+      var li = a.closest ? a.closest("li") : null;
+      if (li && !li.querySelector("a:not([hidden])")) li.hidden = true;
+    }
+    var phoneOk = isReal(SITE.phoneDigits);
+    var waNum = isReal(SITE.whatsapp) ? SITE.whatsapp : SITE.phoneDigits;
+    var waOk = isReal(waNum);
+    $$('a[href^="tel:"]').forEach(function (a) {
+      if (!phoneOk) { hideLink(a); return; }
+      a.href = "tel:+" + SITE.phoneDigits;
+    });
+    $$('a[href*="wa.me/"]').forEach(function (a) {
+      if (!waOk) { hideLink(a); return; }
+      a.href = "https://wa.me/" + waNum;
+    });
+    $$('a[href="mailto:REPLACE"], a[href^="mailto:"]').forEach(function (a) { a.href = "mailto:" + SITE.email; });
 
     /* Textes : seules les valeurs reelles remplacent le repli du HTML. */
     $$("[data-site]").forEach(function (el) {

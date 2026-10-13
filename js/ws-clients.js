@@ -135,7 +135,7 @@
       "<div class='ws-form'>" +
       GW.formRow("Entreprise / raison sociale", GW.input("c_company", v("company"), "Ex : Boulangerie du Centre")) +
       GW.formRow("Nom du contact", GW.input("c_name", v("name"), "Nom et prénom")) +
-      GW.formRow("Téléphone", GW.input("c_phone", v("phone"), "06 12 34 56 78")) +
+      GW.formRow("Téléphone", GW.input("c_phone", v("phone"), "06 00 00 00 00")) +
       GW.formRow("E-mail", GW.input("c_email", v("email"), "client@exemple.fr")) +
       GW.formRow("Adresse", GW.input("c_address", v("address"), "Adresse complète")) +
       GW.formRow("SIRET", GW.input("c_siret", v("siret"), "123 456 789 00012")) +

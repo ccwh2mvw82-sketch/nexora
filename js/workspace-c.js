@@ -157,12 +157,12 @@
   function defaultContenu(type, cl) {
     var n = cl ? clientLabel(cl) : "Notre entreprise";
     var base = [
-      "💡 INFO\n" + n + " : une bonne nouvelle ! Nous vous annonçons la sortie de notre nouvelle prestation. Contactez-nous pour en savoir plus.\n📞 06 12 34 56 78",
+      "💡 INFO\n" + n + " : une bonne nouvelle ! Nous vous annonçons la sortie de notre nouvelle prestation. Contactez-nous pour en savoir plus.\n📞 " + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + "",
       "🛠 CONSEIL\n" + n + " vous partage un conseil métier à appliquer dès aujourd'hui : ne négligez jamais l'entretien de base — c'est ce qui fait la différence sur la durée.\n💬 Et vous, qu'est-ce qui marche chez vous ?",
-      "🎁 OFFRE\n" + n + " vous propose une offre spéciale limitée ! Profitez-en vite, places limitées.\n👉 Contactez-nous au 06 12 34 56 78",
+      "🎁 OFFRE\n" + n + " vous propose une offre spéciale limitée ! Profitez-en vite, places limitées.\n👉 Contactez-nous au " + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + "",
       "⭐ TÉMOIGNAGE\n« Un service impeccable et des équipes à l'écoute. » — un client de " + n + ".\nMerci pour votre confiance !",
       "👀 COULISSES\nCoup d'œil dans les coulisses de " + n + " ! On prépare soigneusement votre prochaine visite.\nRendez-vous très vite !",
-      "📅 ÉVÉNEMENT\n" + n + " organise un événement ! Notez la date et venez nombreux.\n📞 Inscription au 06 12 34 56 78"
+      "📅 ÉVÉNEMENT\n" + n + " organise un événement ! Notez la date et venez nombreux.\n📞 Inscription au " + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + ""
     ];
     var idx = THEMES.indexOf(type);
     return base[Math.max(0, idx)];
@@ -187,7 +187,7 @@
       "<text x='120' y='392' font-family='Arial' font-size='36' fill='" + col + "'>" + stripXml(intro) + "</text>" +
       "<rect x='120' y='460' width='840' height='4' fill='#E3EAF4'/>" +
       "<text x='120' y='560' font-family='Arial' font-size='44' fill='#1B3358'>" + stripXml(msg) + "</text>" +
-      "<text x='120' y='920' font-family='Arial' font-size='30' fill='#8a98a8'>06 12 34 56 78 · gestaffaires45@gmail.com</text>" +
+      "<text x='120' y='920' font-family='Arial' font-size='30' fill='#8a98a8'>" + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + " · gestaffaires45@gmail.com</text>" +
       "<rect x='760' y='860' width='160' height='60' rx='16' fill='" + col + "'/><text x='840' y='892' font-family='Arial' font-size='28' fill='#fff' text-anchor='middle'>Découvrir</text>" +
       "</svg>";
     var dataUrl = "data:image/svg+xml;utf8," + encodeURIComponent(svg);
