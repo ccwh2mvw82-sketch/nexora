@@ -137,6 +137,17 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [x] Revue sécurité/RGPD (voir `SECURITY.md` §5) ; assistant Gemini sécurisé
   (clé en en-tête, jamais en URL).
 
+## PHASE 10 — Facturation avancée & notes de frais — `[x]`
+- [x] Module **Éditeur de facture** (`js/invoice.js`) : mise en page
+  imprimable/PDF avec **logo ou nom** de l'émetteur, coordonnées, IBAN,
+  mentions, aperçu en direct, numérotation `FA-AAAA-NNN`. Réutilise
+  `ga_factures` (aucune duplication).
+- [x] Module **Notes de frais** (`ga_notes_frais`) : dépenses par client,
+  remontées dans l'onglet « 🧾 Notes de frais » du dossier client.
+- [x] Identité émetteur `ga_branding` (upload de logo redimensionné, couleur,
+  mentions) + API `GW.getBranding`, `GW.printInvoice`, `GW.notesFraisFor`.
+- [x] Onglets du dossier client reliés à l'éditeur (impression 1 clic).
+
 ---
 
 ## Documentation à produire

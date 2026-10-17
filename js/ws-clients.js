@@ -233,6 +233,7 @@
       { id: "infos", l: "Infos & pièces" },
       { id: "messages", l: "📨 Messages & réseaux" },
       { id: "factures", l: "Factures" },
+      { id: "frais", l: "🧾 Notes de frais" },
       { id: "devis", l: "Devis" },
       { id: "contrats", l: "Contrats" },
       { id: "com", l: "Communication" },
@@ -268,6 +269,7 @@
       case "infos": return tabInfos(c);
       case "messages": return tabMessages(c);
       case "factures": return tabFactures(c);
+      case "frais": return tabFrais(c);
       case "devis": return tabDevis(c);
       case "contrats": return tabContrats(c);
       case "com": return tabCom(c);
@@ -324,10 +326,28 @@
   function tabFactures(c) {
     var fs = localRows("ga_factures", c.id);
     var rows = fs.map(function (f) {
-      return [esc(f.num || "—"), fmtDate(f.date), fmtDate(f.echeance) || "—", fmtMoney(GW.docTotals(f.lignes).ttc), GW.badge(STATUT_F[f.statut] || f.statut || "—", f.statut === "payee" ? "ok" : (f.statut === "en_attente" ? "warn" : "")), "<button class='mini-btn' data-open-tool='gestion'>Ouvrir</button>"];
+      return [esc(f.num || "—"), fmtDate(f.date), fmtDate(f.echeance) || "—", fmtMoney(GW.docTotals(f.lignes).ttc), GW.badge(STATUT_F[f.statut] || f.statut || "—", f.statut === "payee" ? "ok" : (f.statut === "en_attente" ? "warn" : "")),
+        "<button class='mini-btn' data-open-tool='facture'>✏️ Éditer</button><button class='mini-btn' data-print-fact='" + f.id + "'>🖨️</button>"];
     });
     return "<div class='ws-panel ws-panel-sub'><h4>Factures</h4><p>Total facturé : <b>" + fmtMoney(totalFor(fs)) + "</b> · " + fs.length + " facture(s)</p>" +
-      (rows.length ? GW.tableHTML(["N°", "Date", "Échéance", "Total TTC", "Statut", ""], rows, "Aucune facture.") : empty("Aucune facture pour ce client.")) + "</div>";
+      (rows.length ? GW.tableHTML(["N°", "Date", "Échéance", "Total TTC", "Statut", "Actions"], rows, "Aucune facture.") : empty("Aucune facture pour ce client.")) +
+      "<div class='ws-actions'><button class='mini-btn primary' data-open-tool='facture'>＋ Créer / éditer une facture (logo)</button></div></div>";
+  }
+
+  function tabFrais(c) {
+    var nf = (GW.notesFraisFor ? GW.notesFraisFor(c.id) : []);
+    var st = GW.notesFraisStatus || {};
+    var total = nf.reduce(function (s, x) { return s + (Number(x.ttc) || 0); }, 0);
+    var attente = nf.filter(function (x) { return x.statut === "a_rembourser"; }).reduce(function (s, x) { return s + (Number(x.ttc) || 0); }, 0);
+    var rows = nf.slice().sort(function (a, b) { return (b.date || "").localeCompare(a.date || ""); }).map(function (x) {
+      var ht = GW.notesFraisHT ? GW.notesFraisHT(x) : (Number(x.ttc) || 0);
+      return [fmtDate(x.date), esc(x.objet || "—"), esc(x.categorie || "—"), fmtMoney(ht), (Number(x.tva) || 0) + " %", fmtMoney(x.ttc),
+        GW.badge((st[x.statut] || [x.statut || "—"])[0], (st[x.statut] || ["", "grey"])[1])];
+    });
+    return "<div class='ws-panel ws-panel-sub'><h4>💸 Notes de frais</h4>" +
+      "<p>Total : <b>" + fmtMoney(total) + "</b> · à rembourser : <b>" + fmtMoney(attente) + "</b> · " + nf.length + " note(s)</p>" +
+      (rows.length ? GW.tableHTML(["Date", "Objet", "Catégorie", "HT", "TVA", "TTC", "Statut"], rows, "Aucune note de frais.") : empty("Aucune note de frais pour ce client.")) +
+      "<div class='ws-actions'><button class='mini-btn primary' data-open-tool='notes_frais'>＋ Ajouter / gérer les notes de frais</button></div></div>";
   }
   function tabDevis(c) {
     var ds = localRows("ga_devis", c.id);
@@ -405,6 +425,12 @@
         GW.setClient(id);
         GW.openModule(b.getAttribute("data-open-tool"));
         view = { mode: "dossier", clientId: id };
+      });
+    });
+    document.querySelectorAll("[data-print-fact]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (GW.printInvoice) GW.printInvoice(b.getAttribute("data-print-fact"));
+        else GW.toast("Éditeur de facture non chargé");
       });
     });
     var prt = document.querySelector("[data-print]");

@@ -102,7 +102,11 @@ Les migrations sont additives et idempotentes.
 
 `ga_clients`, `ga_factures`, `ga_devis`, `ga_contrats`, `ga_seq`, `ga_relances`,
 `ga_depenses`, `ga_echeances`, `ga_documents`, `ga_heures`, `ga_planif`,
-`ga_prospects`, `ga_campagnes`, `ga_appels`, `ga_rdv`, `ga_ia`, `ga_ws`.
+`ga_prospects`, `ga_campagnes`, `ga_appels`, `ga_rdv`, `ga_ia`, `ga_ws`,
+`ga_crm_activities`, `ga_missions`, `ga_agenda`, `ga_messages`, `ga_templates`,
+`ga_paiements`, `ga_sites`, `ga_ao`, `ga_doc_meta`, `ga_journal`,
+`ga_automation_log`, **`ga_branding`** (identité émetteur / logo des factures),
+**`ga_notes_frais`** (notes de frais par client).
 
 ## 9. Migrations documentées
 
