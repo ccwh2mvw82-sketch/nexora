@@ -131,8 +131,11 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [x] `js/automation.js` : module « Automatisations » (relances d'impayés,
   échéances → agenda, accueil nouveaux clients) + journal `ga_automation_log`.
 
-## PHASE 9 — Qualité & finalisation — `[ ]`
-- [ ] Tests, `TESTS.md`, revue sécurité/RGPD, documentation finale.
+## PHASE 9 — Qualité & finalisation — `[x]`
+- [x] Harnais de test `qa-check.html` (Chrome headless) : `ERRS:[]`, `n:25` modules.
+- [x] `TESTS.md` (procédure + résultats) et `INTEGRATIONS.md` (services/secrets).
+- [x] Revue sécurité/RGPD (voir `SECURITY.md` §5) ; assistant Gemini sécurisé
+  (clé en en-tête, jamais en URL).
 
 ---
 
@@ -140,9 +143,9 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [x] `ARCHITECTURE.md`
 - [x] `ROADMAP.md`
 - [x] `DATABASE.md`
-- [ ] `INTEGRATIONS.md`
+- [x] `INTEGRATIONS.md`
 - [x] `SECURITY.md`
-- [ ] `TESTS.md`
+- [x] `TESTS.md`
 - (existant) `SETUP.md`
 
 ## Décisions actées

@@ -39,15 +39,24 @@
 | `RESEND_API_KEY` | secrets Edge Functions | — |
 | clé `service_role` Supabase | serveur uniquement | committer |
 
-## 5. Risques connus (audit PHASE 0)
+## 5. Risques connus (audit PHASE 0 + revue PHASE 9)
 
-| # | Risque | Emplacement | Statut |
+| # | Risque | Emplacement | Statut (PHASE 9) |
 |---|---|---|---|
-| 1 | `hashPass()` = hash jouet (non cryptographique) utilisé par l'ancien panneau | `js/app.js:50-58` | à traiter |
-| 2 | `isAdmin()` du shell s'appuie sur un **miroir local** `ga_users`/`ga_session` | `js/workspace.js:73-80` | garde-fou serveur requis |
-| 3 | Pièces jointes stockées en **local (IndexedDB)** — non synchronisées, non chiffrées | `js/ws-store.js:56-200` | à traiter (GED serveur) |
-| 4 | Phrase secrète / sel du coffre en localStorage | `js/ws-store.js:13,31-36` | à traiter |
-| 5 | Clé `sb_secret_…` précédemment exposée en clair | historique | **à révoquer/régénérer** |
+| 1 | `hashPass()` = hash jouet (non cryptographique) utilisé par l'ancien panneau | `js/app.js:50-58` | **legacy** — l'authentification réelle passe par Supabase Auth ; ne pas rebrancher ce panneau |
+| 2 | `isAdmin()` du shell s'appuie sur un **miroir local** `ga_users`/`ga_session` | `js/workspace.js` | **atténué** — les données restent protégées par RLS ; le local ne sert qu'à l'affichage |
+| 3 | Pièces jointes stockées en local (IndexedDB) | `js/ws-store.js` | **chiffrées** côté navigateur (AES-256-GCM) ; synchronisation serveur restante (GED Storage) |
+| 4 | Phrase secrète / sel du coffre en localStorage | `js/ws-store.js` | à traiter (dérivation de clé faite, stockage local restant) |
+| 5 | Clé `sb_secret_…` précédemment exposée en clair | historique | **à révoquer/régénérer** (voir `INTEGRATIONS.md` §7) |
+
+### Notes de revue PHASE 9
+
+- **Clé Gemini** : transmise via l'en-tête `x-goog-api-key`, jamais dans l'URL ni
+  vers nos serveurs ; stockée uniquement sur l'appareil de l'utilisateur.
+- **Automatisations** : les actions ne font que *préparer* des brouillons/relances ;
+  aucun envoi automatique externe sans validation humaine.
+- **CORS** : les Edge Functions restreignent l'origine via `ALLOWED_ORIGINS`.
+- **`send-message`** : exige un en-tête `x-ga-key` égal à `SEND_SECRET`.
 
 Le point 2 est atténué par le fait que **les données réelles sont protégées par
 RLS côté serveur** : même si un utilisateur force l'affichage du shell, il ne
