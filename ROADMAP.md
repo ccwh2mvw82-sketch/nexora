@@ -113,7 +113,15 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [x] Contrats — module `Contrats` (compatible `app.js` : num/titre/montant/
       statut) : contrat client, dates, revenu récurrent.
 
-## PHASE 7 — Dossiers admin avancés — `[ ]`
+## PHASE 7 — Dossiers admin avancés — `[x]`
+- [x] Documents / GED chiffrée — module `Documents` (`js/admin-advanced.js`) :
+      registre de métadonnées (titre, catégorie, date, échéance) + pièces
+      chiffrées AES-256-GCM dans le coffre, sans base64. Remplace le stockage
+      base64 du module « Dossiers ».
+- [x] Comptes & rôles — module `Équipe` : admin / responsable / collaborateur
+      / client (mono-organisation).
+- [x] Journal d'activité (audit) — module `Journal` + helper `GW.journal(...)`
+      appelé par les actions sensibles.
 
 ## PHASE 8 — Automatisation & IA — `[ ]`
 - [ ] Corriger l'assistant Gemini (modèles valides) ; automatisations.
