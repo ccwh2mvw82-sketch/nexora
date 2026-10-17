@@ -47,10 +47,23 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
       figée, statuts devis, GED base64) — repris en PHASE 9 (qualité) ou au fil
       des modules concernés.
 
-## PHASE 2 — Noyau CRM — `[ ]`
-- [ ] Prospects + pipeline commercial.
-- [ ] Fiches clients enrichies + **contexte client global**.
-- [ ] Contacts, activités, historique.
+## PHASE 2 — Noyau CRM — `[~]`
+- [x] Prospects + pipeline commercial — module `CRM` (`js/crm.js`) : étapes
+      (Nouveau → Contacté → Rendez-vous → Gagné/Perdu), valeur estimée,
+      prochaine action, alerte retard, export Excel.
+- [x] Activités et historique — clé `ga_crm_activities` (notes/appels/rdv/devis
+      horodatés par prospect).
+- [x] Conversion prospect → client.
+- [x] Indicateurs CRM sur le tableau de bord d'accueil (prospects actifs,
+      valeur du pipeline).
+- [x] Données partagées avec l'existant : lecture/écriture de `ga_prospects`
+      (aucune migration, aucune perte).
+- [~] Fiches clients enrichies + contexte client global : le **contexte client
+      global** (barre « Client actif ») est déjà en place ; la fiche client 360
+      dédiée reste à construire.
+- [ ] Remplacement effectif de l'ancien module `Acquisition` (cohabite
+      aujourd'hui : mêmes données `ga_prospects`) une fois le suivi des
+      campagnes Ads repris.
 
 ## PHASE 3 — Opérations — `[ ]`
 - [ ] Missions/projets, tâches, planning.

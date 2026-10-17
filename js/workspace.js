@@ -347,7 +347,9 @@ window.GestWorkspace = (function () {
     var echs = get("ga_echeances").filter(function (e) { return !clientId || e.clientId === clientId; });
     var echsAVenir = echs.filter(function (e) { return e.statut !== "fait" && e.date >= today(); }).length;
     var appels = get("ga_appels").filter(function (a) { return !clientId || a.clientId === clientId; }).filter(function (a) { return a.statut === "nouveau"; }).length;
-    return { total: total, payees: payees, impayees: impayees, devisEnCours: devisEnCours, contratsActifs: contratsActifs, relances: relances.length, echsAVenir: echsAVenir, appels: appels };
+    var prospectsActifs = get("ga_prospects").filter(function (p) { return !clientId || p.clientId === clientId; }).filter(function (p) { return p.statut !== "gagne" && p.statut !== "perdu"; });
+    var pipeline = prospectsActifs.reduce(function (s, p) { return s + (Number(p.valeur) || 0); }, 0);
+    return { total: total, payees: payees, impayees: impayees, devisEnCours: devisEnCours, contratsActifs: contratsActifs, relances: relances.length, echsAVenir: echsAVenir, appels: appels, prospectsActifs: prospectsActifs.length, pipeline: pipeline };
   }
   function homeHTML() {
     var s = synthFor(state.clientId);
@@ -376,6 +378,8 @@ window.GestWorkspace = (function () {
       kpi("Relances", s.relances, "historique") +
       kpi("Échéances à venir", s.echsAVenir, "déclarations") +
       kpi("Appels à traiter", s.appels, "secrétariat", "warn") +
+      kpi("Prospects actifs", s.prospectsActifs, "CRM") +
+      kpi("Pipeline", fmtMoney(s.pipeline), "estimation") +
       "</div>" +
       "<div class='ws-accueil'><h3>" + (client ? "Espace de travail · " + esc(clientLabel(client)) : "Espace de travail") + "</h3>" +
       "<p class='ws-sub'>Un vrai outil de travail, réservé à l'administrateur. Choisissez un module pour ouvrir la console correspondante : saisie, suivi, statuts, historique et exports Excel/PDF.</p></div>" +
