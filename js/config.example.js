@@ -14,6 +14,8 @@ window.GA_CONFIG = {
        (Dashboard -> Payment Links -> "+" -> produit/prix),
        puis collez chaque URL ici. Laisser vide désactive "Commander". */
   stripe: {
+    tpe: "",
+    fondations: "",
     essentiel: "",
     confort: "",
     pro: "",

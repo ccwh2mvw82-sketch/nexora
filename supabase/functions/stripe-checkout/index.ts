@@ -8,6 +8,8 @@
 //   STRIPE_SECRET_KEY = sk_live_... (compte Stripe)
 //   PARAMETRES DES FORMULES avec une variable par prix, ex (une JWT
 //   par pool de prix ; ici on utilise PARAMETRES/SECRETS nommes) :
+//     STRIPE_PRICE_TPE       = price_...
+//     STRIPE_PRICE_FONDATIONS = price_...
 //     STRIPE_PRICE_ESSENTIEL = price_...
 //     STRIPE_PRICE_CONFORT   = price_...
 //     STRIPE_PRICE_PRO       = price_...
@@ -22,6 +24,8 @@
 //   supabase functions deploy stripe-checkout
 
 const PRICES: Record<string, string> = {
+  tpe: Deno.env.get("STRIPE_PRICE_TPE") || "",
+  fondations: Deno.env.get("STRIPE_PRICE_FONDATIONS") || "",
   essentiel: Deno.env.get("STRIPE_PRICE_ESSENTIEL") || "",
   confort: Deno.env.get("STRIPE_PRICE_CONFORT") || "",
   pro: Deno.env.get("STRIPE_PRICE_PRO") || "",

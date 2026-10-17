@@ -863,12 +863,13 @@ function scrollToAnchor(id) {
 /* ---------- Paiement des formules (Stripe) ---------- */
   var STRIPE_KEYS = {
     "f-tpe": "tpe",
+    "f-fondations": "fondations",
     "f-essentiel": "essentiel",
     "f-confort": "confort",
     "f-pro": "pro",
-    "f-visibilite": "visibilite",
-    "f-visibilite-plus": "visibilite_plus",
-    "f-developpement": "developpement"
+    "f-notoriete": "visibilite",
+    "f-acquisition": "visibilite_plus",
+    "f-acquisition-plus": "developpement"
   };
   var modalEls = $$(".modal[id^='modal-f-']");
   modalEls.forEach(function (m) {
