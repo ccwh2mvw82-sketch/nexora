@@ -17,7 +17,7 @@ if ($info -match 'email:\s*"([^"]+)"') { $email = $Matches[1] } else { Write-Hos
 
 $phoneConfigured = ($phoneDigits -ne "")
 $expectedTel = "+" + $phoneDigits
-$pages = @("index.html", "pole-temps.html", "pole-visibilite.html", "pole-marches.html")
+$pages = @("index.html", "pole-temps.html", "pole-visibilite.html", "pole-marches.html", "zone-intervention.html")
 $ko = 0
 
 foreach ($p in $pages) {
