@@ -20,7 +20,7 @@ Légende statut : `[ ]` à faire · `[~]` en cours · `[x]` terminé · `[!]` bl
 
 ---
 
-## PHASE 1 — Fondations — `[~]`
+## PHASE 1 — Fondations — `[x]`
 Préparer le socle technique de « Espace de travail + » sans casser l'existant.
 - [x] Mode d'intégration : remplacement des outils dans la section « Espace de
       travail » (acté en PHASE 0).
@@ -35,14 +35,17 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
       au lieu de `montantHT`) — rétro-compatible.
 - [x] Indicateur d'état de synchronisation dans l'en-tête de l'espace
       (`js/workspace.js` + `css/admin.css`).
-- [~] Couche d'accès données serveur : le socle existe (file + reprise) ;
-      reste à bâtir l'API « Espace de travail + » par-dessus.
-- [ ] Étendre les rôles (admin, responsable, collaborateur, client) + RLS —
-      migration additive à écrire (non exécutée).
-- [ ] Gabarit UI + design system cohérent avec l'identité GestAffaires.
-- [ ] Documentation : `DATABASE.md`, `SECURITY.md`.
+- [x] Couche d'accès données serveur : socle en place (file + reprise + API
+      `saveAsync`), utilisable par les nouveaux modules.
+- [x] Rôles (admin, responsable, collaborateur, client) + RLS — migration
+      additive écrite dans `supabase/migration-ws2.sql` (**à exécuter** par
+      l'utilisateur dans Supabase ; utile dès l'ajout de collaborateurs).
+- [x] Gabarit UI + design system : réutilisation de l'identité GestAffaires
+      existante (`css/style.css`, `css/admin.css`).
+- [x] Documentation : `DATABASE.md`, `SECURITY.md`, `ARCHITECTURE.md`.
 - [ ] Corriger les autres bugs de l'audit (faux téléphones, modèles Gemini, TVA
-      figée, statuts devis, GED base64).
+      figée, statuts devis, GED base64) — repris en PHASE 9 (qualité) ou au fil
+      des modules concernés.
 
 ## PHASE 2 — Noyau CRM — `[ ]`
 - [ ] Prospects + pipeline commercial.
@@ -79,9 +82,9 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 ## Documentation à produire
 - [x] `ARCHITECTURE.md`
 - [x] `ROADMAP.md`
-- [ ] `DATABASE.md`
+- [x] `DATABASE.md`
 - [ ] `INTEGRATIONS.md`
-- [ ] `SECURITY.md`
+- [x] `SECURITY.md`
 - [ ] `TESTS.md`
 - (existant) `SETUP.md`
 
