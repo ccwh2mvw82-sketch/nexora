@@ -76,10 +76,21 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [ ] GED (documents) — stockage objet (Supabase Storage), remplace le
       stockage base64 actuel ; nécessite la création d'un bucket + policies.
 
-## PHASE 4 — Suivi commercial & financier — `[ ]`
-- [ ] Devis → facture, TVA correcte.
-- [ ] Temps / forfaits, dépenses, reporting.
-- [ ] Lien Stripe ↔ client.
+## PHASE 4 — Suivi commercial & financier — `[~]`
+- [x] Devis → facture — module `Facturation` (`js/finance.js`) : devis et
+      factures (mêmes données `ga_devis`/`ga_factures` que l'existant),
+      conversion d'un devis en facture en un clic, numérotation DE-/FA-AAAA-NNN.
+- [x] TVA correcte — TVA **par ligne** (0 / 5,5 / 10 / 20 %), totaux HT/TVA/TTC
+      calculés par `docTotals`.
+- [x] Temps / forfaits — module `Temps` : saisie des heures, tarif horaire,
+      valeur et statut « à facturer / facturé », export Excel.
+- [x] Dépenses & échéances : déjà gérées par le module **Comptabilité**
+      existant (dépenses, TVA, échéances URSSAF/CFE…).
+- [~] Lien Stripe ↔ client : lien de paiement déduit de la formule du client
+  + enregistrement du règlement depuis la facture ; reste à brancher la
+  réception automatique des paiements (Edge Function stripe-webhook).
+- [ ] Reporting financier consolidé (CA, encaissé, impayés, TVA) — le module
+      `Reporting` existant à enrichir.
 
 ## PHASE 5 — Communications & portail client — `[ ]`
 - [ ] E-mail, modèles, suivi.
