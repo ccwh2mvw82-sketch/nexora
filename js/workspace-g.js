@@ -231,7 +231,7 @@
       "<table class='ps-table'><thead><tr><th>Désignation</th><th>Qté</th><th>PU HT</th><th>TVA</th><th>Total</th></tr></thead><tbody>" + rows + "</tbody></table>" +
       "<table style='width:260px;margin-left:auto;' class='ps-table'><tr><td>Total HT</td><td class='right'>" + fmtMoney(tot.ht) + "</td></tr><tr><td>TVA</td><td class='right'>" + fmtMoney(tot.tva) + "</td></tr><tr><td><b>Total TTC</b></td><td class='right'><b>" + fmtMoney(tot.ttc) + "</b></td></tr><tr><td colspan='2'><span class='ws-pill " + (stLabel ? stLabel[1] : "") + "'>" + (stLabel ? esc(stLabel[0]) : "") + "</span></td></tr></table>" +
       "<table style='width:100%;margin-top:22px;'><tr><td style='width:50%;'>Le prestataire</td><td style='width:50%;text-align:right;'>Le client</td></tr><tr><td style='height:48px;'></td><td></td></tr></table>" +
-      "<p style='font-size:11px;color:#8a98a8;'>GestAffaires – Gestion &amp; Digital · ' + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + ' · gestaffaires45@gmail.com</p>";
+      "<p style='font-size:11px;color:#8a98a8;'>GestAffaires – Gestion &amp; Digital · " + (window.GA_SITE&&window.GA_SITE.phoneDisplay||"") + " · gestaffaires45@gmail.com</p>";
     GW.printHTML(isF ? "Facture" : "Devis", body);
   }
 

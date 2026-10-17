@@ -675,3 +675,31 @@
   vertical-align: middle;
   margin-right: 2px;
 }
+
+/* Indicateur d'etat de synchronisation (js/workspace.js) */
+.ws-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  margin-right: 10px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.ws-sync::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ws-sync-ok { color: #0f7b52; background: #e3f7ef; border-color: #b7e6d2; }
+.ws-sync-pending { color: #8a5a00; background: #fdf3e0; border-color: #f0d9a8; }
+.ws-sync-local { color: #5b6470; background: #eef1f5; border-color: #d7dde5; }
+
+@media (max-width: 640px) {
+  .ws-sync { display: none; }
+}

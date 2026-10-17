@@ -488,3 +488,42 @@ window.GestWorkspace = (function () {
 })();
 
 window.GestWorkspace.restoreState();
+
+/* ============================================================
+   Indicateur d'etat de synchronisation (cloud vs local)
+   S'appuie sur les evenements "gab:sync" emis par js/gab.js.
+   ============================================================ */
+(function () {
+  "use strict";
+  function stateLabel(state, pending) {
+    if (state === "synced") return { cls: "ws-sync-ok", txt: "Synchronis\u00e9", title: "Donn\u00e9es enregistr\u00e9es sur le serveur" };
+    if (state === "pending") return { cls: "ws-sync-pending", txt: "Enregistrement" + (pending ? " (" + pending + ")" : ""), title: "Enregistrement en cours vers le serveur" };
+    return { cls: "ws-sync-local", txt: "Local seulement", title: "Mode local : les donn\u00e9es restent sur cet appareil (connexion requise pour la synchronisation)" };
+  }
+  function mount() {
+    if (!window.GAB || !window.GAB.data) return;
+    var top = document.querySelector(".admin-top-actions");
+    if (!top || document.getElementById("ws-sync")) return;
+    var el = document.createElement("span");
+    el.id = "ws-sync";
+    el.className = "ws-sync";
+    el.setAttribute("role", "status");
+    top.insertBefore(el, top.firstChild);
+    function paint(detail) {
+      var state, pending;
+      if (detail && detail.state) { state = detail.state; pending = detail.pending || 0; }
+      else if (window.GAB.data.syncState) { state = window.GAB.data.syncState(); pending = window.GAB.data.pendingCount ? window.GAB.data.pendingCount() : 0; }
+      else { state = "local"; pending = 0; }
+      var m = stateLabel(state, pending);
+      el.className = "ws-sync " + m.cls;
+      el.textContent = m.txt;
+      el.title = m.title;
+    }
+    window.GAB.listen("sync", paint);
+    window.GAB.listen("mode-change", function () { paint(); });
+    window.GAB.listen("init", function () { paint(); });
+    paint();
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
+  else mount();
+})();

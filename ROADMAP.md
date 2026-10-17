@@ -20,15 +20,29 @@ Légende statut : `[ ]` à faire · `[~]` en cours · `[x]` terminé · `[!]` bl
 
 ---
 
-## PHASE 1 — Fondations — `[ ]`
+## PHASE 1 — Fondations — `[~]`
 Préparer le socle technique de « Espace de travail + » sans casser l'existant.
-- [ ] Décider du mode d'intégration (section séparée vs extension) et de la route.
-- [ ] Modèle de données multi-tenant (organisations/équipes) — migration additive.
-- [ ] Étendre les rôles (admin, responsable, collaborateur, client) + RLS.
-- [ ] Couche d'accès données serveur (remplacer le localStorage-seul).
-- [ ] Corriger les bugs bloquants de l'audit (synchro, dépenses client, TVA...).
+- [x] Mode d'intégration : remplacement des outils dans la section « Espace de
+      travail » (acté en PHASE 0).
+- [x] **Correction du bug de synchro inter-appareils** (`js/gab.js`) :
+      file d'attente cloud, reprise après rechargement, nouvelle tentative avec
+      délai progressif, reprise au retour du réseau, remontée locale→cloud au
+      login, `saveAsync` qui renvoie une promesse et propage les erreurs.
+- [x] **Correction du défaut de syntaxe `js/workspace-g.js:234`** (guillemets
+      mélangés) qui empêchait le chargement de 5 modules (Gestion, Comptabilité,
+      Dossiers, Reporting…). Vérifié : `modules` 5 → 10, 0 erreur JS.
+- [x] Correction du bug « dépenses client » (`js/ws-clients.js:375` lisait `ht`
+      au lieu de `montantHT`) — rétro-compatible.
+- [x] Indicateur d'état de synchronisation dans l'en-tête de l'espace
+      (`js/workspace.js` + `css/admin.css`).
+- [~] Couche d'accès données serveur : le socle existe (file + reprise) ;
+      reste à bâtir l'API « Espace de travail + » par-dessus.
+- [ ] Étendre les rôles (admin, responsable, collaborateur, client) + RLS —
+      migration additive à écrire (non exécutée).
 - [ ] Gabarit UI + design system cohérent avec l'identité GestAffaires.
 - [ ] Documentation : `DATABASE.md`, `SECURITY.md`.
+- [ ] Corriger les autres bugs de l'audit (faux téléphones, modèles Gemini, TVA
+      figée, statuts devis, GED base64).
 
 ## PHASE 2 — Noyau CRM — `[ ]`
 - [ ] Prospects + pipeline commercial.

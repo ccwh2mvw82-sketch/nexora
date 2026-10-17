@@ -372,7 +372,7 @@
     var rows = echs.map(function (e) {
       return [fmtDate(e.date), esc(e.type || "—"), fmtMoney(e.montant), GW.badge(STATUT_E[e.statut] || e.statut || "—", e.statut === "fait" ? "ok" : "warn"), "<button class='mini-btn' data-open-tool='compta'>Ouvrir</button>"];
     });
-    var dep = localRows("ga_depenses", c.id).reduce(function (s, x) { return s + (Number(x.ht) || 0) + (Number(x.tva) || 0); }, 0);
+    var dep = localRows("ga_depenses", c.id).reduce(function (s, x) { var ht = x.montantHT != null ? x.montantHT : x.ht; return s + (Number(ht) || 0) + (Number(x.tva) || 0); }, 0);
     return "<div class='ws-panel ws-panel-sub'><h4>Échéances &amp; déclarations</h4>" +
       (rows.length ? GW.tableHTML(["Date", "Type", "Montant", "Statut", ""], rows, "Aucune échéance.") : empty("Aucune échéance pour ce client.")) +
       "</div><div class='ws-panel ws-panel-sub'><p>Dépenses du client : <b>" + fmtMoney(dep) + "</b></p></div>";

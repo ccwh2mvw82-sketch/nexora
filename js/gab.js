@@ -15,6 +15,7 @@
 
   var LS_MODE = "ga_cloud_mode";     // "local" | "supabase"
   var LS_PENDING = "ga_pending_admin_code";
+  var LS_SYNCQ = "ga_sync_queue";    // operations cloud en attente (reprise apres rechargement)
 
   var conf = (window.GA_CONFIG && window.GA_CONFIG.supabase) || null;
   var stripeLinks = (window.GA_CONFIG && window.GA_CONFIG.stripe) || null;
@@ -94,6 +95,10 @@
           ready = true;
           emit("init", { mode: "supabase" });
           emit("auth-change", session.user);
+          /* Reprend les ecritures restees en attente, puis remonte en base
+             les donnees locales absentes du cloud (migration silencieuse). */
+          resumeQueue();
+          migrateLocalToCloud();
         });
         return;
       }
@@ -153,6 +158,11 @@
     try { BIZ_KEYS.forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
     try { localStorage.removeItem("ga_users"); } catch (e) {}
     dataCache = {};
+    /* Ne jamais rejouer les ecritures d'un compte sur le suivant (poste
+       partage) : on vide la file d'attente a la deconnexion. */
+    pending = Object.create(null);
+    try { localStorage.removeItem(LS_SYNCQ); } catch (e) {}
+    updateSync();
   }
 
   function normalizedAuthError(err) {
@@ -365,13 +375,115 @@
   function localSet(key, val) {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
   }
+  /* ============================================================
+     SYNCHRONISATION CLOUD (file d'attente + reprise + etat)
+     ------------------------------------------------------------
+     Avant : save() ecrivait en local et lancait l'ecriture cloud sans
+     jamais attendre le resultat ni signaler un echec -> un client saisi
+     hors ligne n'arrivait jamais sur l'autre poste.
+     Desormais : chaque ecriture entre dans une file. La file est poussee
+     vers Supabase, reessayee avec un delai croissant, reprise apres un
+     rechargement, et son etat est diffuse via l'evenement "gab:sync".
+     ============================================================ */
+  var pending = Object.create(null);   // key -> { val, del }
+  var flushing = false;
+  var retryTimer = null;
+  var retryDelay = 3000;
+  var lastSyncError = null;
+
+  function pendingCount() { return Object.keys(pending).length; }
+  function syncState() {
+    if (!isCloud()) return "local";
+    return pendingCount() > 0 ? "pending" : "synced";
+  }
+  function updateSync() {
+    emit("sync", { state: syncState(), pending: pendingCount(), error: lastSyncError || null });
+  }
+  function persistQueue() {
+    try { localStorage.setItem(LS_SYNCQ, JSON.stringify(pending)); } catch (e) {}
+  }
+  function resumeQueue() {
+    try {
+      var raw = localStorage.getItem(LS_SYNCQ);
+      if (!raw) return;
+      var q = JSON.parse(raw);
+      Object.keys(q).forEach(function (k) { if (!pending.hasOwnProperty(k)) pending[k] = q[k]; });
+      updateSync();
+    } catch (e) {}
+  }
+
   function cloudUpsert(key, val) {
-    if (!isCloud()) return Promise.resolve();
-    return supabase.rpc("upsert_app_data", { p_key: key, p_payload: val }).then(function () {}).catch(function () {});
+    if (!isCloud()) return Promise.reject(new Error("mode local : cloud indisponible"));
+    return supabase.rpc("upsert_app_data", { p_key: key, p_payload: val }).then(function (res) {
+      if (res && res.error) throw new Error(res.error.message || "echec de synchronisation");
+      return true;
+    });
   }
   function cloudDelete(key) {
-    if (!isCloud()) return Promise.resolve();
-    return supabase.rpc("delete_app_data", { p_key: key }).then(function () {}).catch(function () {});
+    if (!isCloud()) return Promise.reject(new Error("mode local : cloud indisponible"));
+    return supabase.rpc("delete_app_data", { p_key: key }).then(function (res) {
+      if (res && res.error) throw new Error(res.error.message || "echec de suppression");
+      return true;
+    });
+  }
+
+  function scheduleRetry() {
+    if (retryTimer || typeof setTimeout === "undefined") return;
+    retryTimer = setTimeout(function () {
+      retryTimer = null;
+      if (pendingCount() === 0) return;
+      flush().catch(function () {});
+    }, retryDelay);
+    retryDelay = Math.min(retryDelay * 2, 60000);
+  }
+
+  function flush() {
+    if (flushing) return Promise.resolve();
+    if (!isCloud() || pendingCount() === 0) { updateSync(); return Promise.resolve(); }
+    flushing = true;
+    var keys = Object.keys(pending);
+    var chain = Promise.resolve();
+    keys.forEach(function (k) {
+      chain = chain.then(function () {
+        if (!pending.hasOwnProperty(k)) return;
+        var op = pending[k];
+        var call = op.del ? cloudDelete(k) : cloudUpsert(k, op.val);
+        return call.then(function () {
+          if (pending[k] === op) delete pending[k];
+          persistQueue();
+        });
+      });
+    });
+    return chain.then(function () {
+      flushing = false;
+      lastSyncError = null;
+      retryDelay = 3000;
+      updateSync();
+    }).catch(function (err) {
+      flushing = false;
+      lastSyncError = (err && err.message) || "erreur reseau";
+      updateSync();
+      scheduleRetry();
+      throw err;
+    });
+  }
+
+  function migrateLocalToCloud() {
+    if (!isCloud()) return Promise.resolve({ migrated: 0 });
+    return data.refresh().then(function (has) {
+      has = has || {};
+      var n = 0;
+      BIZ_KEYS.forEach(function (k) {
+        if (has[k]) return;
+        var local = localGet(k, null);
+        if (local === null || local === undefined) return;
+        if (Array.isArray(local) && local.length === 0) return;
+        pending[k] = { val: local, del: false };
+        n++;
+      });
+      if (n) { persistQueue(); updateSync(); }
+      return flush().then(function () { return { migrated: n }; });
+    }).catch(function () { return { migrated: 0 }; });
   }
 
   var data = {
@@ -389,22 +501,60 @@
     save: function (key, val) {
       localSet(key, val);
       dataCache[key] = val;
-      cloudUpsert(key, val);
+      if (isCloud()) {
+        pending[key] = { val: val, del: false };
+        persistQueue();
+        updateSync();
+        flush().catch(function () {});
+      }
+    },
+    /* Save qui renvoie une promesse (resolue une fois la donnee reellement
+       ecrite en base). A utiliser par les modules qui veulent signaler un
+       echec. En mode local, rejette : la donnee reste sur cet appareil. */
+    saveAsync: function (key, val) {
+      localSet(key, val);
+      dataCache[key] = val;
+      if (!isCloud()) {
+        return Promise.reject(new Error("mode local : donnee conservée sur cet appareil uniquement"));
+      }
+      pending[key] = { val: val, del: false };
+      persistQueue();
+      updateSync();
+      return flush();
     },
     get: function (key) { return data.load(key, []); },
     put: function (key, list) { data.save(key, list); },
     remove: function (key) {
       try { localStorage.removeItem(key); } catch (e) {}
       delete dataCache[key];
-      cloudDelete(key);
+      if (isCloud()) {
+        pending[key] = { del: true };
+        persistQueue();
+        updateSync();
+        flush().catch(function () {});
+      }
     },
+    removeAsync: function (key) {
+      try { localStorage.removeItem(key); } catch (e) {}
+      delete dataCache[key];
+      if (!isCloud()) return Promise.reject(new Error("mode local : cloud indisponible"));
+      pending[key] = { del: true };
+      persistQueue();
+      updateSync();
+      return flush();
+    },
+    flush: flush,
+    migrate: migrateLocalToCloud,
+    syncState: syncState,
+    pendingCount: function () { return Object.keys(pending).length; },
     flushCache: function () {
       if (!isCloud()) return Promise.resolve();
-      var p = Promise.resolve();
       Object.keys(dataCache).forEach(function (k) {
-        if (BIZ_KEYS.indexOf(k) !== -1) p = p.then(function () { return cloudUpsert(k, dataCache[k]); });
+        if (BIZ_KEYS.indexOf(k) !== -1) pending[k] = { val: dataCache[k], del: false };
       });
-      return p;
+      persistQueue();
+      updateSync();
+      return flush();
     },
     refresh: function (keys) {
       if (!isCloud()) return Promise.resolve();
@@ -522,6 +672,17 @@
   function formulaAmount(key) {
     var M = { essentiel: 350, confort: 600, pro: 1000, visibilite: 690, visibilite_plus: 850, developpement: 1290 };
     return M[key] || 0;
+  }
+
+  /* Reprise automatique des ecritures en attente des le retour du reseau
+     ou lorsque l'onglet redevient visible (reconnexion d'un poste nomade). */
+  if (typeof window !== "undefined" && window.addEventListener) {
+    window.addEventListener("online", function () { flush().catch(function () {}); });
+    if (typeof document !== "undefined" && document.addEventListener) {
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") flush().catch(function () {});
+      });
+    }
   }
 
   /* ------------------------------------------------------------
