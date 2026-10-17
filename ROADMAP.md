@@ -105,8 +105,13 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [ ] Portail client **externe** sécurisé (compte de rôle « client ») : le
       rendu et l'aperçu sont prêts ; l'accès authentifié reste à ouvrir.
 
-## PHASE 6 — Services numériques — `[ ]`
-- [ ] Sites/SEO, appels d'offres, contrats.
+## PHASE 6 — Services numériques — `[x]`
+- [x] Sites & SEO — module `Sites & SEO` (`js/services.js`) : sites suivis,
+      type, statut, échéance de domaine, Google Business, notes SEO.
+- [x] Appels d'offres — module `Appels d'offres` : veille marchés, acheteur,
+      date limite (alerte dépassement), montant, statut, pipeline.
+- [x] Contrats — module `Contrats` (compatible `app.js` : num/titre/montant/
+      statut) : contrat client, dates, revenu récurrent.
 
 ## PHASE 7 — Dossiers admin avancés — `[ ]`
 
