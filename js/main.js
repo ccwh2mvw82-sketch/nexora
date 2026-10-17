@@ -343,7 +343,8 @@ function scrollToAnchor(id) {
   });
 
   /* ---------- Composez votre formule ---------- */
-  var EXTRA_HOUR = 109;
+  var EXTRA_HOUR = 89;
+  var EXTRA_HOUR_2 = 119;
 
   var PRESTATIONS = {
     devis:      { h: 2, g: "admin" },
@@ -378,7 +379,7 @@ function scrollToAnchor(id) {
 
   var POOLS = {
     admin: [
-      { h: 4,  p: 349,  n: "TPE" },
+      { h: 4,  p: 650,  n: "TPE", noCommit: true },
       { h: 7,  p: 799,  n: "Fondations" },
       { h: 11, p: 1099, n: "Essentiel" },
       { h: 16, p: 1599, n: "Confort" },
@@ -495,7 +496,7 @@ function scrollToAnchor(id) {
         markup: false,
         note: scope === "marches"
           ? "Appels d'offres facturés à la mission : <strong>290 €</strong> l'analyse et la réponse, <strong>450 €</strong> le dossier complet, ou <strong>890 € / mois</strong> en illimité."
-          : "Prestation ponctuelle : <strong>site vitrine 990 €</strong>, <strong>WhatsApp Business et stratégie 109 €/h</strong>. <strong>Google Ads</strong> sur devis, budget publicitaire non inclus."
+          : "Prestation ponctuelle : <strong>site vitrine 990 €</strong>, <strong>WhatsApp Business et stratégie 89 €/h</strong>. <strong>Google Ads</strong> sur devis, budget publicitaire non inclus."
       };
     }
 
@@ -509,7 +510,9 @@ function scrollToAnchor(id) {
         time: time,
         price: tier.p,
         markup: true,
-        note: "Formule adaptée : <strong>" + tier.n + "</strong> · " + tier.h + " h incluses · " +
+        note: tier.noCommit
+          ? "Formule adaptée : <strong>" + tier.n + "</strong> · " + tier.h + " h incluses · sans remise sur engagement."
+          : "Formule adaptée : <strong>" + tier.n + "</strong> · " + tier.h + " h incluses · " +
               formatPrice(Math.round(tier.p * 0.9)) + " en engagement 6 mois, " +
               formatPrice(Math.round(tier.p * 0.8)) + " en engagement 12 mois."
       };
@@ -517,13 +520,13 @@ function scrollToAnchor(id) {
 
     var last = pool[pool.length - 1];
     var over = totalH - last.h;
-    var extra = over * EXTRA_HOUR;
+    var extra = over <= 1 ? over * EXTRA_HOUR : EXTRA_HOUR + (over - 1) * EXTRA_HOUR_2;
     return {
       time: time,
       price: last.p + extra,
       markup: true,
       note: "Formule <strong>" + last.n + "</strong> (" + last.h + " h incluses) + " + over +
-            " h supplémentaires à " + formatPrice(EXTRA_HOUR) + " = " + formatPrice(extra) +
+            " h supplémentaires (89 € la 1ère, puis 119 € / h) = " + formatPrice(extra) +
             " · sans engagement, " + formatPrice(last.p + extra) + "."
     };
   }
