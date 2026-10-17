@@ -65,10 +65,16 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
       aujourd'hui : mêmes données `ga_prospects`) une fois le suivi des
       campagnes Ads repris.
 
-## PHASE 3 — Opérations — `[ ]`
-- [ ] Missions/projets, tâches, planning.
-- [ ] GED (documents) — stockage objet, pas base64.
-- [ ] Agenda.
+## PHASE 3 — Opérations — `[~]`
+- [x] Missions / projets + tâches — module `Missions` (`js/operations.js`) :
+      statut, client, dates, budget, checklist de tâches (échéance, assigné),
+      avancement automatique, alerte tâches en retard, export.
+- [x] Agenda — module `Agenda` : échéancier unifié agrégeant les tâches,
+      factures à encaisser, échéances comptables et RDV, + événements manuels.
+- [x] Correctif outil : `GW.money(nom, valeur)` accepte désormais une valeur
+      initiale (les champs montants se pré-remplissent correctement).
+- [ ] GED (documents) — stockage objet (Supabase Storage), remplace le
+      stockage base64 actuel ; nécessite la création d'un bucket + policies.
 
 ## PHASE 4 — Suivi commercial & financier — `[ ]`
 - [ ] Devis → facture, TVA correcte.

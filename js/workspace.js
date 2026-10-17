@@ -260,8 +260,8 @@ window.GestWorkspace = (function () {
       return "<option value='" + v + "'" + (String(val) === String(v) ? " selected" : "") + ">" + esc(l) + "</option>";
     }).join("") + "</select>";
   }
-  function money(n) {
-    return "<input name='" + n + "' type='number' step='0.01' min='0' class='ws-num' value='" + esc(n || "") + "'>";
+  function money(n, val) {
+    return "<input name='" + n + "' type='number' step='0.01' min='0' class='ws-num' value='" + esc(val == null ? "" : val) + "'>";
   }
   function monRight(n) {
     return "<span class='ws-num-r'>" + fmtMoney(n) + "</span>";
