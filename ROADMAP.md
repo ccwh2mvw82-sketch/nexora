@@ -92,9 +92,18 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [ ] Reporting financier consolidé (CA, encaissé, impayés, TVA) — le module
       `Reporting` existant à enrichir.
 
-## PHASE 5 — Communications & portail client — `[ ]`
-- [ ] E-mail, modèles, suivi.
-- [ ] Portail client sécurisé.
+## PHASE 5 — Communications & portail client — `[~]`
+- [x] Messagerie — module `Messagerie` (`js/communications.js`) : rédaction,
+      modèles avec variables ({client}, {societe}, {date}), envoi e-mail
+      (fonction serveur optionnelle) ou ouverture dans la messagerie, journal.
+- [x] Modèles de message — module `Modèles` (gabarits d'e-mails).
+- [x] Suivi des échanges — historique par client (`ga_messages`).
+- [x] Portail client — module `Portail client` : aperçu en lecture des devis,
+      factures, documents et messages du client.
+- [x] Fonction serveur `send-message` créée (Resend) — à déployer par
+      l'utilisateur ; refuse les envois sans `SEND_SECRET` (pas de relais ouvert).
+- [ ] Portail client **externe** sécurisé (compte de rôle « client ») : le
+      rendu et l'aperçu sont prêts ; l'accès authentifié reste à ouvrir.
 
 ## PHASE 6 — Services numériques — `[ ]`
 - [ ] Sites/SEO, appels d'offres, contrats.
