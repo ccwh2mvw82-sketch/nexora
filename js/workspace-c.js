@@ -531,7 +531,9 @@
      MODULE : ASSISTANT IA (Google Gemini – clé optionnelle)
      ================================================================== */
   var FALLBACK_MODEL = "gemini-3.5-flash";
-  var MODELS_OK = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+  /* Modèles Gemini valides (vérifiés sur ai.google.dev). Utilisez de préférence
+     les versions 3.x / 2.5 ; les anciens identifiants peuvent être retirés. */
+  var MODELS_OK = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-2.5-pro"];
   function saneModel(m) { return MODELS_OK.indexOf(m) >= 0 ? m : FALLBACK_MODEL; }
   var presets = {
     post: "Rédige une publication pour {canal} au nom de l'entreprise « {client} » (type : {type}). Ton : proche, simple, efficace, sans emojis excessifs. 3 à 5 phrases, avec appel à l'action et contact. Donne uniquement le texte de la publication.",
@@ -616,10 +618,10 @@
     var out = $("#ia-out");
     if (!key) { GW.toast("Collez d'abord votre clé Gemini"); return; }
     out.innerHTML = "<p class='ws-hint'>🔍 Vérification de la clé…</p>";
-    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(key);
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
     fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: "Réponds uniquement : OK" }] }] })
     }).then(function (r) { return r.json(); }).then(function (data) {
       var txt = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
@@ -668,8 +670,8 @@
     out.innerHTML = "<p class='ws-hint'>🤖 Génération en cours…</p>";
     var body = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
     var model = saneModel(cfg.model || FALLBACK_MODEL);
-    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent?key=" + encodeURIComponent(cfg.key);
-    fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
+    fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": cfg.key }, body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
       .then(function (data) {
         var txt = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;

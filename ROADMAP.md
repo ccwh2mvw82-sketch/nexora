@@ -123,8 +123,13 @@ Préparer le socle technique de « Espace de travail + » sans casser l'existant
 - [x] Journal d'activité (audit) — module `Journal` + helper `GW.journal(...)`
       appelé par les actions sensibles.
 
-## PHASE 8 — Automatisation & IA — `[ ]`
-- [ ] Corriger l'assistant Gemini (modèles valides) ; automatisations.
+## PHASE 8 — Automatisation & IA — `[x]`
+- [x] Assistant Gemini `js/workspace-c.js` : modèles valides
+  (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`,
+  `gemini-2.5-flash`, `gemini-2.5-pro`), clé transmise par en-tête
+  `x-goog-api-key` (plus dans l'URL).
+- [x] `js/automation.js` : module « Automatisations » (relances d'impayés,
+  échéances → agenda, accueil nouveaux clients) + journal `ga_automation_log`.
 
 ## PHASE 9 — Qualité & finalisation — `[ ]`
 - [ ] Tests, `TESTS.md`, revue sécurité/RGPD, documentation finale.
